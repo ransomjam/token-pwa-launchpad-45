@@ -1,0 +1,225 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useI18n } from '@/context/I18nContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { AuthStepIndicator } from './AuthStepIndicator';
+import { useNetworkStatus } from '@/hooks/use-network-status';
+import type { Session } from '@/types';
+import { trackEvent } from '@/lib/analytics';
+
+const OTP_CODE = '123456';
+
+const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, '0');
+  const secs = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, '0');
+  return `${minutes}:${secs}`;
+};
+
+type SignInStep = 'contact' | 'otp';
+
+type SignInFlowProps = {
+  onAuthenticated: (session: Session) => void;
+};
+
+export const SignInFlow = ({ onAuthenticated }: SignInFlowProps) => {
+  const { t } = useI18n();
+  const isOnline = useNetworkStatus();
+
+  const [step, setStep] = useState<SignInStep>('contact');
+  const [contact, setContact] = useState('');
+  const [contactError, setContactError] = useState('');
+  const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    if (step !== 'otp') return;
+    if (timeLeft <= 0) return;
+    const interval = window.setInterval(() => {
+      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [step, timeLeft]);
+
+  useEffect(() => {
+    if (step === 'contact') {
+      setCode('');
+      setCodeError('');
+    }
+  }, [step]);
+
+  const handleSendCode = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isOnline) return;
+    const trimmed = contact.trim();
+    if (!trimmed) {
+      setContactError(t('auth.contactHint'));
+      return;
+    }
+    setContactError('');
+    setStep('otp');
+    setTimeLeft(30);
+    setCode('');
+    setCodeError('');
+    if (!hasStarted) {
+      trackEvent('auth_start', { method: 'otp' });
+      setHasStarted(true);
+    }
+    trackEvent('auth_code_sent', { method: 'otp' });
+  };
+
+  const handleVerifyCode = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const sanitized = code.replace(/\D/g, '');
+    if (sanitized.length !== 6) return;
+    if (sanitized !== OTP_CODE) {
+      setCodeError(t('auth.wrongCode'));
+      trackEvent('auth_fail', { method: 'otp' });
+      return;
+    }
+
+    const session: Session = {
+      userId: 'demo-user',
+      displayName: 'Demo Trader',
+      contact: contact.trim(),
+      role: 'buyer',
+      hasSelectedRole: false,
+      verifiedImporter: false,
+    };
+
+    trackEvent('auth_success', { method: 'otp' });
+    onAuthenticated(session);
+  };
+
+  const canResend = useMemo(() => timeLeft <= 0, [timeLeft]);
+
+  const handleResend = () => {
+    if (!canResend) return;
+    setTimeLeft(30);
+    setCode('');
+    setCodeError('');
+    trackEvent('auth_code_sent', { method: 'otp', reason: 'resend' });
+  };
+
+  const handleDemo = () => {
+    const demoSession: Session = {
+      userId: 'demo-importer',
+      displayName: 'Demo Importer',
+      contact: 'demo@prolist',
+      role: 'importer',
+      hasSelectedRole: true,
+      verifiedImporter: true,
+    };
+    trackEvent('auth_success', { method: 'demo' });
+    trackEvent('role_select', { role: 'importer', source: 'demo' });
+    onAuthenticated(demoSession);
+  };
+
+  return (
+    <main className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-6 py-10">
+        {!isOnline && (
+          <div className="rounded-2xl border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
+            {t('auth.offlineBanner')}
+          </div>
+        )}
+
+        <AuthStepIndicator current={step === 'otp' ? 'otp' : 'contact'} />
+
+        <header className="space-y-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">{t('auth.welcome')}</h1>
+          <p className="text-muted-foreground">{t('auth.intro')}</p>
+        </header>
+
+        {step === 'contact' && (
+          <form className="space-y-4" onSubmit={handleSendCode}>
+            <div className="space-y-2">
+              <Label htmlFor="contact" className="text-base font-medium">
+                {t('auth.contactLabel')}
+              </Label>
+              <Input
+                id="contact"
+                type="text"
+                inputMode="text"
+                value={contact}
+                onChange={event => setContact(event.target.value)}
+                placeholder={t('auth.contactPlaceholder')}
+                className="h-12 rounded-xl border-2 text-base"
+                autoComplete="email"
+                autoFocus
+              />
+              {contactError && <p className="text-sm text-destructive">{contactError}</p>}
+            </div>
+
+            <Button type="submit" disabled={!isOnline} className="h-12 rounded-xl text-base font-semibold">
+              {t('auth.sendCode')}
+            </Button>
+            {!isOnline && <p className="text-sm text-muted-foreground">{t('auth.sendDisabled')}</p>}
+          </form>
+        )}
+
+        {step === 'otp' && (
+          <form className="space-y-6" onSubmit={handleVerifyCode}>
+            <div className="space-y-2 text-center">
+              <h2 className="text-xl font-semibold tracking-tight">{t('auth.otpTitle')}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t('auth.otpSubtitle', { contact: contact.trim() })}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-medium text-muted-foreground">{t('auth.codeLabel')}</Label>
+              <InputOTP
+                maxLength={6}
+                value={code}
+                onChange={value => setCode(value.replace(/\D/g, ''))}
+                containerClassName="justify-center"
+              >
+                <InputOTPGroup className="gap-2">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <InputOTPSlot
+                      key={`otp-${index}`}
+                      index={index}
+                      className="h-12 w-12 rounded-xl border-2 text-lg font-semibold"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+              {codeError && <p className="text-sm text-destructive">{codeError}</p>}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button type="submit" disabled={code.replace(/\D/g, '').length !== 6} className="h-12 rounded-xl text-base font-semibold">
+                {t('auth.verifyCta')}
+              </Button>
+              <button
+                type="button"
+                onClick={canResend ? handleResend : undefined}
+                className="text-sm font-medium text-primary"
+                disabled={!canResend}
+              >
+                {canResend ? t('auth.resendNow') : t('auth.resendIn', { time: formatTime(timeLeft) })}
+              </button>
+              <button type="button" onClick={() => setStep('contact')} className="text-sm text-muted-foreground">
+                {t('auth.changeContact')}
+              </button>
+            </div>
+          </form>
+        )}
+
+        <div className="pt-8 text-center">
+          <button type="button" onClick={handleDemo} className="text-sm font-medium text-primary">
+            {t('auth.useDemo')}
+          </button>
+        </div>
+      </div>
+    </main>
+  );
+};

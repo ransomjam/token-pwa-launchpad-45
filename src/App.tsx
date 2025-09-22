@@ -7,23 +7,29 @@ import MockProvider from "./components/MockProvider";
 import Index from "./pages/Index";
 import Offline from "./pages/Offline";
 import NotFound from "./pages/NotFound";
+import { SessionProvider } from "./context/SessionContext";
+import { I18nProvider } from "./context/I18nContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <MockProvider />
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/offline" element={<Offline />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <I18nProvider>
+        <SessionProvider>
+          <MockProvider />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/offline" element={<Offline />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SessionProvider>
+      </I18nProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -60,6 +60,9 @@ export type PickupPoint = {
 
 export type Session = {
   userId: string;
-  role: 'buyer' | 'importer' | 'admin';
-  token: string;
+  displayName: string;
+  contact: string;
+  role: 'buyer' | 'importer';
+  hasSelectedRole: boolean;
+  verifiedImporter: boolean;
 };
