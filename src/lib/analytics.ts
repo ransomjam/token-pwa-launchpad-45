@@ -28,7 +28,16 @@ export type AppEvent =
   | 'filter_open'
   | 'filter_apply'
   | 'sort_change'
-  | 'infinite_scroll_next';
+  | 'infinite_scroll_next'
+  | 'order_view'
+  | 'order_refresh_auto'
+  | 'order_refresh_manual'
+  | 'refund_eligible_view'
+  | 'refund_request_click'
+  | 'refund_success'
+  | 'dispute_open_click'
+  | 'pickup_qr_open'
+  | 'evidence_open';
 
 export function trackEvent<T extends AppEvent>(name: T, payload?: Record<string, unknown>) {
   if (import.meta.env.DEV) {
