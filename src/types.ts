@@ -82,3 +82,25 @@ export type Session = {
   hasSelectedRole: boolean;
   verifiedImporter: boolean;
 };
+
+export type OrderDetailResponse = {
+  id: string;
+  status: OrderStatus;
+  countdown: { deadline: string; secondsLeft: number };
+  milestones: { code: MilestoneCode; at: string | null }[];
+  eligibility: { canRefund: boolean; canDispute: boolean };
+  evidence?: { supplierInvoice?: string | null; awb?: string | null };
+  pickupPoint?: {
+    id?: string;
+    name: string;
+    address: string;
+    city?: string;
+    phone?: string | null;
+  } | null;
+  listing?: {
+    id: string;
+    title: string;
+    priceXAF: number;
+  } | null;
+  qty?: number | null;
+};

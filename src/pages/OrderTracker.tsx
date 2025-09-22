@@ -30,19 +30,9 @@ import { cn } from '@/lib/utils';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { trackEvent } from '@/lib/analytics';
 import { activateDemoMode, primaryDemoListing, primaryDemoListingId } from '@/lib/demoMode';
-import type { MilestoneCode, OrderStatus } from '@/types';
+import type { MilestoneCode, OrderDetailResponse, OrderStatus } from '@/types';
 
 type EvidenceKind = 'supplierInvoice' | 'awb';
-
-type OrderDetails = {
-  id: string;
-  status: OrderStatus;
-  countdown: { deadline: string; secondsLeft: number };
-  milestones: { code: MilestoneCode; at: string | null }[];
-  eligibility: { canRefund: boolean; canDispute: boolean };
-  evidence?: { supplierInvoice?: string | null; awb?: string | null };
-  pickupPoint?: { name: string; address: string; phone?: string | null } | null;
-};
 
 const milestoneOrder: MilestoneCode[] = ['POOL_LOCKED', 'SUPPLIER_PAID', 'EXPORTED', 'ARRIVED', 'COLLECTED'];
 
@@ -158,7 +148,7 @@ const OrderTracker = () => {
     queryKey: ['order', id],
     queryFn: async () => {
       if (!id) throw new Error('Missing order id');
-      return api<OrderDetails>(`/api/orders/${id}`);
+      return api<OrderDetailResponse>(`/api/orders/${id}`);
     },
     enabled: Boolean(id),
     staleTime: 0,

@@ -14,6 +14,7 @@ import Checkout from "./pages/Checkout";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import MockPsp from "./pages/MockPsp";
 import OrderTracker from "./pages/OrderTracker";
+import OrderPickupQr from "./pages/OrderPickupQr";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/checkout/:listingId" element={<Checkout />} />
               <Route path="/checkout/return" element={<CheckoutReturn />} />
               <Route path="/order/:id" element={<OrderTracker />} />
+              <Route path="/order/:id/qr" element={<OrderPickupQr />} />
               <Route path="/mock/psp" element={<MockPsp />} />
               <Route path="/offline" element={<Offline />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

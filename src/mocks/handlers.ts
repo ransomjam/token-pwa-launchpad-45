@@ -28,6 +28,7 @@ function enrichListing(listing: Listing) {
 function orderPayload(order: Order) {
   const listing = db.listings.find(l => l.id === order.listingId)!;
   const lane = db.lanes.find(l => l.code === listing.laneCode)!;
+  const pickup = db.pickupPoints.find(p => p.id === order.pickupPointId) ?? null;
   const now = mockNow();
   const secondsLeft = Math.max(0, Math.floor((new Date(order.deadline).getTime() - now) / 1000));
   const eligibleLate = secondsLeft === 0 && !['REFUNDED','CLOSED'].includes(order.status);
@@ -41,7 +42,22 @@ function orderPayload(order: Order) {
     eligibility: {
       canRefund: order.canRefund || eligibleLate,
       canDispute: order.canDispute || ['ESCROW_HELD','POOL_LOCKED','FULFILLING','ARRIVED'].includes(order.status)
-    }
+    },
+    qty: order.qty,
+    listing: {
+      id: listing.id,
+      title: listing.title,
+      priceXAF: listing.priceXAF
+    },
+    pickupPoint: pickup
+      ? {
+          id: pickup.id,
+          name: pickup.name,
+          address: pickup.address,
+          city: pickup.city,
+          phone: pickup.phone ?? null
+        }
+      : null
   };
 }
 

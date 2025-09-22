@@ -37,6 +37,13 @@ export type AppEvent =
   | 'refund_success'
   | 'dispute_open_click'
   | 'pickup_qr_open'
+  | 'pickup_qr_view'
+  | 'pickup_qr_pin_reveal'
+  | 'pickup_qr_pin_copy'
+  | 'pickup_qr_simulate_scan'
+  | 'pickup_collect_success'
+  | 'pickup_collect_fail'
+  | 'pickup_contact_tap'
   | 'evidence_open'
   | 'demo_mode_active';
 
