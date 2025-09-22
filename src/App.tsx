@@ -7,6 +7,7 @@ import MockProvider from "./components/MockProvider";
 import Index from "./pages/Index";
 import Offline from "./pages/Offline";
 import NotFound from "./pages/NotFound";
+import ListingDetails from "./pages/ListingDetails";
 import { SessionProvider } from "./context/SessionContext";
 import { I18nProvider } from "./context/I18nContext";
 
@@ -23,6 +24,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/listings/:id" element={<ListingDetails />} />
               <Route path="/offline" element={<Offline />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

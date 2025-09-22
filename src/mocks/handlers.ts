@@ -15,6 +15,8 @@ function enrichListing(listing: Listing) {
     title: listing.title,
     priceXAF: listing.priceXAF,
     images: listing.images,
+    category: listing.category,
+    specs: listing.specs,
     etaDays: lane.etaDays,
     lane: { code: lane.code, onTimePct: lane.onTimePct, medianDays: lane.medianDays },
     moq: listing.moq,

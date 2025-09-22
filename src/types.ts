@@ -22,8 +22,23 @@ export type Listing = {
   laneCode: string;
   moq: { target: number; committed: number; lockAt: string };
   importerId: string;
+  category: string;
   specs: string[];
   createdAt: string;
+};
+
+export type ListingSummary = {
+  id: string;
+  title: string;
+  priceXAF: number;
+  images: string[];
+  etaDays: { min: number; max: number };
+  lane: { code: string; onTimePct: number; medianDays: number };
+  moq: Listing['moq'];
+  importer: { id: string; displayName: string; verified: boolean };
+  buyerProtection: { escrow: boolean; autoRefundOnLate: boolean };
+  category: string;
+  specs: string[];
 };
 
 export type OrderStatus =
