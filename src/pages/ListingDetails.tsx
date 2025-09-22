@@ -263,14 +263,15 @@ const ListingDetails = () => {
 
   const handlePreorder = useCallback(() => {
     if (!listing) return;
-    if (!selectedPickup) {
-      toast({ description: 'Pick a pickup hub to continue.' });
-      setPickupSheetOpen(true);
-      return;
-    }
     trackEvent('cta_preorder_click', { id: listing.id, qty });
-    toast({ description: `Pre-order locked for ${qty} unit${qty > 1 ? 's' : ''}.` });
-  }, [listing, qty, selectedPickup, toast]);
+    navigate(`/checkout/${listing.id}`, {
+      state: {
+        listingId: listing.id,
+        qty,
+        pickupPointId: selectedPickup?.id,
+      },
+    });
+  }, [listing, navigate, qty, selectedPickup]);
 
   const handlePickupOpen = useCallback(() => {
     if (selectedPickup) {
