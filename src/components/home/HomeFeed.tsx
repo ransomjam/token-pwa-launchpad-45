@@ -2,14 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowUpDown,
+  Clock3,
   Filter,
+  Leaf,
   Loader2,
+  Plane,
   RefreshCw,
   Search,
   ShieldCheck,
+  Ship,
   Sparkles,
-  Tag,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,12 +26,6 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
 import { useI18n } from '@/context/I18nContext';
@@ -40,6 +37,7 @@ import { useIntersectionOnce } from '@/hooks/use-intersection-once';
 import { cn } from '@/lib/utils';
 
 const RECENT_KEY = 'pl.recentListings';
+const RECENT_SEARCH_KEY = 'pl.recentSearches';
 
 type SortOption = 'relevance' | 'endingSoon' | 'priceLowHigh' | 'priceHighLow';
 
@@ -48,6 +46,7 @@ type FilterState = {
   etaRange: [number, number];
   priceRange: [number, number];
   verifiedOnly: boolean;
+  greenLanesOnly: boolean;
 };
 
 type Bounds = {
@@ -142,97 +141,214 @@ type SearchOverlayProps = {
   open: boolean;
   value: string;
   suggestions: ListingSummary[];
+  recentTerms: string[];
+  popularTerms: string[];
   onClose: () => void;
+  onChange: (term: string) => void;
   onSubmit: (term: string) => void;
-  onSelectSuggestion: (term: string) => void;
+  onSelectSuggestion: (listing: ListingSummary) => void;
   labels: {
+    title: string;
     placeholder: string;
     search: string;
     clear: string;
-    suggestions: string;
-    noSuggestions: string;
+    recent: string;
+    popular: string;
+    noRecent: string;
+    results: string;
+    noResults: string;
+    hint: string;
+    close: string;
   };
+  formatPrice: (value: number) => string;
+  getEtaLabel: (listing: ListingSummary) => string;
+  getLaneLabel: (listing: ListingSummary) => string;
 };
 
-const SearchOverlay = ({ open, value, suggestions, onClose, onSubmit, onSelectSuggestion, labels }: SearchOverlayProps) => {
-  const [term, setTerm] = useState(value);
+const SearchOverlay = ({
+  open,
+  value,
+  suggestions,
+  recentTerms,
+  popularTerms,
+  onClose,
+  onChange,
+  onSubmit,
+  onSelectSuggestion,
+  labels,
+  formatPrice,
+  getEtaLabel,
+  getLaneLabel,
+}: SearchOverlayProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      setTerm(value);
-    }
-  }, [open, value]);
 
   useEffect(() => {
     if (!open) return;
     const timer = window.setTimeout(() => {
       inputRef.current?.focus();
-    }, 60);
+    }, 80);
     return () => window.clearTimeout(timer);
   }, [open]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSubmit(term.trim());
+    const trimmed = value.trim();
+    if (!trimmed) {
+      onClose();
+      return;
+    }
+    onSubmit(trimmed);
     onClose();
   };
 
   const handleClear = () => {
-    setTerm('');
+    onChange('');
     inputRef.current?.focus();
   };
 
+  const handleQuickSelect = (term: string) => {
+    onChange(term);
+    onSubmit(term);
+    onClose();
+  };
+
+  const handleSuggestionClick = (listing: ListingSummary) => {
+    onChange(listing.title);
+    onSelectSuggestion(listing);
+    onClose();
+  };
+
+  const showResults = value.trim().length > 0;
+
   return (
     <Dialog open={open} onOpenChange={next => !next && onClose()}>
-      <DialogContent className="top-0 h-[100dvh] max-w-none rounded-none border-none bg-background px-6 py-8 sm:top-[10vh] sm:h-auto sm:max-w-lg sm:rounded-3xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-soft">
-            <Search className="h-5 w-5 text-muted-foreground" />
-            <Input
-              ref={inputRef}
-              value={term}
-              onChange={event => setTerm(event.target.value)}
-              placeholder={labels.placeholder}
-              className="border-none bg-transparent p-0 text-base focus-visible:ring-0"
-              type="search"
-              aria-label={labels.search}
-              autoFocus
-            />
-            {term && (
-              <Button type="button" variant="ghost" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={handleClear}>
-                {labels.clear}
-              </Button>
-            )}
-            <Button type="submit" className="h-10 rounded-xl px-4 text-sm font-semibold">
-              {labels.search}
+      <DialogContent className="top-0 h-[100dvh] max-w-none rounded-none border-none bg-background px-6 py-6 sm:top-[10vh] sm:h-auto sm:max-w-lg sm:rounded-3xl">
+        <div className="flex h-full flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">{labels.title}</h2>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              aria-label={labels.close}
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{labels.suggestions}</p>
-            <div className="grid gap-2">
-              {suggestions.slice(0, 6).map(suggestion => (
-                <button
-                  key={suggestion.id}
-                  type="button"
-                  onClick={() => {
-                    onSelectSuggestion(suggestion.title);
-                    onClose();
-                  }}
-                  className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-left text-sm font-medium shadow-sm hover:border-primary/40"
-                >
-                  <span>{suggestion.title}</span>
-                  <Tag className="h-4 w-4 text-muted-foreground" />
-                </button>
-              ))}
-              {suggestions.length === 0 && (
-                <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                  {labels.noSuggestions}
-                </p>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-soft">
+              <Search className="h-5 w-5 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                value={value}
+                onChange={event => onChange(event.target.value)}
+                placeholder={labels.placeholder}
+                className="border-none bg-transparent p-0 text-base focus-visible:ring-0"
+                type="search"
+                aria-label={labels.search}
+                autoFocus
+              />
+              {value && (
+                <Button type="button" variant="ghost" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={handleClear}>
+                  {labels.clear}
+                </Button>
               )}
+              <Button type="submit" className="h-10 rounded-xl px-4 text-sm font-semibold">
+                {labels.search}
+              </Button>
             </div>
+          </form>
+          <div className="flex-1 overflow-y-auto pb-6">
+            {showResults ? (
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{labels.results}</p>
+                <div className="space-y-2">
+                  {suggestions.slice(0, 6).map(suggestion => {
+                    const [,, modeRaw = ''] = suggestion.lane.code.split('-');
+                    const mode = modeRaw.toLowerCase() === 'air' ? 'air' : 'sea';
+                    const tone = suggestion.lane.onTimePct >= 0.9
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : suggestion.lane.onTimePct >= 0.75
+                        ? 'border-amber-200 bg-amber-50 text-amber-700'
+                        : 'border-rose-200 bg-rose-50 text-rose-700';
+                    const ModeIcon = mode === 'air' ? Plane : Ship;
+                    return (
+                      <button
+                        key={suggestion.id}
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-soft transition-colors hover:border-primary/40"
+                      >
+                        <div className="h-14 w-14 overflow-hidden rounded-xl bg-muted">
+                          <img
+                            src={suggestion.images[0] ?? '/placeholder.svg'}
+                            alt={suggestion.title}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="flex flex-1 flex-col gap-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="line-clamp-2 text-sm font-semibold text-foreground">{suggestion.title}</p>
+                            <span className="text-sm font-semibold text-primary">{formatPrice(suggestion.priceXAF)}</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+                              <Clock3 className="h-3.5 w-3.5" />
+                              {getEtaLabel(suggestion)}
+                            </span>
+                            <span className={cn('inline-flex items-center gap-1 rounded-full border px-2.5 py-1', tone)}>
+                              <ModeIcon className="h-3.5 w-3.5" />
+                              {getLaneLabel(suggestion)}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {suggestions.length === 0 && (
+                    <div className="space-y-2 rounded-2xl border border-dashed border-border px-4 py-6 text-center">
+                      <p className="text-sm font-semibold text-foreground">{labels.noResults}</p>
+                      <p className="text-xs text-muted-foreground">{labels.hint}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{labels.recent}</p>
+                  {recentTerms.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {recentTerms.map(term => (
+                        <Button key={term} type="button" variant="secondary" className="rounded-full px-3 py-1 text-xs" onClick={() => handleQuickSelect(term)}>
+                          {term}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="rounded-2xl border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
+                      {labels.noRecent}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{labels.popular}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {popularTerms.map(term => (
+                      <Button key={term} type="button" variant="outline" className="rounded-full px-3 py-1 text-xs" onClick={() => handleQuickSelect(term)}>
+                        {term}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -244,6 +360,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   const { t, locale } = useI18n();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchDraft, setSearchDraft] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORY);
   const [sort, setSort] = useState<SortOption>('relevance');
   const [filters, setFilters] = useState<FilterState>({
@@ -251,11 +368,13 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     etaRange: [0, 0],
     priceRange: [0, 0],
     verifiedOnly: false,
+    greenLanesOnly: false,
   });
   const [filterDraft, setFilterDraft] = useState<FilterState | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [bounds, setBounds] = useState<Bounds>({ eta: [0, 0], price: [0, 0] });
   const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [visibleTrending, setVisibleTrending] = useState(4);
   const [deferredSections, setDeferredSections] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -317,7 +436,13 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     const maxPrice = Math.max(...allListings.map(item => item.priceXAF));
     setBounds({ eta: [minEta, maxEta], price: [minPrice, maxPrice] });
     if (!hasInitializedFilters.current) {
-      setFilters({ laneMode: null, etaRange: [minEta, maxEta], priceRange: [minPrice, maxPrice], verifiedOnly: false });
+      setFilters({
+        laneMode: null,
+        etaRange: [minEta, maxEta],
+        priceRange: [minPrice, maxPrice],
+        verifiedOnly: false,
+        greenLanesOnly: false,
+      });
       hasInitializedFilters.current = true;
     }
   }, [allListings]);
@@ -332,6 +457,19 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
       }
     } catch (error) {
       console.warn('Failed to parse recent listings', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = window.localStorage.getItem(RECENT_SEARCH_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as string[];
+        setRecentSearches(parsed);
+      }
+    } catch (error) {
+      console.warn('Failed to parse recent searches', error);
     }
   }, []);
 
@@ -399,6 +537,18 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     });
   }, []);
 
+  const updateRecentSearches = useCallback((term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    setRecentSearches(prev => {
+      const next = [trimmed, ...prev.filter(item => item.toLowerCase() !== trimmed.toLowerCase())].slice(0, 6);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(next));
+      }
+      return next;
+    });
+  }, []);
+
   const priceFormatter = useMemo(() => {
     const localeKey = locale === 'fr' ? 'fr-CM' : 'en-US';
     return new Intl.NumberFormat(localeKey, {
@@ -415,6 +565,9 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     }
     if (filters.laneMode) {
       items = items.filter(item => item.lane.code.toLowerCase().includes(filters.laneMode ?? ''));
+    }
+    if (filters.greenLanesOnly) {
+      items = items.filter(item => item.lane.onTimePct >= 0.9);
     }
     items = items.filter(item => item.etaDays.min >= filters.etaRange[0] && item.etaDays.max <= filters.etaRange[1]);
     items = items.filter(item => item.priceXAF >= filters.priceRange[0] && item.priceXAF <= filters.priceRange[1]);
@@ -531,41 +684,164 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     trackEvent('listing_card_view', { id });
   }, []);
 
-  const clearFilters = useCallback(() => {
-    setFilters({ laneMode: null, etaRange: bounds.eta, priceRange: bounds.price, verifiedOnly: false });
-  }, [bounds]);
+  const resetFilters = useCallback((shouldTrack = false) => {
+    setFilters({
+      laneMode: null,
+      etaRange: bounds.eta,
+      priceRange: bounds.price,
+      verifiedOnly: false,
+      greenLanesOnly: false,
+    });
+    setFilterDraft(prev =>
+      prev
+        ? {
+            ...prev,
+            laneMode: null,
+            etaRange: bounds.eta,
+            priceRange: bounds.price,
+            verifiedOnly: false,
+            greenLanesOnly: false,
+          }
+        : prev
+    );
+    if (shouldTrack) {
+      trackEvent('filter_reset');
+    }
+  }, [bounds.eta, bounds.price]);
 
   const handleFilterApply = () => {
     if (!filterDraft) {
       setFilterOpen(false);
       return;
     }
-    setFilters(filterDraft);
+    setFilters({ ...filterDraft });
     setFilterOpen(false);
     trackEvent('filter_apply', {
       laneMode: filterDraft.laneMode,
       eta: filterDraft.etaRange,
       price: filterDraft.priceRange,
       verifiedOnly: filterDraft.verifiedOnly,
+      greenLanesOnly: filterDraft.greenLanesOnly,
     });
   };
 
   const handleFilterOpen = (next: boolean) => {
     setFilterOpen(next);
     if (next) {
-      setFilterDraft(filters);
+      setFilterDraft({ ...filters });
       trackEvent('filter_open');
     }
   };
 
-  const suggestions = useMemo(() => {
-    if (!searchTerm) return sortedListings.slice(0, 6);
-    const term = searchTerm.toLowerCase();
-    return sortedListings.filter(item => item.title.toLowerCase().includes(term)).slice(0, 6);
-  }, [searchTerm, sortedListings]);
+  const searchSuggestions = useMemo(() => {
+    const term = searchDraft.trim().toLowerCase();
+    if (!term) return sortedListings.slice(0, 6);
+    return sortedListings
+      .filter(item =>
+        item.title.toLowerCase().includes(term) ||
+        item.specs.some(spec => spec.toLowerCase().includes(term))
+      )
+      .slice(0, 6);
+  }, [searchDraft, sortedListings]);
+
+  const popularTerms = useMemo(() => {
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const item of sortedListings) {
+      const title = item.title;
+      const normalized = title.toLowerCase();
+      if (!seen.has(normalized)) {
+        seen.add(normalized);
+        unique.push(title);
+      }
+      if (unique.length >= 6) break;
+    }
+    return unique;
+  }, [sortedListings]);
+
+  const filterPills = useMemo(() => {
+    const pills: { key: string; label: string; onRemove: () => void }[] = [];
+    if (selectedCategory !== ALL_CATEGORY) {
+      pills.push({
+        key: `category-${selectedCategory}`,
+        label: selectedCategory,
+        onRemove: () => setSelectedCategory(ALL_CATEGORY),
+      });
+    }
+    if (filters.laneMode) {
+      const modeLabel = filters.laneMode === 'air' ? t('home.modeAir') : t('home.modeSea');
+      pills.push({
+        key: `lane-${filters.laneMode}`,
+        label: t('home.pillLane', { mode: modeLabel }),
+        onRemove: () => setFilters(prev => ({ ...prev, laneMode: null })),
+      });
+    }
+    if (filters.greenLanesOnly) {
+      pills.push({
+        key: 'green',
+        label: t('home.pillGreen'),
+        onRemove: () => setFilters(prev => ({ ...prev, greenLanesOnly: false })),
+      });
+    }
+    if (filters.verifiedOnly) {
+      pills.push({
+        key: 'verified',
+        label: t('home.pillVerified'),
+        onRemove: () => setFilters(prev => ({ ...prev, verifiedOnly: false })),
+      });
+    }
+    const hasBounds = hasInitializedFilters.current;
+    if (hasBounds && (filters.etaRange[0] !== bounds.eta[0] || filters.etaRange[1] !== bounds.eta[1])) {
+      pills.push({
+        key: `eta-${filters.etaRange.join('-')}`,
+        label: t('home.pillEta', { min: filters.etaRange[0], max: filters.etaRange[1] }),
+        onRemove: () => setFilters(prev => ({ ...prev, etaRange: bounds.eta })),
+      });
+    }
+    if (hasBounds && (filters.priceRange[0] !== bounds.price[0] || filters.priceRange[1] !== bounds.price[1])) {
+      pills.push({
+        key: `price-${filters.priceRange.join('-')}`,
+        label: t('home.pillPrice', {
+          min: priceFormatter.format(filters.priceRange[0]),
+          max: priceFormatter.format(filters.priceRange[1]),
+        }),
+        onRemove: () => setFilters(prev => ({ ...prev, priceRange: bounds.price })),
+      });
+    }
+    return pills;
+  }, [bounds.eta, bounds.price, filters, priceFormatter, selectedCategory, t]);
+
+  const getEtaLabel = useCallback(
+    (listing: ListingSummary) => t('home.etaChip', { min: listing.etaDays.min, max: listing.etaDays.max }),
+    [t],
+  );
+
+  const getLaneLabel = useCallback(
+    (listing: ListingSummary) => {
+      const [,, modeRaw = ''] = listing.lane.code.split('-');
+      const modeLabel = modeRaw.toLowerCase() === 'air' ? t('home.modeAir') : t('home.modeSea');
+      return t('home.searchLaneLabel', { mode: modeLabel, pct: Math.round(listing.lane.onTimePct * 100) });
+    },
+    [t],
+  );
 
   const handleSearchSubmit = (term: string) => {
-    setSearchTerm(term);
+    const trimmed = term.trim();
+    setSearchTerm(trimmed);
+    setSearchDraft(trimmed);
+    if (trimmed) {
+      updateRecentSearches(trimmed);
+    }
+  };
+
+  const handleSearchResultSelect = (listing: ListingSummary) => {
+    const position = sortedListings.findIndex(item => item.id === listing.id);
+    const normalizedPosition = position >= 0 ? position : 0;
+    updateRecentSearches(listing.title);
+    setSearchTerm(listing.title);
+    setSearchDraft(listing.title);
+    trackEvent('search_result_click', { id: listing.id });
+    handleCardOpen(listing, normalizedPosition);
   };
 
   const handleSortChange = (next: SortOption) => {
@@ -596,7 +872,11 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
         <div className="mt-4 flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setSearchOpen(true)}
+            onClick={() => {
+              setSearchDraft(searchTerm);
+              setSearchOpen(true);
+              trackEvent('search_open');
+            }}
             className="flex flex-1 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left text-sm text-muted-foreground shadow-soft"
           >
             <Search className="h-4 w-4" />
@@ -612,31 +892,13 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                 onClick={event => {
                   event.stopPropagation();
                   setSearchTerm('');
+                  setSearchDraft('');
                 }}
               >
                 {t('home.clear')}
               </Button>
             )}
           </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-12 rounded-2xl px-4 text-sm font-semibold">
-                <ArrowUpDown className="mr-2 h-4 w-4" />
-                {sortLabels[sort]}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 rounded-2xl p-2">
-              {(Object.keys(sortLabels) as SortOption[]).map(option => (
-                <DropdownMenuItem
-                  key={option}
-                  onSelect={() => handleSortChange(option)}
-                  className={cn('rounded-xl px-3 py-2 text-sm font-medium', option === sort && 'bg-primary/10 text-primary')}
-                >
-                  {sortLabels[option]}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
           <Button
             variant="outline"
             className="h-12 rounded-2xl px-4 text-sm font-semibold"
@@ -645,23 +907,52 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
             <Filter className="mr-2 h-4 w-4" /> {t('home.filterCta')}
           </Button>
         </div>
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {(Object.keys(sortLabels) as SortOption[]).map(option => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => handleSortChange(option)}
+              className={cn(
+                'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm transition-colors',
+                option === sort ? 'border-primary bg-primary text-white' : 'border-border bg-card text-muted-foreground'
+              )}
+              aria-pressed={option === sort}
+            >
+              {sortLabels[option]}
+            </button>
+          ))}
+        </div>
       </header>
 
       <SearchOverlay
         open={searchOpen}
-        value={searchTerm}
-        onClose={() => setSearchOpen(false)}
-        onSubmit={handleSearchSubmit}
-        onSelectSuggestion={term => {
-          setSearchTerm(term);
+        value={searchDraft}
+        onClose={() => {
+          setSearchOpen(false);
+          setSearchDraft(searchTerm);
         }}
-        suggestions={suggestions}
+        onChange={setSearchDraft}
+        onSubmit={handleSearchSubmit}
+        onSelectSuggestion={handleSearchResultSelect}
+        suggestions={searchSuggestions}
+        recentTerms={recentSearches}
+        popularTerms={popularTerms}
+        formatPrice={value => priceFormatter.format(value)}
+        getEtaLabel={getEtaLabel}
+        getLaneLabel={getLaneLabel}
         labels={{
+          title: t('home.searchTitle'),
           placeholder: t('home.searchPlaceholder'),
           search: t('home.searchAction'),
           clear: t('home.clear'),
-          suggestions: t('home.suggestions'),
-          noSuggestions: t('home.noSuggestions'),
+          recent: t('home.searchRecent'),
+          popular: t('home.searchPopular'),
+          noRecent: t('home.searchRecentEmpty'),
+          results: t('home.searchResults'),
+          noResults: t('home.searchNoResults'),
+          hint: t('home.searchHint'),
+          close: t('common.close'),
         }}
       />
 
@@ -685,9 +976,22 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                       filterDraft?.laneMode === mode ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card'
                     )}
                   >
-                    {mode}
+                    {mode === 'air' ? t('home.modeAir') : t('home.modeSea')}
                   </button>
                 ))}
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Leaf className="h-4 w-4 text-emerald-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t('home.filterGreen')}</p>
+                    <p className="text-xs text-muted-foreground">{t('home.filterGreenHint')}</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={filterDraft?.greenLanesOnly ?? false}
+                  onCheckedChange={checked => setFilterDraft(prev => prev ? { ...prev, greenLanesOnly: checked } : prev)}
+                />
               </div>
             </div>
             <div className="space-y-3">
@@ -732,7 +1036,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
             </div>
           </div>
           <DrawerFooter className="gap-3">
-            <Button variant="ghost" className="h-11 rounded-2xl" onClick={() => { clearFilters(); setFilterOpen(false); }}>
+            <Button variant="ghost" className="h-11 rounded-2xl" onClick={() => { resetFilters(true); setFilterOpen(false); }}>
               {t('home.resetFilters')}
             </Button>
             <Button className="h-11 rounded-2xl font-semibold" onClick={handleFilterApply}>
@@ -762,7 +1066,10 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
               <button
                 key={category}
                 type="button"
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  trackEvent('category_chip_click', { category });
+                }}
                 className={cn(
                   'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm transition-colors',
                   selectedCategory === category ? 'border-primary bg-primary text-white' : 'border-border bg-card text-muted-foreground'
@@ -772,6 +1079,22 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
               </button>
             ))}
           </div>
+          {filterPills.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {filterPills.map(pill => (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={pill.onRemove}
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary"
+                  aria-label={t('home.removeFilter', { label: pill.label })}
+                >
+                  <span>{pill.label}</span>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {pullDistance > 0 && (
@@ -793,9 +1116,32 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
             <Sparkles className="mx-auto h-10 w-10 text-muted-foreground" />
             <h2 className="text-lg font-semibold">{t('home.emptyTitle')}</h2>
             <p className="text-sm text-muted-foreground">{t('home.emptySubtitle')}</p>
-            <Button variant="outline" className="rounded-2xl" onClick={clearFilters}>
-              {t('home.resetFilters')}
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              {!filters.greenLanesOnly && (
+                <Button
+                  variant="secondary"
+                  className="rounded-full px-4 py-2 text-sm"
+                  onClick={() =>
+                    setFilters(prev => {
+                      const next = { ...prev, greenLanesOnly: true };
+                      trackEvent('filter_apply', {
+                        laneMode: next.laneMode,
+                        eta: next.etaRange,
+                        price: next.priceRange,
+                        verifiedOnly: next.verifiedOnly,
+                        greenLanesOnly: next.greenLanesOnly,
+                      });
+                      return next;
+                    })
+                  }
+                >
+                  {t('home.emptyActionGreen')}
+                </Button>
+              )}
+              <Button variant="outline" className="rounded-full px-4 py-2 text-sm" onClick={() => resetFilters(true)}>
+                {t('home.emptyActionClear')}
+              </Button>
+            </div>
           </div>
         )}
 
