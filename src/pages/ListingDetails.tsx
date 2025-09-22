@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type SyntheticEvent,
 } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -54,7 +55,7 @@ import {
 } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
-import { FALLBACK_LISTINGS } from '@/components/home/HomeFeed';
+import { activateDemoMode, DEMO_PICKUPS, getDemoListingById, isDemoActive, primaryDemoListing } from '@/lib/demoMode';
 import { useI18n } from '@/context/I18nContext';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
@@ -169,25 +170,44 @@ const ListingDetails = () => {
     enabled: Boolean(id),
   });
 
-  const { data: pickups } = useQuery({
+  const {
+    data: pickupData,
+    isError: pickupError,
+    isLoading: pickupLoading,
+  } = useQuery({
     queryKey: ['pickups'],
     queryFn: fetchPickupPoints,
     staleTime: 1000 * 60 * 10,
   });
 
-  const fallbackListing = useMemo(() => {
-    if (!id) return null;
-    return FALLBACK_LISTINGS.find(item => item.id === id) ?? null;
-  }, [id]);
+  const [demoActiveState, setDemoActiveState] = useState(() => isDemoActive);
 
-  const fallbackActive = Boolean(!listingData && !isLoading && fallbackListing && (isError || listingData === undefined));
-  const listing = listingData ?? (fallbackActive ? fallbackListing : null);
+  const listingQueryResolved = Boolean(id) ? isError || listingData !== undefined : true;
+  const listingFallbackReason = !id || (!isLoading && listingQueryResolved && (isError || listingData === undefined));
+  const pickupQueryResolved = pickupError || pickupData !== undefined;
+  const pickupFallbackReason = !pickupLoading && pickupQueryResolved && (pickupError || (pickupData?.length ?? 0) === 0);
 
   useEffect(() => {
-    if (!pickups || pickups.length === 0) return;
-    if (selectedPickup) return;
-    setSelectedPickup(pickups[0]);
-  }, [pickups, selectedPickup]);
+    if (!demoActiveState && (listingFallbackReason || pickupFallbackReason)) {
+      activateDemoMode();
+      setDemoActiveState(true);
+    }
+  }, [demoActiveState, listingFallbackReason, pickupFallbackReason]);
+
+  const shouldUseDemoListing = demoActiveState || listingFallbackReason;
+  const shouldUseDemoPickups = demoActiveState || pickupFallbackReason;
+
+  const fallbackListing = useMemo(() => getDemoListingById(id) ?? primaryDemoListing, [id]);
+  const listing = shouldUseDemoListing ? fallbackListing : listingData ?? fallbackListing;
+  const pickupOptions = shouldUseDemoPickups ? DEMO_PICKUPS : pickupData ?? [];
+  const isListingLoading = isLoading && !shouldUseDemoListing;
+
+  useEffect(() => {
+    if (pickupOptions.length === 0) return;
+    if (!selectedPickup || !pickupOptions.some(point => point.id === selectedPickup.id)) {
+      setSelectedPickup(pickupOptions[0]);
+    }
+  }, [pickupOptions, selectedPickup]);
 
   useEffect(() => {
     if (!listing || viewTrackedRef.current) return;
@@ -284,22 +304,22 @@ const ListingDetails = () => {
   }, [listing, selectedPickup]);
 
   const handlePickupConfirm = useCallback(() => {
-    if (!pickups || pickups.length === 0) {
+    if (pickupOptions.length === 0) {
       setPickupSheetOpen(false);
       return;
     }
-    const next = pickups.find(point => point.id === pendingPickupId) ?? pickups[0];
+    const next = pickupOptions.find(point => point.id === pendingPickupId) ?? pickupOptions[0];
     setSelectedPickup(next);
     setPickupSheetOpen(false);
     if (listing) {
       trackEvent('pickup_select_confirm', { id: listing.id, pickupPointId: next.id });
     }
     toast({ description: `${next.name} selected.` });
-  }, [listing, pendingPickupId, pickups, toast]);
+  }, [listing, pendingPickupId, pickupOptions, toast]);
 
   const subtotal = listing ? listing.priceXAF * qty : 0;
 
-  if (isLoading) {
+  if (isListingLoading) {
     return (
       <main className="min-h-dvh bg-background px-6 py-8">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -316,7 +336,7 @@ const ListingDetails = () => {
     );
   }
 
-  if (!listing || !id) {
+  if (!listing) {
     return (
       <main className="min-h-dvh bg-background px-6 py-8">
         <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-4 text-center">
@@ -342,6 +362,10 @@ const ListingDetails = () => {
   const [origin = '', destination = '', modeRaw = ''] = listing.lane.code.split('-');
   const laneMode = modeRaw.toLowerCase() === 'air' ? 'Air' : 'Sea';
   const nearLockHint = progressPercent <= 20 && lockMeta.hoursUntilLock <= 72;
+  const handleImageError = useCallback((event: SyntheticEvent<HTMLImageElement>) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = '/placeholder.svg';
+  }, []);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -374,6 +398,8 @@ const ListingDetails = () => {
                           src={image}
                           alt={listing.title}
                           loading="lazy"
+                          decoding="async"
+                          onError={handleImageError}
                           className="h-full w-full object-cover"
                         />
                       </AspectRatio>
@@ -651,7 +677,14 @@ const ListingDetails = () => {
             <div className="mt-4 flex h-full flex-col gap-4">
               <ScrollArea className="h-full pr-1">
                 <div className="space-y-3">
-                  {(pickups ?? []).map(point => {
+                  {pickupLoading && (
+                    <div className="space-y-2">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <Skeleton key={index} className="h-16 w-full rounded-2xl" />
+                      ))}
+                    </div>
+                  )}
+                  {!pickupLoading && pickupOptions.map(point => {
                     const active = (pendingPickupId ?? selectedPickup?.id) === point.id;
                     return (
                       <button
@@ -676,7 +709,7 @@ const ListingDetails = () => {
                       </button>
                     );
                   })}
-                  {(!pickups || pickups.length === 0) && (
+                  {!pickupLoading && pickupOptions.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
                       Pickup hubs will appear here once available.
                     </div>
