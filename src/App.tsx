@@ -10,6 +10,10 @@ import NotFound from "./pages/NotFound";
 import ListingDetails from "./pages/ListingDetails";
 import { SessionProvider } from "./context/SessionContext";
 import { I18nProvider } from "./context/I18nContext";
+import Checkout from "./pages/Checkout";
+import CheckoutReturn from "./pages/CheckoutReturn";
+import MockPsp from "./pages/MockPsp";
+import OrderTracker from "./pages/OrderTracker";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +29,10 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/listings/:id" element={<ListingDetails />} />
+              <Route path="/checkout/:listingId" element={<Checkout />} />
+              <Route path="/checkout/return" element={<CheckoutReturn />} />
+              <Route path="/order/:id" element={<OrderTracker />} />
+              <Route path="/mock/psp" element={<MockPsp />} />
               <Route path="/offline" element={<Offline />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
