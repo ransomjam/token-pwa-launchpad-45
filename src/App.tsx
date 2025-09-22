@@ -23,23 +23,24 @@ const App = () => (
     <TooltipProvider>
       <I18nProvider>
         <SessionProvider>
-          <MockProvider />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/listings/:id" element={<ListingDetails />} />
-              <Route path="/checkout/:listingId" element={<Checkout />} />
-              <Route path="/checkout/return" element={<CheckoutReturn />} />
-              <Route path="/order/:id" element={<OrderTracker />} />
-              <Route path="/order/:id/qr" element={<OrderPickupQr />} />
-              <Route path="/mock/psp" element={<MockPsp />} />
-              <Route path="/offline" element={<Offline />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <MockProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/listings/:id" element={<ListingDetails />} />
+                <Route path="/checkout/:listingId" element={<Checkout />} />
+                <Route path="/checkout/return" element={<CheckoutReturn />} />
+                <Route path="/order/:id" element={<OrderTracker />} />
+                <Route path="/order/:id/qr" element={<OrderPickupQr />} />
+                <Route path="/mock/psp" element={<MockPsp />} />
+                <Route path="/offline" element={<Offline />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </MockProvider>
         </SessionProvider>
       </I18nProvider>
     </TooltipProvider>

@@ -1,18 +1,36 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
-export default function MockProvider() {
-  const [ready, setReady] = useState(false);
+type MockProviderProps = {
+  children: ReactNode;
+};
+
+export default function MockProvider({ children }: MockProviderProps) {
+  const [ready, setReady] = useState(() => !import.meta.env.DEV);
 
   useEffect(() => {
-    if (import.meta.env.DEV) {
-      import('@/mocks/browser').then(({ worker }) => {
-        worker.start({ onUnhandledRequest: 'bypass' }).then(() => setReady(true));
+    if (!import.meta.env.DEV) return;
+
+    let cancelled = false;
+
+    import('@/mocks/browser')
+      .then(({ worker }) => worker.start({ onUnhandledRequest: 'bypass' }))
+      .then(() => {
+        if (!cancelled) {
+          setReady(true);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to start mock service worker', error);
+        if (!cancelled) {
+          setReady(true);
+        }
       });
-    } else {
-      setReady(true);
-    }
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!ready) return null;
-  return null;
+  return <>{children}</>;
 }
