@@ -1,4 +1,7 @@
 [
   { "id": "usr_buyer_1", "displayName": "Nadege", "role": "buyer" },
-  { "id": "usr_imp_1", "displayName": "Nelly Stores", "role": "importer", "verified": true, "score": 92 }
+  { "id": "usr_imp_1", "displayName": "Nelly Stores", "role": "importer", "verified": true, "score": 92 },
+  { "id": "usr_imp_2", "displayName": "Brightway Imports", "role": "importer", "verified": false, "score": 74 },
+  { "id": "usr_imp_3", "displayName": "Savon Afrique", "role": "importer", "verified": true, "score": 88 },
+  { "id": "usr_imp_4", "displayName": "Logistix Hub", "role": "importer", "verified": true, "score": 81 }
 ]
