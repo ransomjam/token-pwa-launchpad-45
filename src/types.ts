@@ -39,6 +39,7 @@ export type ListingSummary = {
   buyerProtection: { escrow: boolean; autoRefundOnLate: boolean };
   category: string;
   specs: string[];
+  createdAt: string;
 };
 
 export type OrderStatus =
