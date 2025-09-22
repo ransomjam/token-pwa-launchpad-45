@@ -289,6 +289,9 @@ const translations = {
       },
       helpCta: 'Need help?',
       backHome: 'Back to listings',
+      backToListing: 'Back to listing',
+      demoFallbackTitle: 'We saved a demo journey for you',
+      demoFallbackSubtitle: 'Live order data is offline right now. Jump back to {{listing}} to keep the flow moving.',
       escrowBadge: 'Escrow protected',
       offline: {
         title: "You're offline",
@@ -582,6 +585,9 @@ const translations = {
       },
       helpCta: 'Besoin d’aide ?',
       backHome: 'Retour aux offres',
+      backToListing: 'Retour à l’offre',
+      demoFallbackTitle: 'Nous gardons la démo en mouvement',
+      demoFallbackSubtitle: 'Les données de commande sont inaccessibles. Revenez sur {{listing}} pour poursuivre le parcours.',
       escrowBadge: 'Paiement séquestré',
       offline: {
         title: 'Vous êtes hors ligne',

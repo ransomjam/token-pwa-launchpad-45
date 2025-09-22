@@ -68,10 +68,12 @@ export const ListingCard = ({
   lockCountdown,
 }: ListingCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
   const { t } = useI18n();
 
   const primaryImage = useMemo(() => listing.images[0] ?? '/placeholder.svg', [listing.images]);
+  const displayImage = imageError ? '/placeholder.svg' : primaryImage;
 
   const etaChipLabel = useMemo(
     () => t('home.etaChip', { min: listing.etaDays.min, max: listing.etaDays.max }),
@@ -82,6 +84,11 @@ export const ListingCard = ({
     () => t('home.etaChipAria', { min: listing.etaDays.min, max: listing.etaDays.max }),
     [listing.etaDays.max, listing.etaDays.min, t],
   );
+
+  useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+  }, [primaryImage]);
 
   useEffect(() => {
     preloadImage(primaryImage);
@@ -168,7 +175,7 @@ export const ListingCard = ({
       <div className="relative">
         <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-2xl bg-muted">
           <img
-            src={primaryImage}
+            src={displayImage}
             loading="lazy"
             decoding="async"
             alt={listing.title}
@@ -177,6 +184,12 @@ export const ListingCard = ({
               imageLoaded ? 'opacity-100' : 'opacity-0',
             )}
             onLoad={() => setImageLoaded(true)}
+            onError={() => {
+              if (!imageError) {
+                setImageError(true);
+                setImageLoaded(true);
+              }
+            }}
           />
           {!imageLoaded && (
             <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-muted via-muted/60 to-muted/40" aria-hidden />

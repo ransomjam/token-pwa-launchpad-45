@@ -23,6 +23,7 @@ import {
   setLastPaymentMethod,
   setLastPickupId,
 } from '@/lib/checkoutStorage';
+import { activateDemoMode, DEMO_PICKUPS, getDemoListingById, isDemoActive, primaryDemoListing } from '@/lib/demoMode';
 
 const paymentOptions: { id: CheckoutPaymentMethod; labelKey: string; hintKey: string }[] = [
   { id: 'mtn', labelKey: 'checkout.paymentOptions.mtn', hintKey: 'checkout.paymentHints.mtn' },
@@ -43,12 +44,17 @@ const Checkout = () => {
   const [policyOpen, setPolicyOpen] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [demoActive, setDemoActive] = useState(() => isDemoActive);
   const initialisedRef = useRef(false);
 
   const locationState = (location.state as CheckoutDraft | undefined) ?? undefined;
 
   useEffect(() => {
-    if (!listingId || initialisedRef.current) return;
+    if (initialisedRef.current) return;
+    if (!listingId) {
+      initialisedRef.current = true;
+      return;
+    }
     const draft = getCheckoutDraft();
     const lastPayment = getLastPaymentMethod();
     const lastPickup = getLastPickupId();
@@ -68,14 +74,14 @@ const Checkout = () => {
   }, [listingId, locationState]);
 
   useEffect(() => {
-    if (!listingId || !initialisedRef.current) return;
+    if (!initialisedRef.current) return;
     setCheckoutDraft({
-      listingId,
+      listingId: effectiveListingId,
       qty,
       pickupPointId: selectedPickupId ?? undefined,
       paymentMethod: paymentMethod ?? undefined,
     });
-  }, [listingId, qty, paymentMethod, selectedPickupId]);
+  }, [effectiveListingId, qty, paymentMethod, selectedPickupId]);
 
   useEffect(() => {
     if (selectedPickupId) {
@@ -106,9 +112,38 @@ const Checkout = () => {
     },
   });
 
-  const listing = listingQuery.data;
-  const pickups = pickupQuery.data ?? [];
-  const selectedPickup = pickups.find(point => point.id === selectedPickupId) ?? null;
+  const remoteListing = listingQuery.data;
+  const remotePickups = pickupQuery.data ?? [];
+  const listingQueryResolved = listingId ? listingQuery.isError || remoteListing !== undefined : true;
+  const listingFallbackReason = !listingId || (!listingQuery.isLoading && listingQueryResolved && (listingQuery.isError || remoteListing === undefined));
+  const pickupQueryResolved = pickupQuery.isError || pickupQuery.data !== undefined;
+  const pickupFallbackReason = !pickupQuery.isLoading && pickupQueryResolved && (pickupQuery.isError || remotePickups.length === 0);
+
+  useEffect(() => {
+    if (!demoActive && (listingFallbackReason || pickupFallbackReason)) {
+      activateDemoMode();
+      setDemoActive(true);
+    }
+  }, [demoActive, listingFallbackReason, pickupFallbackReason]);
+
+  const shouldUseDemoListing = demoActive || listingFallbackReason;
+  const shouldUseDemoPickups = demoActive || pickupFallbackReason;
+
+  const fallbackListing = getDemoListingById(listingId) ?? primaryDemoListing;
+  const listing = shouldUseDemoListing ? fallbackListing : remoteListing ?? fallbackListing;
+  const pickupOptions = shouldUseDemoPickups ? DEMO_PICKUPS : remotePickups;
+  const selectedPickup = pickupOptions.find(point => point.id === selectedPickupId) ?? null;
+  const isListingLoading = listingQuery.isLoading && !shouldUseDemoListing;
+  const isPickupLoading = pickupQuery.isLoading && !shouldUseDemoPickups;
+
+  useEffect(() => {
+    if (pickupOptions.length === 0) return;
+    if (!selectedPickupId || !pickupOptions.some(point => point.id === selectedPickupId)) {
+      setSelectedPickupId(pickupOptions[0].id);
+    }
+  }, [pickupOptions, selectedPickupId]);
+
+  const effectiveListingId = listing?.id ?? listingId ?? primaryDemoListing.id;
 
   useEffect(() => {
     if (listing) {
@@ -143,46 +178,46 @@ const Checkout = () => {
       setQty(prev => {
         const next = Math.min(5, Math.max(1, prev + delta));
         if (next !== prev) {
-          trackEvent('qty_change', { listingId, qty: next });
+          trackEvent('qty_change', { listingId: effectiveListingId, qty: next });
         }
         return next;
       });
     },
-    [listingId],
+    [effectiveListingId],
   );
 
   const handlePickupOpen = useCallback(() => {
-    if (listingId) {
-      trackEvent('pickup_open', { listingId });
+    if (effectiveListingId) {
+      trackEvent('pickup_open', { listingId: effectiveListingId });
     }
     setPickupSheetOpen(true);
-  }, [listingId]);
+  }, [effectiveListingId]);
 
   const handlePickupSelect = useCallback(
     (nextId: string) => {
       setSelectedPickupId(nextId);
       setPickupSheetOpen(false);
-      if (listingId) {
-        trackEvent('pickup_select', { listingId, pickupPointId: nextId });
+      if (effectiveListingId) {
+        trackEvent('pickup_select', { listingId: effectiveListingId, pickupPointId: nextId });
       }
-      const pickupName = pickups.find(point => point.id === nextId)?.name;
+      const pickupName = pickupOptions.find(point => point.id === nextId)?.name;
       if (pickupName) {
         toast({ description: t('checkout.pickupConfirmToast', { name: pickupName }) });
       }
     },
-    [listingId, pickups, t, toast],
+    [effectiveListingId, pickupOptions, t, toast],
   );
 
   const handlePaymentSelect = useCallback(
     (method: CheckoutPaymentMethod) => {
       setPaymentMethod(prev => {
-        if (prev !== method && listingId) {
-          trackEvent('payment_method_select', { listingId, method });
+        if (prev !== method && effectiveListingId) {
+          trackEvent('payment_method_select', { listingId: effectiveListingId, method });
         }
         return method;
       });
     },
-    [listingId],
+    [effectiveListingId],
   );
 
   const handleSubmit = useCallback(async () => {
@@ -246,8 +281,6 @@ const Checkout = () => {
     </div>
   );
 
-  const checkoutUnavailable = listingQuery.isError;
-
   return (
     <main className="min-h-dvh bg-background pb-32">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
@@ -264,7 +297,7 @@ const Checkout = () => {
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('checkout.title')}</p>
             <h1 className="text-xl font-semibold text-foreground">
-              {listing ? listing.title : <Skeleton className="h-6 w-48 rounded-full" />}
+              {isListingLoading ? <Skeleton className="h-6 w-48 rounded-full" /> : listing?.title}
             </h1>
           </div>
         </header>
@@ -287,19 +320,21 @@ const Checkout = () => {
         )}
 
         <section className="space-y-6 rounded-3xl border border-border bg-card/70 p-5 shadow-soft">
-          {checkoutUnavailable && !listing ? (
-            <div className="space-y-2">
-              <p className="text-base font-semibold text-foreground">{t('home.detailUnavailable')}</p>
-              <p className="text-sm text-muted-foreground">{t('home.detailUnavailableSubtitle')}</p>
-            </div>
+          {isListingLoading ? (
+            itemSkeleton
           ) : listing ? (
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
               <div className="w-full md:w-auto">
                 <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-2xl bg-muted">
                   <img
-                    src={listing.images[0]}
+                    src={listing.images[0] ?? '/placeholder.svg'}
                     alt={listing.title}
                     className="h-full w-full object-cover"
+                    loading="lazy"
+                    onError={event => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = '/placeholder.svg';
+                    }}
                   />
                 </AspectRatio>
               </div>
@@ -339,7 +374,10 @@ const Checkout = () => {
               </div>
             </div>
           ) : (
-            itemSkeleton
+            <div className="space-y-2">
+              <p className="text-base font-semibold text-foreground">{t('home.detailUnavailable')}</p>
+              <p className="text-sm text-muted-foreground">{t('home.detailUnavailableSubtitle')}</p>
+            </div>
           )}
         </section>
 
@@ -487,17 +525,17 @@ const Checkout = () => {
             <DrawerDescription>{t('checkout.pickupSheetSubtitle')}</DrawerDescription>
           </DrawerHeader>
           <div className="max-h-[60vh] space-y-2 overflow-y-auto px-6 pb-6">
-            {pickupQuery.isLoading && (
+            {isPickupLoading && (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <Skeleton key={index} className="h-16 w-full rounded-2xl" />
                 ))}
               </div>
             )}
-            {!pickupQuery.isLoading && pickups.length === 0 && (
+            {!isPickupLoading && pickupOptions.length === 0 && (
               <p className="text-sm text-muted-foreground">{t('checkout.emptyPickup')}</p>
             )}
-            {pickups.map(point => {
+            {!isPickupLoading && pickupOptions.map(point => {
               const active = selectedPickupId === point.id;
               return (
                 <button

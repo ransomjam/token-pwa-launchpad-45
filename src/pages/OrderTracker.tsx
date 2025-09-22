@@ -29,6 +29,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { trackEvent } from '@/lib/analytics';
+import { activateDemoMode, primaryDemoListing, primaryDemoListingId } from '@/lib/demoMode';
 import type { MilestoneCode, OrderStatus } from '@/types';
 
 type EvidenceKind = 'supplierInvoice' | 'awb';
@@ -165,6 +166,12 @@ const OrderTracker = () => {
   });
 
   const order = orderQuery.data;
+
+  useEffect(() => {
+    if (orderQuery.isError) {
+      activateDemoMode();
+    }
+  }, [orderQuery.isError]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -440,12 +447,21 @@ const OrderTracker = () => {
         )}
 
         {orderQuery.isError && !order && (
-          <div className="space-y-3 rounded-3xl border border-border bg-card/60 p-6 text-center shadow-soft">
-            <p className="text-base font-semibold text-foreground">{t('home.detailUnavailable')}</p>
-            <p className="text-sm text-muted-foreground">{t('home.detailUnavailableSubtitle')}</p>
-            <Button className="rounded-full" onClick={() => navigate('/')}>
-              {t('order.backHome')}
-            </Button>
+          <div className="space-y-4 rounded-3xl border border-amber-200 bg-amber-50/90 p-6 text-left shadow-soft">
+            <Badge variant="outline" className="rounded-full border-dashed border-amber-300 bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+              {t('home.demoData')}
+            </Badge>
+            <div className="space-y-2">
+              <p className="text-base font-semibold text-foreground">{t('order.demoFallbackTitle')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('order.demoFallbackSubtitle', { listing: primaryDemoListing.title })}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button className="rounded-full" onClick={() => navigate(`/listings/${primaryDemoListingId}`)}>
+                {t('order.backToListing')}
+              </Button>
+            </div>
           </div>
         )}
 

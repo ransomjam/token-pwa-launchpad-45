@@ -37,7 +37,8 @@ export type AppEvent =
   | 'refund_success'
   | 'dispute_open_click'
   | 'pickup_qr_open'
-  | 'evidence_open';
+  | 'evidence_open'
+  | 'demo_mode_active';
 
 export function trackEvent<T extends AppEvent>(name: T, payload?: Record<string, unknown>) {
   if (import.meta.env.DEV) {
