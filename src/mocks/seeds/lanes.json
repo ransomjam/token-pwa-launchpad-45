@@ -1,0 +1,4 @@
+[
+  { "code": "GZ-DLA-AIR", "name": "Guangzhou → Douala (Air)", "onTimePct": 0.93, "medianDays": 12, "etaDays": { "min": 10, "max": 14 }, "color": "green" },
+  { "code": "GZ-DLA-SEA", "name": "Guangzhou → Douala (Sea)", "onTimePct": 0.78, "medianDays": 28, "etaDays": { "min": 25, "max": 35 }, "color": "amber" }
+]

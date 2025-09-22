@@ -1,0 +1,4 @@
+[
+  { "id": "usr_buyer_1", "displayName": "Nadege", "role": "buyer" },
+  { "id": "usr_imp_1", "displayName": "Nelly Stores", "role": "importer", "verified": true, "score": 92 }
+]

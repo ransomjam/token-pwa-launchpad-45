@@ -1,0 +1,24 @@
+[
+  {
+    "id": "lst_123",
+    "title": "Baseus 30W Charger",
+    "priceXAF": 6500,
+    "images": ["/demo/charger1.jpg","/demo/charger2.jpg"],
+    "laneCode": "GZ-DLA-AIR",
+    "moq": { "target": 25, "committed": 18, "lockAt": "2025-10-02T18:00:00Z" },
+    "importerId": "usr_imp_1",
+    "specs": ["EU Plug", "Fast Charge", "1 Year Warranty"],
+    "createdAt": "2025-09-15T09:00:00Z"
+  },
+  {
+    "id": "lst_456",
+    "title": "Wireless Earbuds (TWS)",
+    "priceXAF": 8900,
+    "images": ["/demo/tws1.jpg","/demo/tws2.jpg"],
+    "laneCode": "GZ-DLA-AIR",
+    "moq": { "target": 30, "committed": 12, "lockAt": "2025-10-04T18:00:00Z" },
+    "importerId": "usr_imp_1",
+    "specs": ["Noise Reduction", "USB-C", "12h Battery"],
+    "createdAt": "2025-09-18T15:03:00Z"
+  }
+]

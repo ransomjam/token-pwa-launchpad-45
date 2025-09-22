@@ -1,0 +1,23 @@
+[
+  {
+    "id": "ord_001",
+    "listingId": "lst_123",
+    "buyerId": "usr_buyer_1",
+    "qty": 1,
+    "pickupPointId": "pkp_1",
+    "status": "ESCROW_HELD",
+    "milestones": [
+      { "code": "POOL_LOCKED", "at": "2025-09-28T12:00:00Z" },
+      { "code": "SUPPLIER_PAID", "at": "2025-09-29T08:00:00Z" },
+      { "code": "EXPORTED", "at": null },
+      { "code": "ARRIVED", "at": null },
+      { "code": "COLLECTED", "at": null }
+    ],
+    "deadline": "2025-10-12T23:59:59Z",
+    "escrowHeld": true,
+    "evidence": { "supplierInvoice": "/demo/inv.jpg" },
+    "canRefund": false,
+    "canDispute": true,
+    "createdAt": "2025-09-20T10:00:00Z"
+  }
+]
