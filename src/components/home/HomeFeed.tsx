@@ -28,6 +28,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/context/I18nContext';
 import { ListingCard } from './ListingCard';
 import type { ListingSummary, Session } from '@/types';
@@ -68,6 +69,79 @@ const fetchListings = async (): Promise<ListingSummary[]> => {
   const json = await response.json() as { items: ListingSummary[] };
   return json.items;
 };
+
+export const FALLBACK_LISTINGS: ListingSummary[] = [
+  {
+    id: 'demo-led-strip',
+    title: 'RGB LED Strip Lighting Kit',
+    priceXAF: 48000,
+    images: ['/images/led-strip.svg'],
+    etaDays: { min: 10, max: 14 },
+    lane: { code: 'GZ-DLA-AIR', onTimePct: 0.93, medianDays: 12 },
+    moq: { target: 200, committed: 120, lockAt: '2025-03-01T18:00:00Z' },
+    importer: { id: 'importer-aurora', displayName: 'Aurora Trading Co.', verified: true },
+    buyerProtection: { escrow: true, autoRefundOnLate: true },
+    category: 'Electronics',
+    specs: ['24V driver included', '3M adhesive backing', 'Warm-to-cool color presets'],
+    createdAt: '2024-03-05T10:00:00Z',
+  },
+  {
+    id: 'demo-shea-butter',
+    title: 'Shea Butter Wholesale Packs',
+    priceXAF: 32500,
+    images: ['/images/shea-butter.svg'],
+    etaDays: { min: 18, max: 24 },
+    lane: { code: 'GZ-DLA-SEA', onTimePct: 0.82, medianDays: 28 },
+    moq: { target: 150, committed: 90, lockAt: '2025-02-18T09:00:00Z' },
+    importer: { id: 'importer-eko', displayName: 'Eko Beauty Collective', verified: true },
+    buyerProtection: { escrow: true, autoRefundOnLate: true },
+    category: 'Beauty & Wellness',
+    specs: ['Grade A unrefined', 'Packed in 5kg tubs', 'Women-led cooperative supply'],
+    createdAt: '2024-02-20T08:00:00Z',
+  },
+  {
+    id: 'demo-power-bank',
+    title: '20,000mAh Dual USB Power Bank',
+    priceXAF: 41500,
+    images: ['/images/power-bank.svg'],
+    etaDays: { min: 12, max: 16 },
+    lane: { code: 'HKG-DLA-AIR', onTimePct: 0.91, medianDays: 11 },
+    moq: { target: 180, committed: 140, lockAt: '2025-01-28T16:00:00Z' },
+    importer: { id: 'importer-volt', displayName: 'VoltBridge Logistics', verified: true },
+    buyerProtection: { escrow: true, autoRefundOnLate: true },
+    category: 'Accessories',
+    specs: ['Qualcomm QC 3.0 ready', 'Aluminum alloy housing', 'Type-C + dual USB-A outputs'],
+    createdAt: '2024-03-18T12:30:00Z',
+  },
+  {
+    id: 'demo-baby-bibs',
+    title: 'Organic Cotton Baby Bibs (10-pack)',
+    priceXAF: 28500,
+    images: ['/images/baby-bibs.svg'],
+    etaDays: { min: 20, max: 27 },
+    lane: { code: 'SH-DLA-SEA', onTimePct: 0.78, medianDays: 32 },
+    moq: { target: 120, committed: 72, lockAt: '2025-02-05T11:30:00Z' },
+    importer: { id: 'importer-little', displayName: 'Little Sprout Imports', verified: false },
+    buyerProtection: { escrow: true, autoRefundOnLate: true },
+    category: 'Kids & Baby',
+    specs: ['GOTS-certified cotton', 'Adjustable snap closure', 'Mixed pastel palette'],
+    createdAt: '2024-01-30T09:45:00Z',
+  },
+  {
+    id: 'demo-hair-clippers',
+    title: 'Pro Groom Hair Clippers Set',
+    priceXAF: 56000,
+    images: ['/images/hair-clippers.svg'],
+    etaDays: { min: 14, max: 18 },
+    lane: { code: 'GZ-DLA-AIR', onTimePct: 0.9, medianDays: 12 },
+    moq: { target: 160, committed: 110, lockAt: '2025-03-10T14:00:00Z' },
+    importer: { id: 'importer-trim', displayName: 'TrimLine Exports', verified: true },
+    buyerProtection: { escrow: true, autoRefundOnLate: true },
+    category: 'Grooming',
+    specs: ['Cordless lithium battery', 'Ceramic guard blades', 'Includes 6 guide combs'],
+    createdAt: '2024-03-22T07:15:00Z',
+  },
+];
 
 const ListingSkeleton = () => (
   <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-soft">
@@ -379,6 +453,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   const [deferredSections, setDeferredSections] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [usingFallback, setUsingFallback] = useState(false);
 
   const hasInitializedFilters = useRef(false);
   const pullDistanceRef = useRef(0);
@@ -414,19 +489,33 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     [t],
   );
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['listings'],
     queryFn: fetchListings,
     staleTime: 1000 * 60,
   });
 
+  const remoteListings = data ?? [];
+  const shouldActivateFallback = !isLoading && remoteListings.length === 0 && (isError || data !== undefined);
+
+  useEffect(() => {
+    if (remoteListings.length > 0) {
+      setUsingFallback(false);
+      return;
+    }
+    if (shouldActivateFallback) {
+      setUsingFallback(true);
+    }
+  }, [remoteListings.length, shouldActivateFallback]);
+
+  const fallbackActive = usingFallback || shouldActivateFallback;
+  const allListings = remoteListings.length > 0 ? remoteListings : fallbackActive ? FALLBACK_LISTINGS : [];
+
   useEffect(() => {
     setDeferredSections(false);
     const timer = window.setTimeout(() => setDeferredSections(true), 260);
     return () => window.clearTimeout(timer);
-  }, [data]);
-
-  const allListings = data ?? [];
+  }, [data, fallbackActive]);
 
   useEffect(() => {
     if (!allListings.length) return;
@@ -1061,6 +1150,13 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
               {languageNames[locale]} • {t('home.resultsCount', { count: filteredListings.length })}
             </span>
           </div>
+          {fallbackActive && (
+            <div className="mt-2">
+              <Badge variant="outline" className="rounded-full border-dashed border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                {t('home.demoData')}
+              </Badge>
+            </div>
+          )}
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {categories.map(category => (
               <button
@@ -1145,7 +1241,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
           </div>
         )}
 
-        {isError && (
+        {isError && !fallbackActive && remoteListings.length === 0 && (
           <div className="flex items-center justify-between rounded-2xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             <span>{t('home.errorBanner')}</span>
             <Button size="sm" variant="outline" className="rounded-full" onClick={() => refetch()}>

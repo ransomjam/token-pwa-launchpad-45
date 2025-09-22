@@ -12,6 +12,7 @@ import type { ListingSummary } from '@/types';
 import { useI18n } from '@/context/I18nContext';
 import { languageNames } from '@/components/shell/AccountControls';
 import { trackEvent } from '@/lib/analytics';
+import { FALLBACK_LISTINGS } from '@/components/home/HomeFeed';
 
 const laneTone = (pct: number) => {
   if (pct >= 0.9) return 'green' as const;
@@ -45,6 +46,14 @@ const ListingDetails = () => {
     queryFn: () => fetchListingById(id!),
     enabled: Boolean(id),
   });
+
+  const fallbackListing = useMemo(() => {
+    if (!id) return null;
+    return FALLBACK_LISTINGS.find(item => item.id === id) ?? null;
+  }, [id]);
+
+  const fallbackActive = Boolean(!data && !isLoading && fallbackListing && (isError || data === undefined));
+  const listing = data ?? (fallbackActive ? fallbackListing : null);
 
   const priceFormatter = useMemo(() => {
     const localeKey = locale === 'fr' ? 'fr-CM' : 'en-US';
@@ -114,7 +123,7 @@ const ListingDetails = () => {
     );
   }
 
-  if (isError || !data || !id) {
+  if (!listing || !id) {
     return (
       <main className="min-h-dvh bg-background px-6 py-8">
         <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-4 text-center">
@@ -126,22 +135,22 @@ const ListingDetails = () => {
     );
   }
 
-  const etaLabel = t('home.etaChip', { min: data.etaDays.min, max: data.etaDays.max });
-  const etaAria = t('home.etaChipAria', { min: data.etaDays.min, max: data.etaDays.max });
-  const [origin = '', destination = '', modeRaw = ''] = data.lane.code.split('-');
+  const etaLabel = t('home.etaChip', { min: listing.etaDays.min, max: listing.etaDays.max });
+  const etaAria = t('home.etaChipAria', { min: listing.etaDays.min, max: listing.etaDays.max });
+  const [origin = '', destination = '', modeRaw = ''] = listing.lane.code.split('-');
   const modeLabel = modeRaw.toLowerCase() === 'air' ? t('home.modeAir') : t('home.modeSea');
   const laneLabel = t('home.laneLabel', {
     origin,
     destination,
     mode: modeLabel,
-    pct: Math.round(data.lane.onTimePct * 100),
+    pct: Math.round(listing.lane.onTimePct * 100),
   });
-  const laneVariant = laneTone(data.lane.onTimePct);
+  const laneVariant = laneTone(listing.lane.onTimePct);
   const LaneIcon = laneVariant === 'green' ? CheckCircle2 : laneVariant === 'amber' ? AlertTriangle : XCircle;
 
-  const progress = Math.min(100, Math.round((data.moq.committed / data.moq.target) * 100));
-  const moqLabel = t('home.moqLabel', { value: data.moq.target });
-  const moqLocked = t('home.moqLocked', { committed: data.moq.committed, target: data.moq.target });
+  const progress = Math.min(100, Math.round((listing.moq.committed / listing.moq.target) * 100));
+  const moqLabel = t('home.moqLabel', { value: listing.moq.target });
+  const moqLocked = t('home.moqLocked', { committed: listing.moq.committed, target: listing.moq.target });
   const progressAria = t('home.moqProgressAria', { percent: progress });
 
   return (
@@ -154,13 +163,13 @@ const ListingDetails = () => {
           </Button>
           <div className="flex flex-col">
             <span className="text-xs font-semibold uppercase text-primary/80">{languageNames[locale]}</span>
-            <h1 className="text-xl font-semibold text-foreground">{data.title}</h1>
+            <h1 className="text-xl font-semibold text-foreground">{listing.title}</h1>
           </div>
         </header>
 
         <div className="space-y-4">
           <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-3xl bg-muted">
-            <img src={data.images[0]} alt={data.title} className="h-full w-full object-cover" loading="lazy" />
+            <img src={listing.images[0]} alt={listing.title} className="h-full w-full object-cover" loading="lazy" />
           </AspectRatio>
           <div className="flex flex-wrap gap-2">
             <span
@@ -180,11 +189,11 @@ const ListingDetails = () => {
         <section className="space-y-4 rounded-3xl border border-border bg-card p-5 shadow-soft">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-foreground">{data.title}</h2>
+              <h2 className="text-lg font-semibold text-foreground">{listing.title}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Store className="h-4 w-4" />
-                <span>{data.importer.displayName}</span>
-                {data.importer.verified && (
+                <span>{listing.importer.displayName}</span>
+                {listing.importer.verified && (
                   <Badge variant="outline" className="rounded-full border-emerald-300 bg-emerald-50 text-emerald-700">
                     {t('dashboard.importerStatusVerified')}
                   </Badge>
@@ -192,7 +201,7 @@ const ListingDetails = () => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-foreground">{priceFormatter.format(data.priceXAF)}</p>
+              <p className="text-2xl font-bold text-foreground">{priceFormatter.format(listing.priceXAF)}</p>
               <p className="text-xs text-muted-foreground">{moqLabel}</p>
             </div>
           </div>
@@ -200,7 +209,7 @@ const ListingDetails = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
               <span>{moqLocked}</span>
-              <span>{formatLockCountdown(data.moq.lockAt)}</span>
+              <span>{formatLockCountdown(listing.moq.lockAt)}</span>
             </div>
             <Progress value={progress} aria-label={progressAria} />
           </div>
@@ -211,26 +220,26 @@ const ListingDetails = () => {
           </div>
 
           <div className="flex flex-wrap gap-3 pt-2">
-            <Button className="flex-1 rounded-2xl py-2 text-base font-semibold" onClick={() => trackEvent('listing_card_click', { id: data.id, position: 'detail' })}>
+            <Button className="flex-1 rounded-2xl py-2 text-base font-semibold" onClick={() => trackEvent('listing_card_click', { id: listing.id, position: 'detail' })}>
               {t('home.preorder')}
             </Button>
             <Button
               type="button"
               variant="secondary"
               className="h-12 w-12 rounded-2xl border border-border"
-              onClick={() => handleShare(data)}
-              aria-label={t('home.shareWhatsapp', { title: data.title })}
+              onClick={() => handleShare(listing)}
+              aria-label={t('home.shareWhatsapp', { title: listing.title })}
             >
               <MessageCircle className="h-5 w-5" />
             </Button>
           </div>
         </section>
 
-        {data.specs.length > 0 && (
+        {listing.specs.length > 0 && (
           <section className="space-y-3 rounded-3xl border border-border bg-card p-5 shadow-soft">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t('home.keySpecs')}</h2>
             <ul className="grid gap-2 text-sm text-foreground">
-              {data.specs.map(spec => (
+              {listing.specs.map(spec => (
                 <li key={spec} className="rounded-2xl bg-muted px-3 py-2 text-muted-foreground">{spec}</li>
               ))}
             </ul>
