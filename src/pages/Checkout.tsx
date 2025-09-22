@@ -74,16 +74,6 @@ const Checkout = () => {
   }, [listingId, locationState]);
 
   useEffect(() => {
-    if (!initialisedRef.current) return;
-    setCheckoutDraft({
-      listingId: effectiveListingId,
-      qty,
-      pickupPointId: selectedPickupId ?? undefined,
-      paymentMethod: paymentMethod ?? undefined,
-    });
-  }, [effectiveListingId, qty, paymentMethod, selectedPickupId]);
-
-  useEffect(() => {
     if (selectedPickupId) {
       setLastPickupId(selectedPickupId);
     }
@@ -144,6 +134,16 @@ const Checkout = () => {
   }, [pickupOptions, selectedPickupId]);
 
   const effectiveListingId = listing?.id ?? listingId ?? primaryDemoListing.id;
+
+  useEffect(() => {
+    if (!initialisedRef.current) return;
+    setCheckoutDraft({
+      listingId: effectiveListingId,
+      qty,
+      pickupPointId: selectedPickupId ?? undefined,
+      paymentMethod: paymentMethod ?? undefined,
+    });
+  }, [effectiveListingId, qty, paymentMethod, selectedPickupId]);
 
   useEffect(() => {
     if (listing) {
