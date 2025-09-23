@@ -12,9 +12,10 @@ import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from '@/components/ui/use-toast';
+import ShareSheet from '@/components/share/ShareSheet';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
+import { ensureAbsoluteUrl, type StoreShareContent } from '@/lib/share';
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertTriangle,
@@ -204,6 +205,7 @@ const PublicImporterProfile = () => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [showAllListings, setShowAllListings] = useState(false);
   const [openMetric, setOpenMetric] = useState<MetricId | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     trackEvent('imp_public_profile_view', { importerId: profile.id });
@@ -264,6 +266,30 @@ const PublicImporterProfile = () => {
   const canToggleListings = filteredListings.length > 3;
   const usingSampleListings = filteredListings.length > 0 && filteredListings.every(listing => listing.isSample);
 
+  const shareContent = useMemo<StoreShareContent>(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const absoluteOrigin = ensureAbsoluteUrl(origin);
+    const trimmedOrigin = absoluteOrigin.endsWith('/') ? absoluteOrigin.slice(0, -1) : absoluteOrigin;
+    const longUrl = ensureAbsoluteUrl(profile.shareUrl);
+    return {
+      id: profile.id,
+      storeName: profile.storeName,
+      avatarInitials: profile.avatarInitials,
+      onTimePct: performance.onTimePct,
+      disputePct: performance.disputeRatePct,
+      shareUrls: {
+        short: `${trimmedOrigin}/s/${profile.id}`,
+        long: longUrl,
+      },
+      isDemo: usingSampleListings,
+    };
+  }, [performance.disputeRatePct, performance.onTimePct, profile.avatarInitials, profile.id, profile.shareUrl, profile.storeName, usingSampleListings]);
+
+  const openShareSheet = useCallback(() => {
+    trackEvent('imp_public_profile_share_click', { importerId: profile.id, channel: 'sheet' });
+    setShareOpen(true);
+  }, [profile.id]);
+
   const metricsConfig = useMemo<MetricDefinition[]>(() => {
     const onTimeTone = reliabilityTone(performance.onTimePct);
     const onTimeDisplay = formatPercent(performance.onTimePct);
@@ -305,32 +331,6 @@ const PublicImporterProfile = () => {
       },
     ];
   }, [performance.disputeRatePct, performance.onTimePct, performance.ordersFulfilledLabel, performance.responseTimeLabel, t]);
-
-  const copyShareLink = useCallback(async () => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(profile.shareUrl);
-        toast({ title: t('publicProfile.shareToast') });
-        return;
-      }
-      throw new Error('Clipboard API unavailable');
-    } catch (error) {
-      toast({ title: t('publicProfile.shareFallbackTitle'), description: profile.shareUrl });
-    }
-  }, [profile.shareUrl, t]);
-
-  const handleShareCopy = useCallback(async () => {
-    trackEvent('imp_public_profile_share_click', { importerId: profile.id, channel: 'copy' });
-    await copyShareLink();
-  }, [copyShareLink, profile.id]);
-
-  const handleWhatsAppShare = useCallback(() => {
-    trackEvent('imp_public_profile_share_click', { importerId: profile.id, channel: 'whatsapp' });
-    const message = t('publicProfile.shareMessage', { store: profile.storeName, url: profile.shareUrl });
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    toast({ title: t('publicProfile.shareWhatsappToast') });
-  }, [profile.id, profile.shareUrl, profile.storeName, t]);
 
   const handleCategorySelect = useCallback(
     (categoryId: string) => {
@@ -423,7 +423,7 @@ const PublicImporterProfile = () => {
             <div className="flex items-center gap-3">
               <Button
                 type="button"
-                onClick={handleShareCopy}
+                onClick={openShareSheet}
                 className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90"
               >
                 <Share2 className="h-4 w-4" aria-hidden />
@@ -434,7 +434,7 @@ const PublicImporterProfile = () => {
                 variant="secondary"
                 size="icon"
                 aria-label={t('publicProfile.shareWhatsapp')}
-                onClick={handleWhatsAppShare}
+                onClick={openShareSheet}
                 className="rounded-full bg-card/80 shadow-soft"
               >
                 <MessageCircle className="h-4 w-4" aria-hidden />
@@ -589,7 +589,7 @@ const PublicImporterProfile = () => {
               <p className="max-w-sm text-sm text-muted-foreground">{t('publicProfile.listings.emptyBody')}</p>
               <Button
                 type="button"
-                onClick={handleShareCopy}
+                onClick={openShareSheet}
                 className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90"
               >
                 {t('publicProfile.listings.shareCta')}
@@ -667,7 +667,7 @@ const PublicImporterProfile = () => {
         <footer className="mt-auto flex flex-col gap-4 rounded-3xl border border-border/70 bg-card/90 p-6 shadow-soft sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
-            onClick={handleShareCopy}
+            onClick={openShareSheet}
             className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90"
           >
             <Share2 className="h-4 w-4" aria-hidden />
@@ -689,6 +689,7 @@ const PublicImporterProfile = () => {
             </a>
           </div>
         </footer>
+        <ShareSheet open={shareOpen} onOpenChange={setShareOpen} context="store" data={shareContent} />
       </div>
     </main>
   );

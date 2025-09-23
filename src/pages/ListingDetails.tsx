@@ -55,10 +55,12 @@ import {
 } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
+import ShareSheet from '@/components/share/ShareSheet';
 import { activateDemoMode, DEMO_PICKUPS, getDemoListingById, isDemoActive, primaryDemoListing } from '@/lib/demoMode';
 import { useI18n } from '@/context/I18nContext';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
+import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
 import type { ListingSummary, PickupPoint } from '@/types';
 
 const laneTone = (pct: number) => {
@@ -139,8 +141,6 @@ const formatLockMeta = (iso: string) => {
 
 const formatEtaChip = (min: number, max: number) => `${min}–${max} days`;
 
-const formatSharePrice = (value: number) => value.toLocaleString('en-US');
-
 const ListingDetails = () => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -157,6 +157,7 @@ const ListingDetails = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showStickyCta, setShowStickyCta] = useState(false);
   const [importerModalOpen, setImporterModalOpen] = useState(false);
+  const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
   const viewTrackedRef = useRef(false);
 
@@ -201,6 +202,30 @@ const ListingDetails = () => {
   const listing = shouldUseDemoListing ? fallbackListing : listingData ?? fallbackListing;
   const pickupOptions = shouldUseDemoPickups ? DEMO_PICKUPS : pickupData ?? [];
   const isListingLoading = isLoading && !shouldUseDemoListing;
+
+  const shareContent = useMemo<ListingShareContent | null>(() => {
+    if (!listing) return null;
+    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const absoluteOrigin = ensureAbsoluteUrl(origin);
+    const trimmedOrigin = absoluteOrigin.endsWith('/') ? absoluteOrigin.slice(0, -1) : absoluteOrigin;
+    return {
+      id: listing.id,
+      title: listing.title,
+      priceXAF: listing.priceXAF,
+      etaMin: listing.etaDays.min,
+      etaMax: listing.etaDays.max,
+      laneCode: listing.lane.code,
+      onTimePct: listing.lane.onTimePct * 100,
+      committed: listing.moq.committed,
+      target: listing.moq.target,
+      image: listing.images[0] ?? '/placeholder.svg',
+      shareUrls: {
+        short: `${trimmedOrigin}/l/${listing.id}`,
+        long: `${trimmedOrigin}/listings/${listing.id}`,
+      },
+      isDemo: shouldUseDemoListing,
+    };
+  }, [listing, shouldUseDemoListing]);
 
   useEffect(() => {
     if (pickupOptions.length === 0) return;
@@ -250,26 +275,6 @@ const ListingDetails = () => {
       maximumFractionDigits: 0,
     });
   }, [locale]);
-
-  const handleShare = useCallback(
-    (item: ListingSummary) => {
-      if (typeof window === 'undefined') return;
-      const shareUrl = `${window.location.origin}/listings/${item.id}`;
-      const message = `ProList Mini • ${item.title} • ${formatSharePrice(item.priceXAF)} XAF • ETA ${item.etaDays.min}–${item.etaDays.max} days → ${shareUrl}`;
-      trackEvent('share_click', { id: item.id, channel: 'whatsapp' });
-      const encoded = encodeURIComponent(message);
-      const whatsappUrl = `https://wa.me/?text=${encoded}`;
-      const opened = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-      if (!opened) {
-        navigator.clipboard?.writeText(message)
-          .then(() => toast({ description: 'Message copied. Paste into WhatsApp.' }))
-          .catch(() => toast({ description: 'Unable to launch WhatsApp. Message copied to clipboard.', variant: 'destructive' }));
-      } else {
-        toast({ description: 'Opening WhatsApp…' });
-      }
-    },
-    [toast],
-  );
 
   const handleQtyChange = useCallback(
     (delta: number) => {
@@ -532,7 +537,7 @@ const ListingDetails = () => {
                       variant="ghost"
                       className="h-12 w-12 rounded-full border"
                       aria-label="Share"
-                      onClick={() => handleShare(listing)}
+                      onClick={() => setShareSheetOpen(true)}
                     >
                       <MessageCircle className="h-5 w-5" />
                     </Button>
@@ -731,6 +736,12 @@ const ListingDetails = () => {
             </div>
           </SheetContent>
         </Sheet>
+        <ShareSheet
+          open={shareSheetOpen}
+          onOpenChange={setShareSheetOpen}
+          context="listing"
+          data={shareContent}
+        />
       </main>
     </TooltipProvider>
   );

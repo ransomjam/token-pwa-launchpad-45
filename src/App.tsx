@@ -18,6 +18,7 @@ import OrderPickupQr from "./pages/OrderPickupQr";
 import CreateListingWizard from "./pages/CreateListingWizard";
 import Profile from "./pages/Profile";
 import PublicImporterProfile from "./pages/PublicImporterProfile";
+import ShareRedirect from "./pages/ShareRedirect";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,8 @@ const App = () => (
                 <Route path="/importer/create" element={<CreateListingWizard />} />
                 <Route path="/account" element={<Profile />} />
                 <Route path="/importers/:id/profile" element={<PublicImporterProfile />} />
+                <Route path="/l/:id" element={<ShareRedirect context="listing" />} />
+                <Route path="/s/:id" element={<ShareRedirect context="store" />} />
                 <Route path="/mock/psp" element={<MockPsp />} />
                 <Route path="/offline" element={<Offline />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

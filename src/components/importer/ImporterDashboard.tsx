@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import type { JSX } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Share2, UploadCloud, Users, Loader2, AlertCircle, Copy, Send, FileText, PackageCheck } from 'lucide-react';
+import { Share2, UploadCloud, Users, Loader2, AlertCircle, FileText, PackageCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -36,6 +35,8 @@ import {
   toImporterListing,
   committedRatio,
 } from '@/lib/importerDashboard';
+import ShareSheet from '@/components/share/ShareSheet';
+import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
 import type { ListingSummary, Session } from '@/types';
 
 const fetchImporterListings = async (): Promise<ListingSummary[]> => {
@@ -84,15 +85,6 @@ function formatPrice(value: number, locale: string) {
   });
   const formatted = formatter.format(value).replace(/\u00A0/g, '\u202F');
   return `XAF ${formatted}`;
-}
-
-function shareSnippet(listing: ImporterListing, locale: string) {
-  const locksText = locksInCopy(listing.moq.lockAt, locale);
-  return `${listing.title}\n${formatPrice(listing.priceXAF, locale)} • ${listing.moq.committed}/${listing.moq.target}\n${locksText} • ${listing.lane.label}\nProtected by Escrow • Auto-refund if late`;
-}
-
-function shareSnippetFr(listing: ImporterListing) {
-  return `${listing.title}\n${formatPrice(listing.priceXAF, 'fr')} • ${listing.moq.committed}/${listing.moq.target}\n${locksInCopy(listing.moq.lockAt, 'fr')} • ${listing.lane.label}\nPaiement séquestré • Remboursement automatique en cas de retard`;
 }
 
 const buyerNames = ['Fabrice N.', 'Stéphanie K.', 'Roland T.', 'Claudia M.', 'Yannick P.', 'Amina B.'];
@@ -148,6 +140,30 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
 
   const shouldUseDemo = (isError || !data || data.length === 0) && !isDemoActive;
   const fallbackActive = shouldUseDemo || isDemoActive;
+
+  const shareContent = useMemo<ListingShareContent | null>(() => {
+    if (!shareListing) return null;
+    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const absoluteOrigin = ensureAbsoluteUrl(origin);
+    const trimmedOrigin = absoluteOrigin.endsWith('/') ? absoluteOrigin.slice(0, -1) : absoluteOrigin;
+    return {
+      id: shareListing.id,
+      title: shareListing.title,
+      priceXAF: shareListing.priceXAF,
+      etaMin: shareListing.etaDays.min,
+      etaMax: shareListing.etaDays.max,
+      laneCode: shareListing.lane.code,
+      onTimePct: shareListing.lane.onTimePct * 100,
+      committed: shareListing.moq.committed,
+      target: shareListing.moq.target,
+      image: shareListing.image,
+      shareUrls: {
+        short: `${trimmedOrigin}/l/${shareListing.id}`,
+        long: `${trimmedOrigin}/listings/${shareListing.id}`,
+      },
+      isDemo: fallbackActive,
+    };
+  }, [fallbackActive, shareListing]);
 
   useEffect(() => {
     if (fallbackActive) {
@@ -420,56 +436,17 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
         )}
       </section>
 
-      <Sheet open={shareOpen} onOpenChange={setShareOpen}>
-        <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl">
-          <SheetHeader className="text-left">
-            <SheetTitle>{t('importerDashboard.shareTitle')}</SheetTitle>
-            <SheetDescription>{t('importerDashboard.shareSubtitle')}</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 flex flex-1 flex-col gap-4">
-            {shareListing && (
-              <>
-                <div className="rounded-2xl border bg-muted/40 p-4 text-sm leading-relaxed">
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-foreground">
-                    {locale === 'fr' ? shareSnippetFr(shareListing) : shareSnippet(shareListing, locale)}
-                  </pre>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Button
-                    className="h-12 rounded-full"
-                    onClick={() => {
-                      const text = locale === 'fr' ? shareSnippetFr(shareListing) : shareSnippet(shareListing, locale);
-                      const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
-                      window.open(wa, '_blank', 'noopener,noreferrer');
-                      toast(t('importerDashboard.shareWhatsappToast'));
-                    }}
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    WhatsApp
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-12 rounded-full"
-                    onClick={async () => {
-                      try {
-                        const text = locale === 'fr' ? shareSnippetFr(shareListing) : shareSnippet(shareListing, locale);
-                        await navigator.clipboard.writeText(text);
-                        toast.success(t('importerDashboard.shareCopied'));
-                      } catch (error) {
-                        console.error(error);
-                        toast.error(t('importerDashboard.shareCopyError'));
-                      }
-                    }}
-                  >
-                    <Copy className="mr-2 h-4 w-4" />
-                    {t('importerDashboard.copyLabel')}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ShareSheet
+        open={shareOpen}
+        onOpenChange={next => {
+          setShareOpen(next);
+          if (!next) {
+            setShareListing(null);
+          }
+        }}
+        context="listing"
+        data={shareContent}
+      />
 
       <Sheet open={evidenceOpen} onOpenChange={setEvidenceOpen}>
         <SheetContent side="bottom" className="h-[75vh] rounded-t-3xl">
