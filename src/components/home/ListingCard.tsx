@@ -13,9 +13,11 @@ import {
   ShieldCheck,
   XCircle,
   CheckCheck,
+  ArrowUpRight,
 } from 'lucide-react';
 import { useIntersectionOnce } from '@/hooks/use-intersection-once';
 import { useI18n } from '@/context/I18nContext';
+import { useNavigate } from 'react-router-dom';
 
 const laneBadgeStyles = {
   green: {
@@ -71,6 +73,7 @@ export const ListingCard = ({
   const [imageError, setImageError] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
   const { t } = useI18n();
+  const navigate = useNavigate();
 
   const primaryImage = useMemo(() => listing.images[0] ?? '/placeholder.svg', [listing.images]);
   const displayImage = imageError ? '/placeholder.svg' : primaryImage;
@@ -166,6 +169,11 @@ export const ListingCard = ({
     onShare(listing);
   };
 
+  const handleImporterProfile = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    navigate(`/importers/${listing.importer.id}/profile`);
+  };
+
   return (
     <article
       ref={viewRef}
@@ -235,6 +243,18 @@ export const ListingCard = ({
                   {t('home.verifiedImporter')}
                 </span>
               )}
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={handleImporterProfile}
+                className="inline-flex items-center gap-1 rounded-full bg-muted/70 px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                <span className="truncate">
+                  {t('home.importerByline', { name: listing.importer.displayName })}
+                </span>
+                <ArrowUpRight className="h-3 w-3" />
+              </button>
             </div>
           </div>
           <div className="text-right">

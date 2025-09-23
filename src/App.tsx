@@ -16,6 +16,8 @@ import MockPsp from "./pages/MockPsp";
 import OrderTracker from "./pages/OrderTracker";
 import OrderPickupQr from "./pages/OrderPickupQr";
 import CreateListingWizard from "./pages/CreateListingWizard";
+import Profile from "./pages/Profile";
+import PublicImporterProfile from "./pages/PublicImporterProfile";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => (
                 <Route path="/order/:id" element={<OrderTracker />} />
                 <Route path="/order/:id/qr" element={<OrderPickupQr />} />
                 <Route path="/importer/create" element={<CreateListingWizard />} />
+                <Route path="/account" element={<Profile />} />
+                <Route path="/importers/:id/profile" element={<PublicImporterProfile />} />
                 <Route path="/mock/psp" element={<MockPsp />} />
                 <Route path="/offline" element={<Offline />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

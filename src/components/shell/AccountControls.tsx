@@ -6,6 +6,7 @@ import { useI18n } from '@/context/I18nContext';
 import { useSession } from '@/context/SessionContext';
 import type { Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,6 +100,7 @@ export const AccountSheet = ({ session }: { session: Session }) => {
   const { t, locale } = useI18n();
   const { updateSession } = useSession();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleRoleChange = (role: Role) => {
     if (session.role === role) return;
@@ -124,6 +126,18 @@ export const AccountSheet = ({ session }: { session: Session }) => {
           <SheetTitle>{t('common.account')}</SheetTitle>
           <SheetDescription>{session.contact}</SheetDescription>
         </SheetHeader>
+
+        <Button
+          variant="outline"
+          className="w-full justify-between rounded-2xl border-primary/60 text-sm font-semibold text-primary"
+          onClick={() => {
+            setOpen(false);
+            navigate('/account');
+          }}
+        >
+          <span>{t('profile.viewProfile')}</span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
 
         <section className="space-y-3">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
