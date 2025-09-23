@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import PublicImporterProfile from "./pages/PublicImporterProfile";
 import ShareRedirect from "./pages/ShareRedirect";
 import RefundPolicy from "./pages/RefundPolicy";
+import BuyerOrders from "./pages/BuyerOrders";
 
 const queryClient = new QueryClient();
 const rawBaseUrl = import.meta.env.BASE_URL ?? "/";
@@ -41,6 +42,7 @@ const App = () => (
                 <Route path="/checkout/return" element={<CheckoutReturn />} />
                 <Route path="/order/:id" element={<OrderTracker />} />
                 <Route path="/order/:id/qr" element={<OrderPickupQr />} />
+                <Route path="/orders" element={<BuyerOrders />} />
                 <Route path="/importer/create" element={<CreateListingWizard />} />
                 <Route path="/account" element={<Profile />} />
                 <Route path="/importers/:id/profile" element={<PublicImporterProfile />} />
