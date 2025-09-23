@@ -401,7 +401,7 @@ const OrderTracker = () => {
                     <button
                       type="button"
                       className="text-xs font-medium text-primary underline-offset-4 transition hover:underline"
-                      onClick={() => window.open('/#refund-policy', '_blank')}
+                      onClick={() => window.open(`/policy/refunds?orderId=${id ?? ''}&source=order`, '_blank')}
                     >
                       {t('order.viewRefundPolicy')}
                     </button>

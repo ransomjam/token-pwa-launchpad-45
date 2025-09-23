@@ -700,6 +700,128 @@ const translations = {
       },
       refreshManual: 'Refresh',
     },
+    refundPolicyPage: {
+      title: 'Buyer Protection & Refunds',
+      trustLine: 'Protected by Escrow • Auto-refund if late.',
+      hero: {
+        subtitle: 'Clear answers for your order in one screen.',
+        fallbackTitle: 'Escrow keeps your payment safe.',
+        fallbackBody: 'Review each scenario below to know exactly when refunds trigger.',
+        orderLabel: 'Order {{id}}',
+        activeOrder: 'Active order',
+        statusCountdown: 'Auto-refund in {{time}}',
+        statusLate: 'Eligible for auto-refund now',
+        statusRefunded: 'Refund issued',
+        timerHint: 'Timer starts at Pool Locked',
+        missingOrder: 'No active order detected — showing the demo policy.',
+        viewOrder: 'View order',
+      },
+      chips: {
+        late: 'Late delivery',
+        moq: 'Pool not locked',
+        nas: 'Not as described',
+      },
+      eligibility: {
+        title: 'Am I eligible?',
+        badges: {
+          late: 'Typically <24h',
+          moq: 'Instant',
+          nas: '≤72h',
+        },
+        tiles: {
+          late: {
+            label: 'Late delivery',
+            rule: 'Auto-refund if your order hasn’t arrived when the countdown ends.',
+            micro: 'The timer starts when the pool locks.',
+            cta: 'Request refund',
+            howItWorks: 'How it works',
+            disabledReason: 'Available when timer ends.',
+            joinPoolReason: 'Join a pool to access refunds.',
+            refundedReason: 'Already refunded.',
+          },
+          moq: {
+            label: 'Pool not locked',
+            rule: 'Automatic refund if the pool misses MOQ at lock time.',
+            micro: 'We send it back automatically—no action needed.',
+            howItWorks: 'How it works',
+          },
+          nas: {
+            label: 'Not as described',
+            rule: 'Open a dispute within 72h of pickup with photos or video.',
+            micro: 'We help you resolve or refund.',
+            cta: 'Open dispute',
+            howItWorks: 'How it works',
+          },
+        },
+      },
+      timeline: {
+        title: 'Timelines',
+        start: {
+          label: 'Timer starts',
+          detail: 'At Pool Locked',
+        },
+        duration: {
+          label: 'How long',
+          eta: '{{min}}–{{max}} days',
+        },
+        atZero: {
+          label: 'At zero',
+          detail: 'If not Arrived → Eligible for auto-refund.',
+        },
+      },
+      how: {
+        title: 'How refunds work',
+        escrow: 'Funds stay in escrow until your order is collected or refunded.',
+        late: 'Late arrival: tap Request refund for instant confirmation; funds release back typically <24h.',
+        moq: 'Pool not locked: refunds trigger automatically — you’ll see “Refunded (Pool not locked)”.',
+        dispute: 'Not as described: open a dispute with evidence; most cases resolve within 72h.',
+        disputeLink: 'See dispute steps',
+      },
+      faq: {
+        title: 'FAQ',
+        items: {
+          timer: {
+            q: 'When does my timer start?',
+            a: 'Right when the pool locks and the importer confirms the shipment.',
+          },
+          speed: {
+            q: 'How long do refunds take?',
+            a: 'Most refunds land back in your wallet within 24h. Bank processing may add a short delay.',
+          },
+          cancel: {
+            q: 'Can I cancel before pool lock?',
+            a: 'Yes. Cancel anytime before lock — you’re refunded in full in our demo policy.',
+          },
+          evidence: {
+            q: 'What evidence helps in a dispute?',
+            a: 'Clear photos of the product, packaging, and pickup receipt speed things up.',
+          },
+          window: {
+            q: 'What if I miss the 72h window?',
+            a: 'Still reach out. We review late disputes, though resolutions may take longer.',
+          },
+          fees: {
+            q: 'Who pays fees?',
+            a: 'Escrow and platform fees are refunded alongside your order for late or MOQ-fail cases.',
+          },
+        },
+      },
+      actions: {
+        viewOrder: 'View order',
+        browse: 'Browse listings',
+        requestRefund: 'Request refund',
+        requestRefundFor: 'Request refund for {{id}}',
+        openDispute: 'Open dispute',
+        toast: {
+          refundRequested: 'Refund requested',
+          refundRequestedBody: 'We’ll send a confirmation once the release completes.',
+          refundFailed: 'Unable to request refund. Try again shortly.',
+        },
+      },
+      status: {
+        demo: 'Covered by demo policy.',
+      },
+    },
     pickupQr: {
       title: 'Pickup pass',
       orderLabel: 'Order {{id}}',
@@ -1419,6 +1541,128 @@ const translations = {
         lastUpdated: 'Dernière mise à jour il y a {{time}}',
       },
       refreshManual: 'Actualiser',
+    },
+    refundPolicyPage: {
+      title: 'Protection Acheteur & Remboursements',
+      trustLine: 'Protégé par séquestre • Remboursement auto en cas de retard.',
+      hero: {
+        subtitle: 'Tous les scénarios en un écran.',
+        fallbackTitle: 'Le séquestre protège votre paiement.',
+        fallbackBody: 'Consultez chaque cas ci-dessous pour savoir quand le remboursement tombe.',
+        orderLabel: 'Commande {{id}}',
+        activeOrder: 'Commande active',
+        statusCountdown: 'Remboursement auto dans {{time}}',
+        statusLate: 'Éligible au remboursement automatique maintenant',
+        statusRefunded: 'Remboursement effectué',
+        timerHint: 'Le minuteur démarre au verrouillage du panier',
+        missingOrder: 'Aucune commande active — politique démo affichée.',
+        viewOrder: 'Voir la commande',
+      },
+      chips: {
+        late: 'Livraison en retard',
+        moq: 'Panier non verrouillé',
+        nas: 'Non conforme',
+      },
+      eligibility: {
+        title: 'Suis-je éligible ?',
+        badges: {
+          late: 'Généralement <24h',
+          moq: 'Automatique',
+          nas: '≤72h',
+        },
+        tiles: {
+          late: {
+            label: 'Livraison en retard',
+            rule: 'Remboursement auto si votre commande n’est pas arrivée quand le compte à rebours se termine.',
+            micro: 'Le minuteur démarre lorsque le panier se verrouille.',
+            cta: 'Demander un remboursement',
+            howItWorks: 'Comment ça marche',
+            disabledReason: 'Disponible à la fin du minuteur.',
+            joinPoolReason: 'Rejoignez un panier pour activer les remboursements.',
+            refundedReason: 'Déjà remboursée.',
+          },
+          moq: {
+            label: 'Panier non verrouillé',
+            rule: 'Remboursement automatique si la MOQ n’est pas atteinte au verrouillage.',
+            micro: 'Nous renvoyons l’argent automatiquement — aucune action.',
+            howItWorks: 'Comment ça marche',
+          },
+          nas: {
+            label: 'Non conforme',
+            rule: 'Ouvrez un litige dans les 72h après le retrait avec photos ou vidéo.',
+            micro: 'Nous vous aidons à résoudre ou rembourser.',
+            cta: 'Ouvrir un litige',
+            howItWorks: 'Comment ça marche',
+          },
+        },
+      },
+      timeline: {
+        title: 'Délais',
+        start: {
+          label: 'Début du minuteur',
+          detail: 'Au verrouillage du panier',
+        },
+        duration: {
+          label: 'Durée',
+          eta: '{{min}}–{{max}} jours',
+        },
+        atZero: {
+          label: 'À zéro',
+          detail: 'Pas marqué Arrivé → remboursement automatique éligible.',
+        },
+      },
+      how: {
+        title: 'Fonctionnement des remboursements',
+        escrow: 'Les fonds restent en séquestre jusqu’à retrait ou remboursement.',
+        late: 'Retard : touchez Demander un remboursement pour confirmer — libération en général <24h.',
+        moq: 'Panier non verrouillé : remboursement automatique — message “Remboursé (panier non verrouillé)”.',
+        dispute: 'Non conforme : ouvrez un litige avec vos preuves ; résolution typique ≤72h.',
+        disputeLink: 'Voir les étapes de litige',
+      },
+      faq: {
+        title: 'FAQ',
+        items: {
+          timer: {
+            q: 'Quand démarre mon minuteur ?',
+            a: 'Juste quand le panier se verrouille et que l’importateur confirme l’expédition.',
+          },
+          speed: {
+            q: 'Combien de temps dure un remboursement ?',
+            a: 'La plupart reviennent dans votre portefeuille sous 24h. Les banques peuvent ajouter un léger délai.',
+          },
+          cancel: {
+            q: 'Puis-je annuler avant le verrouillage ?',
+            a: 'Oui. Annulez avant le verrouillage — remboursement intégral dans cette politique démo.',
+          },
+          evidence: {
+            q: 'Quelles preuves facilitent un litige ?',
+            a: 'Des photos nettes du produit, de l’emballage et du reçu de retrait accélèrent le traitement.',
+          },
+          window: {
+            q: 'Et si je dépasse les 72h ?',
+            a: 'Contactez-nous quand même. Nous examinons les litiges tardifs mais la résolution peut prendre plus de temps.',
+          },
+          fees: {
+            q: 'Qui prend en charge les frais ?',
+            a: 'Les frais de séquestre et de plateforme sont remboursés avec votre commande en cas de retard ou d’échec de MOQ.',
+          },
+        },
+      },
+      actions: {
+        viewOrder: 'Voir la commande',
+        browse: 'Parcourir les offres',
+        requestRefund: 'Demander un remboursement',
+        requestRefundFor: 'Demander un remboursement pour {{id}}',
+        openDispute: 'Ouvrir un litige',
+        toast: {
+          refundRequested: 'Remboursement demandé',
+          refundRequestedBody: 'Nous confirmons par message dès que la libération est faite.',
+          refundFailed: 'Impossible de demander le remboursement. Réessayez bientôt.',
+        },
+      },
+      status: {
+        demo: 'Couvert par la politique démo.',
+      },
     },
     pickupQr: {
       title: 'Pass de retrait',
