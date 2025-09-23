@@ -1032,7 +1032,7 @@ const Profile = () => {
             <>
               <DrawerHeader className="px-6 pt-6 text-left">
                 <DrawerTitle>{editState.label}</DrawerTitle>
-                {editState.description ? <DrawerDescription>{editState.description}</DrawerDescription> : null}
+                {('description' in editState && editState.description) ? <DrawerDescription>{editState.description}</DrawerDescription> : null}
               </DrawerHeader>
               <div className="px-6">
                 {editState.type === 'text' ? (

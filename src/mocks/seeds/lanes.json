@@ -1,6 +1,8 @@
 [
-  { "code": "GZ-DLA-AIR", "name": "Guangzhou → Douala (Air)", "onTimePct": 0.93, "medianDays": 12, "etaDays": { "min": 10, "max": 14 }, "color": "green" },
-  { "code": "GZ-DLA-SEA", "name": "Guangzhou → Douala (Sea)", "onTimePct": 0.78, "medianDays": 28, "etaDays": { "min": 25, "max": 35 }, "color": "amber" },
-  { "code": "HKG-DLA-AIR", "name": "Hong Kong → Douala (Air)", "onTimePct": 0.91, "medianDays": 11, "etaDays": { "min": 9, "max": 13 }, "color": "green" },
-  { "code": "SH-DLA-SEA", "name": "Shanghai → Douala (Sea)", "onTimePct": 0.72, "medianDays": 32, "etaDays": { "min": 30, "max": 40 }, "color": "red" }
+  { "code": "GZ-DLA-AIR", "name": "Guangzhou → Douala (Air)", "onTimePct": 0.94, "medianDays": 12, "etaDays": { "min": 10, "max": 14 }, "color": "green" },
+  { "code": "GZ-DLA-SEA", "name": "Guangzhou → Douala (Sea)", "onTimePct": 0.79, "medianDays": 28, "etaDays": { "min": 25, "max": 35 }, "color": "amber" },
+  { "code": "HKG-DLA-AIR", "name": "Hong Kong → Douala (Air)", "onTimePct": 0.92, "medianDays": 11, "etaDays": { "min": 9, "max": 13 }, "color": "green" },
+  { "code": "SH-DLA-SEA", "name": "Shanghai → Douala (Sea)", "onTimePct": 0.74, "medianDays": 32, "etaDays": { "min": 30, "max": 40 }, "color": "red" },
+  { "code": "SZX-DLA-AIR", "name": "Shenzhen → Douala (Air)", "onTimePct": 0.91, "medianDays": 13, "etaDays": { "min": 11, "max": 15 }, "color": "green" },
+  { "code": "YWN-DLA-AIR", "name": "Yiwu → Douala (Air)", "onTimePct": 0.88, "medianDays": 14, "etaDays": { "min": 12, "max": 16 }, "color": "amber" }
 ]

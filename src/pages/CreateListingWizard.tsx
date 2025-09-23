@@ -119,7 +119,7 @@ const formatNumber = (value: number, locale: string) => {
 
 const getLaneSafeBand = (code: string): LaneOption['safe'] => {
   const lane = LANE_OPTIONS.find(item => item.code === code);
-  return lane?.safe ?? { min: 7, max: 21 };
+  return lane?.safe ?? { min: 10, max: 14 };
 };
 
 const hasClearTitle = (title: string) => title.trim().length >= 8;

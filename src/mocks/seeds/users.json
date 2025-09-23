@@ -1,7 +1,9 @@
 [
-  { "id": "usr_buyer_1", "displayName": "Nadege", "role": "buyer" },
-  { "id": "usr_imp_1", "displayName": "Nelly Stores", "role": "importer", "verified": true, "score": 92 },
-  { "id": "usr_imp_2", "displayName": "Brightway Imports", "role": "importer", "verified": false, "score": 74 },
-  { "id": "usr_imp_3", "displayName": "Savon Afrique", "role": "importer", "verified": true, "score": 88 },
-  { "id": "usr_imp_4", "displayName": "Logistix Hub", "role": "importer", "verified": true, "score": 81 }
+  { "id": "usr_buyer_1", "displayName": "Nadège Mballa", "role": "buyer" },
+  { "id": "usr_buyer_2", "displayName": "Jean-Claude Ndong", "role": "buyer" },
+  { "id": "usr_imp_1", "displayName": "Nelly Stores", "role": "importer", "verified": true, "score": 94 },
+  { "id": "usr_imp_2", "displayName": "AfriTech Imports", "role": "importer", "verified": true, "score": 89 },
+  { "id": "usr_imp_3", "displayName": "Savon d'Afrique", "role": "importer", "verified": true, "score": 91 },
+  { "id": "usr_imp_4", "displayName": "Horizon Trading", "role": "importer", "verified": false, "score": 76 },
+  { "id": "usr_imp_5", "displayName": "Elite Commerce CM", "role": "importer", "verified": true, "score": 87 }
 ]

@@ -6,8 +6,8 @@ export type Locale = 'en' | 'fr';
 const translations = {
   en: {
     app: {
-      name: 'ProList Mini',
-      tagline: 'Fast preorder companion',
+      name: 'ProList Mini' as const,
+      tagline: 'Fast preorder companion' as const,
     },
     home: {
       searchTitle: 'Search listings',
@@ -1748,9 +1748,9 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
 
   const t = useCallback(
     (key: string, vars?: InterpolationValues) => {
-      const primary = resolve(translations[locale], key);
+      const primary = resolve(translations[locale] as any, key);
       if (primary) return format(primary, vars);
-      const fallback = resolve(translations.en, key);
+      const fallback = resolve(translations.en as any, key);
       return fallback ? format(fallback, vars) : key;
     },
     [locale],

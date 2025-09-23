@@ -1,4 +1,6 @@
 [
-  { "id": "pkp_1", "name": "Akwa Pickup Hub", "address": "Rue Joffre, Akwa", "city": "Douala", "phone": "6 70 00 00 00" },
-  { "id": "pkp_2", "name": "Biyem-Assi Point", "address": "Carrefour Biyem-Assi", "city": "Yaoundé", "phone": "6 71 11 11 11" }
+  { "id": "pkp_akwa", "name": "Akwa Central Hub", "address": "Boulevard de la Liberté, Akwa", "city": "Douala", "phone": "+237 680 12 34 56" },
+  { "id": "pkp_bonamoussadi", "name": "Bonamoussadi Point", "address": "Carrefour Ange Raphaël, Bonamoussadi", "city": "Douala", "phone": "+237 681 23 45 67" },
+  { "id": "pkp_biyemAssi", "name": "Biyem-Assi Hub", "address": "Carrefour Biyem-Assi, route de Mfou", "city": "Yaoundé", "phone": "+237 690 12 34 56" },
+  { "id": "pkp_bastos", "name": "Bastos Express Point", "address": "Avenue Charles de Gaulle, Bastos", "city": "Yaoundé", "phone": "+237 691 23 45 67" }
 ]

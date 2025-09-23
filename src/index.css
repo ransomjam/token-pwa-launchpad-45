@@ -2,22 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ProList Mini Design System - Mobile-first PWA */
+/* Premium Design System - Mobile-first PWA */
 
 @layer base {
   :root {
-    /* Brand Colors */
-    --color-primary: 142 81% 40%;        /* #0FBF6D */
-    --color-timer: 142 84% 39%;          /* #0AA66D */
-    --color-teal: 180 97% 33%;           /* #03A6A6 */
-    --color-blue: 195 97% 39%;           /* #049DBF */
+    /* Brand Colors - Premium palette */
+    --color-primary: 156 100% 27%;       /* #008B44 - Forest Green */
+    --color-primary-light: 156 100% 35%; /* #00AB55 - Lighter accent */
+    --color-timer: 24 100% 50%;          /* #FF6B00 - Energy Orange */
+    --color-teal: 186 100% 29%;          /* #0093A6 - Ocean Teal */
+    --color-blue: 210 100% 40%;          /* #0066CC - Trust Blue */
     
-    /* Base Colors */
-    --color-fg: 0 0% 7%;                 /* #111111 */
-    --color-muted: 0 0% 47%;             /* #777777 */
-    --color-bg: 0 0% 97%;                /* #F7F7F7 */
-    --color-card: 0 0% 100%;             /* #FFFFFF */
-    --color-border: 0 0% 93%;            /* #EEEEEE */
+    /* Neutral Colors - Refined scale */
+    --color-fg: 240 9% 9%;               /* #16181D - Rich black */
+    --color-fg-muted: 240 5% 34%;        /* #525866 - Muted text */
+    --color-bg: 240 9% 98%;              /* #FAFBFC - Clean white */
+    --color-card: 0 0% 100%;             /* #FFFFFF - Pure white */
+    --color-border: 240 6% 90%;          /* #E4E7EC - Soft border */
+    --color-border-light: 240 5% 96%;    /* #F2F4F7 - Ultra light */
+    
+    /* Status Colors */
+    --color-success: 142 76% 36%;        /* #15B869 */
+    --color-warning: 38 92% 50%;         /* #F79009 */
+    --color-error: 357 75% 59%;          /* #F04438 */
+    --color-info: 221 83% 53%;           /* #2E90FA */
     
     /* Semantic tokens for shadcn compatibility */
     --background: var(--color-bg);
@@ -28,42 +36,81 @@
     --popover-foreground: var(--color-fg);
     --primary: var(--color-primary);
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 240 5% 96%;
     --secondary-foreground: var(--color-fg);
-    --muted: 210 40% 96.1%;
-    --muted-foreground: var(--color-muted);
-    --accent: 210 40% 96.1%;
+    --muted: 240 5% 96%;
+    --muted-foreground: var(--color-fg-muted);
+    --accent: 240 5% 96%;
     --accent-foreground: var(--color-fg);
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: var(--color-error);
+    --destructive-foreground: 0 0% 100%;
     --border: var(--color-border);
     --input: var(--color-border);
     --ring: var(--color-primary);
-    --radius: 1rem;
+    --radius: 1.25rem;
+    
+    /* Premium Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-primary-light)) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(var(--color-card)) 0%, hsl(240 5% 98%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(var(--color-success)) 0%, hsl(142 76% 45%) 100%);
+    
+    /* Elegant Shadows */
+    --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
+    --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+    --shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+    --shadow-xl: 0 20px 24px -4px rgba(16, 24, 40, 0.08), 0 8px 8px -4px rgba(16, 24, 40, 0.03);
+    --shadow-card: 0 8px 32px rgba(16, 24, 40, 0.06);
+    --shadow-glow: 0 0 20px hsla(var(--color-primary), 0.15);
+    
+    /* Typography Scale */
+    --font-mono: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    
+    /* Animation Timing */
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-fast: cubic-bezier(0.4, 0, 1, 1);
   }
 }
 
 html, body {
   height: 100%;
   min-height: 100dvh;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Component utilities */
+/* Premium Component Utilities */
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white font-semibold shadow-soft active:scale-[0.99] transition-transform;
+    @apply inline-flex items-center justify-center rounded-2xl bg-primary px-6 py-3.5 text-white font-semibold shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200;
+    background: var(--gradient-primary);
   }
   
-  .btn-outline {
-    @apply inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-3 text-foreground font-semibold hover:bg-muted/50;
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-2xl border border-border bg-card px-6 py-3.5 text-foreground font-semibold hover:bg-muted/50 active:scale-[0.98] transition-all duration-200;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-3.5 text-foreground font-semibold hover:bg-muted/50 active:scale-[0.98] transition-all duration-200;
+  }
+  
+  .card-premium {
+    @apply bg-card rounded-3xl border border-border-light overflow-hidden transition-all duration-300 hover:shadow-card;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-sm);
   }
   
   .chip {
-    @apply inline-flex items-center gap-2 rounded-xl border px-3 py-1 text-sm font-medium;
+    @apply inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all duration-200;
   }
   
   .chip-escrow {
-    @apply border-primary/30 bg-primary/5 text-primary;
+    @apply border-success/30 bg-success/5 text-success;
   }
   
   .chip-lane {
@@ -73,39 +120,112 @@ html, body {
   .chip-timer {
     @apply border-timer/30 bg-timer/5 text-timer;
   }
+  
+  .chip-primary {
+    @apply border-primary/30 bg-primary/5 text-primary;
+  }
+  
+  .input-premium {
+    @apply border-border bg-card/50 rounded-2xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200;
+    box-shadow: var(--shadow-xs);
+  }
+  
+  .surface-elevated {
+    @apply bg-card rounded-3xl border border-border/50;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 @layer utilities {
+  /* Enhanced Animations */
   @keyframes feed-fade-up {
     from {
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(16px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-
-  .animate-fade-in {
-    animation: feed-fade-up 0.48s ease forwards;
+  
+  @keyframes scale-bounce {
+    0% { transform: scale(0.95) }
+    50% { transform: scale(1.02) }
+    100% { transform: scale(1) }
   }
-
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%) }
+    100% { transform: translateX(100%) }
+  }
+  
+  .animate-fade-up {
+    animation: feed-fade-up 0.6s var(--ease-smooth) forwards;
+  }
+  
+  .animate-scale-bounce {
+    animation: scale-bounce 0.4s var(--ease-bounce) forwards;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+  
+  /* Premium Shadows */
   .shadow-soft {
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    box-shadow: var(--shadow-sm);
   }
   
   .shadow-card {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Micro-interactions */
+  .interactive {
+    @apply transition-all duration-200 active:scale-[0.98] hover:shadow-md;
+  }
+  
+  .press-bounce {
+    @apply transition-transform duration-150 active:scale-[0.96];
+  }
+  
+  /* Glass morphism */
+  .glass-card {
+    @apply backdrop-blur-xl bg-card/80 border border-border/50;
+    box-shadow: var(--shadow-lg);
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border/50;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+  
+  /* Premium scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
   }
 }
