@@ -155,8 +155,8 @@ const ShareSheet = ({ open, onOpenChange, ...rest }: ShareSheetProps) => {
     });
   }, [locale, open, isOnline, props.context, props.data, template, toast, t, useShortLink]);
 
-  const priceLabel = listingData ? usePriceLabel(locale, listingData.priceXAF) : '';
-  const onTimeLabel = listingData ? usePercentLabel(listingData.onTimePct) : '';
+  const priceLabel = usePriceLabel(locale, listingData?.priceXAF ?? 0);
+  const onTimeLabel = usePercentLabel(listingData?.onTimePct ?? 0);
 
   const logShareAttempt = () => {
     const now = Date.now();
