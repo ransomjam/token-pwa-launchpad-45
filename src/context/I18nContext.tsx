@@ -23,6 +23,7 @@ const translations = {
       searchLaneLabel: '{{mode}} • {{pct}}% on-time',
       heroCopy: 'Protected by Escrow · Auto-refund if late',
       categoriesAll: 'All categories',
+      categoriesMenu: 'Browse categories',
       resultsCount: '{{count}} results',
       demoData: 'Demo data',
       pullToRefresh: 'Pull to refresh',
@@ -50,6 +51,7 @@ const translations = {
       pillEta: 'ETA {{min}}–{{max}} days',
       pillPrice: 'Price {{min}} – {{max}}',
       removeFilter: 'Remove {{label}}',
+      sortMenu: 'Sort options',
       sort: {
         relevance: 'Relevance',
         endingSoon: 'Ending soon',
@@ -343,6 +345,7 @@ const translations = {
       searchLaneLabel: '{{mode}} • {{pct}}% ponctuel',
       heroCopy: 'Protégé par séquestre · Remboursement automatique en cas de retard',
       categoriesAll: 'Toutes les catégories',
+      categoriesMenu: 'Parcourir les catégories',
       resultsCount: '{{count}} résultats',
       demoData: 'Données démo',
       pullToRefresh: 'Tirer pour actualiser',
@@ -370,6 +373,7 @@ const translations = {
       pillEta: 'ETA {{min}}–{{max}} jours',
       pillPrice: 'Prix {{min}} – {{max}}',
       removeFilter: 'Retirer {{label}}',
+      sortMenu: 'Options de tri',
       sort: {
         relevance: 'Pertinence',
         endingSoon: 'Se termine bientôt',
