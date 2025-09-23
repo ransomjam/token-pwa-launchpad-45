@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -114,7 +114,7 @@ type SectionProps = {
   subtitle?: string;
   items: ListingSummary[];
   isLoading: boolean;
-  renderItem: (item: ListingSummary, index: number) => React.ReactNode;
+  renderItem: (item: ListingSummary, index: number) => ReactNode;
   animationDelay: number;
 };
 
@@ -203,7 +203,7 @@ const SearchOverlay = ({
     return () => window.clearTimeout(timer);
   }, [open]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) {

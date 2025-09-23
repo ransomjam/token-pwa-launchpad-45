@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   demoBuyerProfile,
@@ -124,7 +124,7 @@ const InfoRow = ({
   actionLabel,
 }: {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
   hint?: string;
   onClick?: () => void;
   actionLabel?: string;
@@ -170,7 +170,7 @@ const QuickActionButton = ({
 }: {
   label: string;
   description: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   onClick?: () => void;
   muted?: boolean;
   badge?: string | null;

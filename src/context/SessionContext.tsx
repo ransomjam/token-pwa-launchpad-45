@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@/types';
 
 const STORAGE_KEY = 'pl.session';
@@ -12,7 +12,7 @@ type SessionContextValue = {
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
-export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
+export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSessionState] = useState<Session | null>(null);
 
   useEffect(() => {

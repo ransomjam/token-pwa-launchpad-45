@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -152,24 +152,24 @@ export const ListingCard = ({
     onOpen(listing);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleOpen();
     }
   };
 
-  const handlePreOrder = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePreOrder = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onPreOrder(listing);
   };
 
-  const handleShare = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleShare = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onShare(listing);
   };
 
-  const handleImporterProfile = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleImporterProfile = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     navigate(`/importers/${listing.importer.id}/profile`);
   };

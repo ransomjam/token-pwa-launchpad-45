@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +55,7 @@ export const SignInFlow = ({ onAuthenticated }: SignInFlowProps) => {
     }
   }, [step]);
 
-  const handleSendCode = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSendCode = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isOnline) return;
     const trimmed = contact.trim();
@@ -75,7 +75,7 @@ export const SignInFlow = ({ onAuthenticated }: SignInFlowProps) => {
     trackEvent('auth_code_sent', { method: 'otp' });
   };
 
-  const handleVerifyCode = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleVerifyCode = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const sanitized = code.replace(/\D/g, '');
     if (sanitized.length !== 6) return;
