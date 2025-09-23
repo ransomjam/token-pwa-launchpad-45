@@ -52,6 +52,11 @@ export type AppEvent =
   | 'pickup_default_change'
   | 'notif_pref_change'
   | 'imp_public_profile_view'
+  | 'imp_public_profile_share_click'
+  | 'imp_public_profile_metric_tooltip_open'
+  | 'imp_public_profile_category_filter'
+  | 'imp_public_profile_listing_click'
+  | 'imp_public_profile_report_click'
   | 'kyc_step_view'
   | 'kyc_step_complete';
 

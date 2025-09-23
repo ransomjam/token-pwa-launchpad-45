@@ -1,4 +1,35 @@
 import type { PickupPoint } from '@/types';
+import { DEMO_LISTINGS } from './demoMode';
+
+const normaliseSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+const titleCaseFromSlug = (value: string) =>
+  value
+    .split('-')
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+const formatLaneLabel = (code: string) => {
+  if (code.includes('→')) {
+    return code.replace(/\s{2,}/g, ' ').trim();
+  }
+  const parts = code.split('-').filter(Boolean);
+  const [originRaw = '', destinationRaw = '', rawMode = ''] = parts;
+  const origin = originRaw.trim().toUpperCase();
+  const destination = destinationRaw.trim().toUpperCase();
+  const mode = rawMode.toLowerCase() === 'sea' ? 'Sea' : 'Air';
+  if (!origin || !destination) {
+    return code.replace(/-/g, ' ').trim();
+  }
+  return `${origin}→${destination} ${mode}`;
+};
+
+const normalisePercent = (value: number) => (value > 1 ? Math.round(value) : Math.round(value * 100));
 
 export type DeviceInfo = {
   id: string;
@@ -78,23 +109,61 @@ export type ImporterProfile = {
   };
 };
 
+export type PublicImporterMetricSource = 'profile' | 'platform_average';
+
+export type PublicImporterMetrics = {
+  onTimePct: number;
+  disputeRatePct: number;
+  responseTimeLabel: string;
+  ordersFulfilledLabel: string;
+  source: PublicImporterMetricSource;
+};
+
+export type PublicImporterLane = {
+  id: string;
+  label: string;
+  onTimePct: number;
+};
+
+export type PublicImporterCategory = {
+  id: string;
+  label: string;
+};
+
+export type PublicImporterListing = {
+  id: string;
+  title: string;
+  priceXAF: number;
+  image: string;
+  etaLabel: string;
+  laneId: string;
+  laneLabel?: string;
+  laneOnTimePct?: number;
+  categories: string[];
+  moqCommitted: number;
+  moqTarget: number;
+  isSample?: boolean;
+};
+
+export type PublicImporterSocialProof = {
+  id: string;
+  quote: string;
+};
+
 export type PublicImporterProfile = {
   id: string;
   storeName: string;
   city: string;
   verified: boolean;
   avatarInitials: string;
-  onTime: number;
-  disputeRate: number;
-  lanes: string[];
+  lanes: PublicImporterLane[];
+  metrics: PublicImporterMetrics;
+  categories: PublicImporterCategory[];
   about: string;
-  recentListings: Array<{
-    id: string;
-    title: string;
-    priceXAF: number;
-    image: string;
-    etaLabel: string;
-  }>;
+  policyUrl: string;
+  pickupHubs: string[];
+  socialProof: PublicImporterSocialProof[];
+  recentListings: PublicImporterListing[];
   shareUrl: string;
 };
 
@@ -248,11 +317,33 @@ export const demoImporterPublicProfile: PublicImporterProfile = {
   city: demoImporterProfile.city,
   verified: demoImporterProfile.verified,
   avatarInitials: 'NS',
-  onTime: 93,
-  disputeRate: 2.1,
-  lanes: ['GZ→DLA Air', 'IST→DLA Sea', 'SZX→DLA Air'],
+  lanes: [
+    { id: normaliseSlug('GZ→DLA Air'), label: 'GZ→DLA Air', onTimePct: 93 },
+    { id: normaliseSlug('IST→DLA Sea'), label: 'IST→DLA Sea', onTimePct: 88 },
+    { id: normaliseSlug('SZX→DLA Air'), label: 'SZX→DLA Air', onTimePct: 96 },
+  ],
+  metrics: {
+    onTimePct: 93,
+    disputeRatePct: 2.1,
+    responseTimeLabel: '<6h',
+    ordersFulfilledLabel: '120+',
+    source: 'profile',
+  },
+  categories: [
+    { id: normaliseSlug('Small electronics'), label: 'Small electronics' },
+    { id: normaliseSlug('Accessories'), label: 'Accessories' },
+    { id: normaliseSlug('Beauty'), label: 'Beauty' },
+    { id: normaliseSlug('Home essentials'), label: 'Home essentials' },
+  ],
   about:
     'Trusted preorder partner delivering electronics with consistent quality and transparent updates for growing retailers.',
+  policyUrl: 'https://prolist.africa/buyer-protection',
+  pickupHubs: ['Akwa', 'Biyem-Assi', 'Bonamoussadi'],
+  socialProof: [
+    { id: 'fbk-1', quote: '“Great updates—every drop arrived on time.”' },
+    { id: 'fbk-2', quote: '“Packaging always secure, buyers felt confident.”' },
+    { id: 'fbk-3', quote: '“Escrow released funds quickly after pickup.”' },
+  ],
   recentListings: [
     {
       id: 'listing-1',
@@ -260,7 +351,13 @@ export const demoImporterPublicProfile: PublicImporterProfile = {
       priceXAF: 11500,
       image:
         'https://images.unsplash.com/photo-1582719478173-d83e7e913b95?auto=format&fit=crop&w=600&q=80',
-      etaLabel: 'ETA 10–14 days',
+      etaLabel: '10–14 days',
+      laneId: normaliseSlug('GZ→DLA Air'),
+      laneLabel: 'GZ→DLA Air',
+      laneOnTimePct: 93,
+      categories: [normaliseSlug('Small electronics'), normaliseSlug('Accessories')],
+      moqCommitted: 18,
+      moqTarget: 30,
     },
     {
       id: 'listing-2',
@@ -268,7 +365,13 @@ export const demoImporterPublicProfile: PublicImporterProfile = {
       priceXAF: 18500,
       image:
         'https://images.unsplash.com/photo-1526402468835-cf54a0c1d79b?auto=format&fit=crop&w=600&q=80',
-      etaLabel: 'ETA 12–16 days',
+      etaLabel: '12–16 days',
+      laneId: normaliseSlug('GZ→DLA Air'),
+      laneLabel: 'GZ→DLA Air',
+      laneOnTimePct: 93,
+      categories: [normaliseSlug('Small electronics'), normaliseSlug('Accessories')],
+      moqCommitted: 22,
+      moqTarget: 35,
     },
     {
       id: 'listing-3',
@@ -276,11 +379,74 @@ export const demoImporterPublicProfile: PublicImporterProfile = {
       priceXAF: 23500,
       image:
         'https://images.unsplash.com/photo-1585386959984-a4155229a1ab?auto=format&fit=crop&w=600&q=80',
-      etaLabel: 'ETA 15–20 days',
+      etaLabel: '15–20 days',
+      laneId: normaliseSlug('SZX→DLA Air'),
+      laneLabel: 'SZX→DLA Air',
+      laneOnTimePct: 96,
+      categories: [normaliseSlug('Beauty'), normaliseSlug('Accessories')],
+      moqCommitted: 24,
+      moqTarget: 40,
+    },
+    {
+      id: 'listing-4',
+      title: 'Samsung Galaxy A35 (128GB)',
+      priceXAF: 198000,
+      image:
+        'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
+      etaLabel: '14–18 days',
+      laneId: normaliseSlug('IST→DLA Sea'),
+      laneLabel: 'IST→DLA Sea',
+      laneOnTimePct: 88,
+      categories: [normaliseSlug('Small electronics')],
+      moqCommitted: 12,
+      moqTarget: 25,
     },
   ],
   shareUrl: 'https://prolist.africa/importers/nelly-stores',
 };
+
+const fallbackMetrics: PublicImporterMetrics = {
+  onTimePct: 90,
+  disputeRatePct: 2,
+  responseTimeLabel: '<12h',
+  ordersFulfilledLabel: '100+',
+  source: 'platform_average',
+};
+
+const fallbackPickupHubs = ['Akwa', 'Biyem-Assi'];
+const fallbackPolicyUrl = 'https://prolist.africa/buyer-protection';
+
+const samplePublicListings: PublicImporterListing[] = DEMO_LISTINGS.slice(0, 3).map(listing => ({
+  id: listing.id,
+  title: listing.title,
+  priceXAF: listing.priceXAF,
+  image: listing.images[0] ?? '/placeholder.svg',
+  etaLabel: `${listing.etaDays.min}–${listing.etaDays.max} days`,
+  laneId: normaliseSlug(listing.lane.code),
+  laneLabel: formatLaneLabel(listing.lane.code),
+  laneOnTimePct: normalisePercent(listing.lane.onTimePct),
+  categories: [normaliseSlug(listing.category)],
+  moqCommitted: listing.moq.committed,
+  moqTarget: listing.moq.target,
+  isSample: true,
+}));
+
+const sampleCategoryMap = new Map(
+  samplePublicListings.map(listing => [listing.categories[0], titleCaseFromSlug(listing.categories[0])]),
+);
+
+const sampleLanes = Array.from(
+  new Map(
+    samplePublicListings.map(listing => [
+      listing.laneId,
+      {
+        id: listing.laneId,
+        label: listing.laneLabel ?? formatLaneLabel(listing.laneId),
+        onTimePct: listing.laneOnTimePct ?? fallbackMetrics.onTimePct,
+      },
+    ]),
+  ).values(),
+);
 
 const safelyParse = <T,>(value: string | null): T | null => {
   if (!value) return null;
@@ -358,12 +524,84 @@ export const saveImporterProfile = (profile: ImporterProfile) => {
 };
 
 export const loadImporterPublicProfile = (importerId?: string): PublicImporterProfile => {
-  if (!importerId || importerId === demoImporterPublicProfile.id) {
-    return demoImporterPublicProfile;
+  const baseProfile =
+    !importerId || importerId === demoImporterPublicProfile.id
+      ? demoImporterPublicProfile
+      : { ...demoImporterPublicProfile, id: importerId };
+
+  const metrics: PublicImporterMetrics = {
+    ...fallbackMetrics,
+    ...baseProfile.metrics,
+    source: baseProfile.metrics?.source ?? (baseProfile.metrics ? 'profile' : fallbackMetrics.source),
+  };
+
+  const laneMap = new Map<string, PublicImporterLane>();
+  (baseProfile.lanes ?? []).forEach(lane => {
+    const id = lane.id ?? normaliseSlug(lane.label);
+    const label = lane.label ?? formatLaneLabel(lane.id ?? id);
+    laneMap.set(id, {
+      id,
+      label,
+      onTimePct: lane.onTimePct ?? metrics.onTimePct,
+    });
+  });
+
+  const listingSource = baseProfile.recentListings?.length ? baseProfile.recentListings : samplePublicListings;
+
+  const listings = listingSource.map(listing => {
+    const laneId = listing.laneId ?? normaliseSlug(listing.laneLabel ?? listing.laneId ?? '');
+    const laneEntry = laneMap.get(laneId);
+    const laneLabel = listing.laneLabel ?? laneEntry?.label ?? formatLaneLabel(laneId);
+    const laneOnTimePct = listing.laneOnTimePct ?? laneEntry?.onTimePct ?? metrics.onTimePct;
+    if (!laneEntry) {
+      laneMap.set(laneId, { id: laneId, label: laneLabel, onTimePct: laneOnTimePct });
+    }
+    return {
+      ...listing,
+      laneId,
+      laneLabel,
+      laneOnTimePct,
+    };
+  });
+
+  if (laneMap.size === 0) {
+    sampleLanes.forEach(lane => laneMap.set(lane.id, lane));
   }
+
+  const categoriesMap = new Map<string, string>();
+  (baseProfile.categories ?? []).forEach(category => {
+    const id = category.id ?? normaliseSlug(category.label);
+    const label = category.label ?? titleCaseFromSlug(id);
+    categoriesMap.set(id, label);
+  });
+
+  listings.forEach(listing => {
+    listing.categories.forEach(categoryId => {
+      if (!categoriesMap.has(categoryId)) {
+        const fallbackLabel = sampleCategoryMap.get(categoryId) ?? titleCaseFromSlug(categoryId);
+        categoriesMap.set(categoryId, fallbackLabel);
+      }
+    });
+  });
+
+  let categories = Array.from(categoriesMap.entries()).map(([id, label]) => ({ id, label }));
+  if (!categories.length) {
+    categories = Array.from(sampleCategoryMap.entries()).map(([id, label]) => ({ id, label }));
+  }
+
+  const pickupHubs = baseProfile.pickupHubs?.length ? baseProfile.pickupHubs : fallbackPickupHubs;
+  const socialProof = baseProfile.socialProof?.length ? baseProfile.socialProof : [];
+
   return {
-    ...demoImporterPublicProfile,
-    id: importerId,
+    ...baseProfile,
+    metrics,
+    lanes: Array.from(laneMap.values()),
+    categories,
+    pickupHubs,
+    socialProof,
+    recentListings: listings,
+    policyUrl: baseProfile.policyUrl ?? fallbackPolicyUrl,
+    shareUrl: baseProfile.shareUrl ?? demoImporterPublicProfile.shareUrl,
   };
 };
 
