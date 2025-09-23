@@ -1,0 +1,28 @@
+<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="eb2-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="100%" stop-color="#3730A3" />
+    </linearGradient>
+    <linearGradient id="eb2-case" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FAF7FF" />
+      <stop offset="100%" stop-color="#DAD5FF" />
+    </linearGradient>
+    <linearGradient id="eb2-highlight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#C084FC" />
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" rx="48" fill="url(#eb2-bg)" />
+  <path d="M160 260c0-66.274 53.726-120 120-120h80c66.274 0 120 53.726 120 120v56c0 17.673-14.327 32-32 32H192c-17.673 0-32-14.327-32-32v-56z" fill="url(#eb2-case)" opacity="0.95" />
+  <rect x="208" y="220" width="224" height="88" rx="44" fill="#FFFFFF" opacity="0.94" />
+  <rect x="208" y="312" width="224" height="64" rx="32" fill="#F1EDFF" />
+  <circle cx="240" cy="260" r="28" fill="url(#eb2-highlight)" />
+  <circle cx="272" cy="248" r="18" fill="#2E2A6A" opacity="0.7" />
+  <circle cx="400" cy="260" r="28" fill="url(#eb2-highlight)" />
+  <circle cx="368" cy="248" r="18" fill="#2E2A6A" opacity="0.7" />
+  <rect x="302" y="332" width="36" height="12" rx="6" fill="#C6BCFF" />
+  <rect x="216" y="340" width="72" height="12" rx="6" fill="#C6BCFF" opacity="0.8" />
+  <rect x="352" y="340" width="72" height="12" rx="6" fill="#C6BCFF" opacity="0.6" />
+  <ellipse cx="320" cy="402" rx="140" ry="24" fill="#1F1B4F" opacity="0.3" />
+</svg>
