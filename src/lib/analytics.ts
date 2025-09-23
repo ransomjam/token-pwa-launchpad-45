@@ -45,7 +45,15 @@ export type AppEvent =
   | 'pickup_collect_fail'
   | 'pickup_contact_tap'
   | 'evidence_open'
-  | 'demo_mode_active';
+  | 'demo_mode_active'
+  | 'profile_view'
+  | 'profile_edit_open'
+  | 'profile_edit_save'
+  | 'pickup_default_change'
+  | 'notif_pref_change'
+  | 'imp_public_profile_view'
+  | 'kyc_step_view'
+  | 'kyc_step_complete';
 
 export function trackEvent<T extends AppEvent>(name: T, payload?: Record<string, unknown>) {
   if (import.meta.env.DEV) {
