@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShoppingBag, Boxes } from 'lucide-react';
+import { ShoppingBag, Boxes, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthStepIndicator } from './AuthStepIndicator';
 import { useI18n } from '@/context/I18nContext';
@@ -32,9 +32,10 @@ const options: { role: Role; titleKey: string; descriptionKey: string; summaryKe
 
 export const RoleChooser = ({ initialRole, onRoleChosen }: RoleChooserProps) => {
   const { t } = useI18n();
-  const [selected, setSelected] = useState<Role>(initialRole);
+  const [selected, setSelected] = useState<Role | null>(initialRole);
 
   const handleContinue = () => {
+    if (!selected) return;
     trackEvent('role_select', { role: selected, source: 'onboarding' });
     onRoleChosen(selected);
   };
@@ -58,29 +59,39 @@ export const RoleChooser = ({ initialRole, onRoleChosen }: RoleChooserProps) => 
                 key={option.role}
                 type="button"
                 onClick={() => setSelected(option.role)}
-                className={`flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all ${
-                  isActive ? 'border-primary bg-primary/5 shadow-sm' : 'border-border'
+                className={`relative flex items-start gap-5 rounded-3xl border border-border/70 bg-card p-5 text-left shadow-soft transition-all hover:border-primary/50 hover:shadow-card ${
+                  isActive ? 'border-primary bg-primary/5 shadow-card' : ''
                 }`}
+                aria-pressed={isActive}
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Icon className="h-7 w-7" />
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold">{t(option.titleKey)}</h2>
-                    {isActive && <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">✔</span>}
-                  </div>
+                  <h2 className="text-lg font-semibold leading-tight">{t(option.titleKey)}</h2>
                   <p className="text-sm text-muted-foreground">{t(option.descriptionKey)}</p>
                   <p className="text-sm font-medium text-muted-foreground/80">{t(option.summaryKey)}</p>
                 </div>
+                {isActive && (
+                  <span className="pointer-events-none absolute right-5 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                    <Check className="h-4 w-4" />
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
 
-        <Button onClick={handleContinue} className="h-12 rounded-xl text-base font-semibold">
-          {t('common.continue')}
-        </Button>
+        {selected && (
+          <div className="mt-auto pt-2">
+            <Button
+              onClick={handleContinue}
+              className="h-12 w-full rounded-full text-base font-semibold shadow-soft"
+            >
+              {t('common.continue')}
+            </Button>
+          </div>
+        )}
       </div>
     </main>
   );

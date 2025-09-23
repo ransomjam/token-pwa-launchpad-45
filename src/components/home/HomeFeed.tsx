@@ -9,7 +9,6 @@ import {
   Plane,
   RefreshCw,
   Search,
-  ShieldCheck,
   Ship,
   Sparkles,
   X,
@@ -33,7 +32,7 @@ import { useI18n } from '@/context/I18nContext';
 import { ListingCard } from './ListingCard';
 import type { ListingSummary, Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
-import { AccountSheet, LanguageToggle, languageNames } from '@/components/shell/AccountControls';
+import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
 import { useIntersectionOnce } from '@/hooks/use-intersection-once';
 import { cn } from '@/lib/utils';
 import { activateDemoMode, DEMO_LISTINGS, isDemoActive } from '@/lib/demoMode';
@@ -72,26 +71,34 @@ const fetchListings = async (): Promise<ListingSummary[]> => {
 };
 
 const ListingSkeleton = () => (
-  <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-soft">
+  <div className="flex flex-col gap-5 rounded-3xl border border-border/70 bg-card p-5 shadow-soft">
     <div className="relative">
       <Skeleton className="h-40 w-full rounded-2xl" />
-      <div className="absolute left-3 top-3 flex gap-2">
+      <div className="absolute left-4 top-4 flex gap-2">
         <Skeleton className="h-6 w-24 rounded-full" />
         <Skeleton className="h-6 w-28 rounded-full" />
       </div>
     </div>
-    <div className="space-y-3">
-      <div className="space-y-2">
-        <Skeleton className="h-5 w-3/4 rounded" />
-        <Skeleton className="h-4 w-1/3 rounded" />
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-48 rounded" />
+          <Skeleton className="h-4 w-32 rounded" />
+        </div>
+        <div className="space-y-2 text-right">
+          <Skeleton className="h-5 w-20 rounded" />
+          <Skeleton className="h-3 w-16 rounded" />
+        </div>
       </div>
-      <div className="space-y-2">
+      <Skeleton className="h-4 w-3/4 rounded" />
+      <div className="flex items-center gap-3">
         <Skeleton className="h-3 w-full rounded-full" />
-        <Skeleton className="h-3 w-5/6 rounded-full" />
+        <Skeleton className="h-4 w-16 rounded-full" />
       </div>
-      <div className="flex gap-2">
-        <Skeleton className="h-11 flex-1 rounded-2xl" />
-        <Skeleton className="h-11 w-11 rounded-2xl" />
+      <Skeleton className="h-4 w-40 rounded" />
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-12 flex-1 rounded-full" />
+        <Skeleton className="h-12 w-12 rounded-full" />
       </div>
     </div>
   </div>
@@ -565,14 +572,20 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     });
   }, []);
 
-  const priceFormatter = useMemo(() => {
-    const localeKey = locale === 'fr' ? 'fr-CM' : 'en-US';
-    return new Intl.NumberFormat(localeKey, {
-      style: 'currency',
-      currency: 'XAF',
-      maximumFractionDigits: 0,
-    });
-  }, [locale]);
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat('fr-FR', { style: 'decimal', maximumFractionDigits: 0 }),
+    [],
+  );
+
+  const formatPrice = useCallback(
+    (value: number) => {
+      const formatted = numberFormatter
+        .format(value)
+        .replace(/\u00A0/g, '\u202F');
+      return `XAF ${formatted}`;
+    },
+    [numberFormatter],
+  );
 
   const filteredListings = useMemo(() => {
     let items = allListings;
@@ -674,7 +687,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
     const shareUrl = `${window.location.origin}/listings/${listing.id}`;
     trackEvent('share_click', { id: listing.id, channel: 'whatsapp' });
-    const message = `Check this preorder: ${listing.title} – ${priceFormatter.format(listing.priceXAF)}\n${shareUrl}`;
+    const message = `Check this preorder: ${listing.title} – ${formatPrice(listing.priceXAF)}\n${shareUrl}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: listing.title, text: message, url: shareUrl });
@@ -694,7 +707,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     } else {
       toast({ description: `${t('home.shareFallback')} ${shareUrl}` });
     }
-  }, [priceFormatter, t, toast]);
+  }, [formatPrice, t, toast]);
 
   const handleCardView = useCallback((id: string) => {
     trackEvent('listing_card_view', { id });
@@ -818,14 +831,35 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
       pills.push({
         key: `price-${filters.priceRange.join('-')}`,
         label: t('home.pillPrice', {
-          min: priceFormatter.format(filters.priceRange[0]),
-          max: priceFormatter.format(filters.priceRange[1]),
+          min: formatPrice(filters.priceRange[0]),
+          max: formatPrice(filters.priceRange[1]),
         }),
         onRemove: () => setFilters(prev => ({ ...prev, priceRange: bounds.price })),
       });
     }
     return pills;
-  }, [bounds.eta, bounds.price, filters, priceFormatter, selectedCategory, t]);
+  }, [bounds.eta, bounds.price, filters, formatPrice, selectedCategory, t]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.laneMode) count += 1;
+    if (filters.greenLanesOnly) count += 1;
+    if (filters.verifiedOnly) count += 1;
+    if (hasInitializedFilters.current) {
+      if (filters.etaRange[0] !== bounds.eta[0] || filters.etaRange[1] !== bounds.eta[1]) {
+        count += 1;
+      }
+      if (filters.priceRange[0] !== bounds.price[0] || filters.priceRange[1] !== bounds.price[1]) {
+        count += 1;
+      }
+    }
+    return count;
+  }, [bounds.eta, bounds.price, filters]);
+
+  const filterLabel = useMemo(
+    () => (activeFilterCount > 0 ? `${t('home.filterCta')} · ${activeFilterCount}` : t('home.filterCta')),
+    [activeFilterCount, t],
+  );
 
   const getEtaLabel = useCallback(
     (listing: ListingSummary) => t('home.etaChip', { min: listing.etaDays.min, max: listing.etaDays.max }),
@@ -869,69 +903,93 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background" ref={containerRef}>
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 px-6 py-4 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 px-6 py-3 backdrop-blur">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white shadow-soft">
-              <Sparkles className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-soft">
+              <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">{t('app.tagline')}</p>
-              <h1 className="text-xl font-bold tracking-tight text-foreground">{t('app.name')}</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary/80">{t('app.tagline')}</p>
+              <h1 className="text-lg font-semibold tracking-tight text-foreground">{t('app.name')}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <LanguageToggle />
+            <LanguageToggle className="justify-center" />
             <AccountSheet session={session} />
           </div>
         </div>
-        <div className="mt-4 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setSearchDraft(searchTerm);
-              setSearchOpen(true);
-              trackEvent('search_open');
-            }}
-            className="flex flex-1 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left text-sm text-muted-foreground shadow-soft"
-          >
-            <Search className="h-4 w-4" />
-            <span className="flex-1 truncate">
-              {searchTerm ? searchTerm : t('home.searchPlaceholder')}
-            </span>
-            {searchTerm && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 rounded-full px-3 text-xs"
-                onClick={event => {
-                  event.stopPropagation();
-                  setSearchTerm('');
-                  setSearchDraft('');
-                }}
-              >
-                {t('home.clear')}
-              </Button>
-            )}
-          </button>
-          <Button
-            variant="outline"
-            className="h-12 rounded-2xl px-4 text-sm font-semibold"
-            onClick={() => handleFilterOpen(true)}
-          >
-            <Filter className="mr-2 h-4 w-4" /> {t('home.filterCta')}
-          </Button>
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setSearchDraft(searchTerm);
+                setSearchOpen(true);
+                trackEvent('search_open');
+              }}
+              className="flex h-11 flex-1 items-center gap-3 rounded-full border border-border bg-card px-4 text-left text-sm text-muted-foreground shadow-soft transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <Search className="h-4 w-4" />
+              <span className="flex-1 truncate">
+                {searchTerm ? searchTerm : t('home.searchPlaceholder')}
+              </span>
+              {searchTerm && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 rounded-full px-3 text-xs"
+                  onClick={event => {
+                    event.stopPropagation();
+                    setSearchTerm('');
+                    setSearchDraft('');
+                  }}
+                >
+                  {t('home.clear')}
+                </Button>
+              )}
+            </button>
+            <Button
+              variant="outline"
+              className={cn(
+                'h-11 rounded-full px-4 text-sm font-semibold shadow-soft transition-colors',
+                activeFilterCount > 0 ? 'border-primary bg-primary/10 text-primary' : '',
+              )}
+              onClick={() => handleFilterOpen(true)}
+            >
+              <Filter className="h-4 w-4" />
+              <span>{filterLabel}</span>
+            </Button>
+          </div>
+          {filterPills.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {filterPills.map(pill => (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={pill.onRemove}
+                  className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-1 text-[11px] font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary"
+                  aria-label={t('home.removeFilter', { label: pill.label })}
+                >
+                  <span className="truncate">{pill.label}</span>
+                  <X className="h-3 w-3" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {(Object.keys(sortLabels) as SortOption[]).map(option => (
             <button
               key={option}
               type="button"
               onClick={() => handleSortChange(option)}
               className={cn(
-                'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm transition-colors',
-                option === sort ? 'border-primary bg-primary text-white' : 'border-border bg-card text-muted-foreground'
+                'flex h-9 flex-shrink-0 items-center rounded-full border px-4 text-sm font-semibold transition-colors',
+                option === sort
+                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border bg-card text-muted-foreground hover:border-primary/40',
               )}
               aria-pressed={option === sort}
             >
@@ -939,7 +997,39 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
             </button>
           ))}
         </div>
+        <div className="mt-3">
+          <div className="relative">
+            <div className="flex gap-2 overflow-x-auto pb-1 pr-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    trackEvent('category_chip_click', { category });
+                  }}
+                  className={cn(
+                    'flex h-9 flex-shrink-0 items-center rounded-full border px-4 text-sm font-semibold transition-colors',
+                    selectedCategory === category
+                      ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/40',
+                  )}
+                >
+                  {category === ALL_CATEGORY ? t('home.categoriesAll') : category}
+                </button>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background via-background to-transparent" aria-hidden />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background via-background to-transparent" aria-hidden />
+          </div>
+        </div>
       </header>
+
+      <div className="px-6 pt-4 pb-2">
+        <div className="inline-flex items-center rounded-full border border-border/70 bg-card px-4 py-1.5 text-sm text-muted-foreground shadow-soft">
+          <span>{t('home.heroCopy')}</span>
+        </div>
+      </div>
 
       <SearchOverlay
         open={searchOpen}
@@ -954,7 +1044,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
         suggestions={searchSuggestions}
         recentTerms={recentSearches}
         popularTerms={popularTerms}
-        formatPrice={value => priceFormatter.format(value)}
+        formatPrice={formatPrice}
         getEtaLabel={getEtaLabel}
         getLaneLabel={getLaneLabel}
         labels={{
@@ -1013,7 +1103,11 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <span>{t('home.filterEta')}</span>
-                <span>{filterDraft ? `${filterDraft.etaRange[0]}–${filterDraft.etaRange[1]} days` : ''}</span>
+                <span>
+                  {filterDraft
+                    ? t('home.pillEta', { min: filterDraft.etaRange[0], max: filterDraft.etaRange[1] })
+                    : ''}
+                </span>
               </div>
               <Slider
                 value={filterDraft ? filterDraft.etaRange : bounds.eta}
@@ -1028,7 +1122,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                 <span>{t('home.filterPrice')}</span>
                 <span>
                   {filterDraft
-                    ? `${priceFormatter.format(filterDraft.priceRange[0])} – ${priceFormatter.format(filterDraft.priceRange[1])}`
+                    ? `${formatPrice(filterDraft.priceRange[0])} – ${formatPrice(filterDraft.priceRange[1])}`
                     : ''}
                 </span>
               </div>
@@ -1063,62 +1157,11 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
       </Drawer>
 
       <main className="flex-1 space-y-6 px-6 pb-24 pt-6">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" />
-            <span>{t('home.heroCopy')}</span>
-          </div>
-        </div>
-
-        <div className="sticky top-[108px] z-30 -mx-6 bg-background/95 px-6 pb-3 pt-2 backdrop-blur">
-          <div className="flex items-center justify-between text-[13px] text-muted-foreground">
-            <span>{selectedCategory === ALL_CATEGORY ? t('home.categoriesAll') : selectedCategory}</span>
-            <span>
-              {languageNames[locale]} • {t('home.resultsCount', { count: filteredListings.length })}
-            </span>
-          </div>
-          {fallbackActive && (
-            <div className="mt-2">
-              <Badge variant="outline" className="rounded-full border-dashed border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground">
-                {t('home.demoData')}
-              </Badge>
-            </div>
-          )}
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {categories.map(category => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(category);
-                  trackEvent('category_chip_click', { category });
-                }}
-                className={cn(
-                  'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm transition-colors',
-                  selectedCategory === category ? 'border-primary bg-primary text-white' : 'border-border bg-card text-muted-foreground'
-                )}
-              >
-                {category === ALL_CATEGORY ? t('home.categoriesAll') : category}
-              </button>
-            ))}
-          </div>
-          {filterPills.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {filterPills.map(pill => (
-                <button
-                  key={pill.key}
-                  type="button"
-                  onClick={pill.onRemove}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary"
-                  aria-label={t('home.removeFilter', { label: pill.label })}
-                >
-                  <span>{pill.label}</span>
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {fallbackActive && (
+          <Badge variant="outline" className="w-fit rounded-full border-dashed border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground">
+            {t('home.demoData')}
+          </Badge>
+        )}
 
         {pullDistance > 0 && (
           <div className="flex items-center justify-center text-xs text-muted-foreground" style={{ height: pullDistance }}>
@@ -1185,19 +1228,19 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
           isLoading={isListingLoading}
           animationDelay={0}
           renderItem={(item, index) => (
-            <ListingCard
-              key={item.id}
-              listing={item}
-              position={index}
-              formattedPrice={priceFormatter.format(item.priceXAF)}
-              lockCountdown={formatLockCountdown(item.moq.lockAt)}
-              onOpen={listing => handleCardOpen(listing, index)}
-              onPreOrder={handlePreOrder}
-              onShare={handleShare}
-              onView={handleCardView}
-            />
-          )}
-        />
+              <ListingCard
+                key={item.id}
+                listing={item}
+                position={index}
+                formattedPrice={formatPrice(item.priceXAF)}
+                lockCountdown={formatLockCountdown(item.moq.lockAt)}
+                onOpen={listing => handleCardOpen(listing, index)}
+                onPreOrder={handlePreOrder}
+                onShare={handleShare}
+                onView={handleCardView}
+              />
+            )}
+          />
 
         {deferredSections && (
           <div className="space-y-8">
@@ -1209,19 +1252,19 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
               isLoading={isListingLoading}
               animationDelay={80}
               renderItem={(item, index) => (
-                <ListingCard
-                  key={item.id}
-                  listing={item}
-                  position={index}
-                  formattedPrice={priceFormatter.format(item.priceXAF)}
-                  lockCountdown={formatLockCountdown(item.moq.lockAt)}
-                  onOpen={listing => handleCardOpen(listing, index)}
-                  onPreOrder={handlePreOrder}
-                  onShare={handleShare}
-                  onView={handleCardView}
-                />
-              )}
-            />
+              <ListingCard
+                key={item.id}
+                listing={item}
+                position={index}
+                formattedPrice={formatPrice(item.priceXAF)}
+                lockCountdown={formatLockCountdown(item.moq.lockAt)}
+                onOpen={listing => handleCardOpen(listing, index)}
+                onPreOrder={handlePreOrder}
+                onShare={handleShare}
+                onView={handleCardView}
+              />
+            )}
+          />
 
             <Section
               id="greenLanes"
@@ -1231,18 +1274,18 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
               isLoading={isListingLoading}
               animationDelay={140}
               renderItem={(item, index) => (
-                <ListingCard
-                  key={item.id}
-                  listing={item}
-                  position={index}
-                  formattedPrice={priceFormatter.format(item.priceXAF)}
-                  lockCountdown={formatLockCountdown(item.moq.lockAt)}
-                  onOpen={listing => handleCardOpen(listing, index)}
-                  onPreOrder={handlePreOrder}
-                  onShare={handleShare}
-                  onView={handleCardView}
-                />
-              )}
+              <ListingCard
+                key={item.id}
+                listing={item}
+                position={index}
+                formattedPrice={formatPrice(item.priceXAF)}
+                lockCountdown={formatLockCountdown(item.moq.lockAt)}
+                onOpen={listing => handleCardOpen(listing, index)}
+                onPreOrder={handlePreOrder}
+                onShare={handleShare}
+                onView={handleCardView}
+              />
+            )}
             />
 
             <Section
@@ -1257,7 +1300,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                   key={item.id}
                   listing={item}
                   position={index}
-                  formattedPrice={priceFormatter.format(item.priceXAF)}
+              formattedPrice={formatPrice(item.priceXAF)}
                   lockCountdown={formatLockCountdown(item.moq.lockAt)}
                   onOpen={listing => handleCardOpen(listing, index)}
                   onPreOrder={handlePreOrder}
