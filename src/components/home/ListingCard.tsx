@@ -21,15 +21,15 @@ import { useNavigate } from 'react-router-dom';
 
 const laneBadgeStyles = {
   green: {
-    base: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    base: 'border border-primary/40 bg-primary/15 text-primary shadow-soft',
     icon: CheckCircle2,
   },
   amber: {
-    base: 'bg-amber-50 text-amber-700 border-amber-200',
+    base: 'border border-amber-300/50 bg-amber-100/40 text-amber-700 shadow-soft',
     icon: AlertTriangle,
   },
   red: {
-    base: 'bg-rose-50 text-rose-700 border-rose-200',
+    base: 'border border-rose-300/50 bg-rose-100/40 text-rose-600 shadow-soft',
     icon: XCircle,
   },
 } as const;
@@ -182,7 +182,7 @@ export const ListingCard = ({
       aria-label={cardAria}
       onKeyDown={handleKeyDown}
       onClick={handleOpen}
-      className="group relative flex cursor-pointer flex-col gap-5 rounded-3xl border border-border/70 bg-card p-5 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 active:translate-y-[1px]"
+      className="group relative flex cursor-pointer flex-col gap-5 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-5 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100"
     >
       <div className="relative">
         <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-2xl bg-muted">
@@ -210,16 +210,16 @@ export const ListingCard = ({
         <div className="absolute left-4 top-4 flex items-center gap-2">
           <span
             aria-label={etaChipAria}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur"
+            className="pill gap-1.5 bg-white/85 text-foreground/80 shadow-soft normal-case"
           >
-            <Clock3 className="h-3.5 w-3.5" />
+            <Clock3 className="h-3.5 w-3.5 text-blue" />
             {etaChipLabel}
           </span>
         </div>
         <div className="absolute right-4 top-4">
           <span
             className={cn(
-              'inline-flex max-w-[220px] items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm backdrop-blur',
+              'pill max-w-[220px] gap-1.5 bg-white/80 text-foreground/80 normal-case',
               laneBadgeStyles[tone].base,
             )}
             aria-label={`${laneLabel}`}
@@ -238,7 +238,7 @@ export const ListingCard = ({
                 {listing.title}
               </h3>
               {listing.importer.verified && (
-                <span className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                <span className="pill gap-1.5 border-primary/40 bg-primary/15 text-primary normal-case">
                   <CheckCheck className="h-3.5 w-3.5" />
                   {t('home.verifiedImporter')}
                 </span>
@@ -248,7 +248,7 @@ export const ListingCard = ({
               <button
                 type="button"
                 onClick={handleImporterProfile}
-                className="inline-flex items-center gap-1 rounded-full bg-muted/70 px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="inline-flex items-center gap-1 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-xs font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <span className="truncate">
                   {t('home.importerByline', { name: listing.importer.displayName })}
@@ -263,20 +263,22 @@ export const ListingCard = ({
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground">{factsLine}</p>
+        <p className="text-sm text-muted-foreground/90">{factsLine}</p>
 
         <div className="flex items-center gap-3">
-          <Progress value={progressValue} aria-label={progressAria} className="h-2.5 flex-1 rounded-full bg-muted" />
+          <Progress value={progressValue} aria-label={progressAria} className="flex-1" />
           {percent >= 80 && (
-            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+            <span className="pill gap-1 border-primary/40 bg-primary/20 text-primary">
               {t('home.almostThere')}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ShieldCheck className="h-4 w-4 text-emerald-600" />
-          <span>{t('home.heroCopy')}</span>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground/90">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
+            <ShieldCheck className="h-4 w-4" />
+          </span>
+          <span className="font-medium text-foreground/80">{t('home.heroCopy')}</span>
         </div>
       </div>
 
@@ -284,7 +286,7 @@ export const ListingCard = ({
         <Button
           onClick={handlePreOrder}
           aria-label={`${t('home.preorder')} ${listing.title}`}
-          className="h-12 flex-1 rounded-full text-base font-semibold shadow-soft"
+          className="h-12 flex-1 rounded-full text-base font-semibold shadow-lux"
         >
           {t('home.preorder')}
         </Button>
@@ -295,7 +297,7 @@ export const ListingCard = ({
               variant="outline"
               onClick={handleShare}
               aria-label={t('home.shareWhatsapp', { title: listing.title })}
-              className="h-12 w-12 rounded-full border border-border bg-card p-0 text-foreground shadow-sm"
+              className="h-12 w-12 rounded-full border border-white/60 bg-white/80 p-0 text-muted-foreground shadow-soft backdrop-blur hover:border-primary/40 hover:text-primary"
             >
               <MessageCircle className="h-5 w-5" />
             </Button>
