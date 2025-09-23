@@ -23,7 +23,8 @@ export default {
         timer: "hsl(var(--color-timer))",
         teal: "hsl(var(--color-teal))",
         blue: "hsl(var(--color-blue))",
-        
+        ocean: "hsl(var(--color-ocean))",
+
         /* Base colors */
         fg: "hsl(var(--color-fg))",
         bg: "hsl(var(--color-bg))",

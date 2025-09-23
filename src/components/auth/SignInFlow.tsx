@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,101 +125,119 @@ export const SignInFlow = ({ onAuthenticated }: SignInFlowProps) => {
   };
 
   return (
-    <main className="min-h-dvh bg-background text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-6 py-10">
-        {!isOnline && (
-          <div className="rounded-2xl border border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
-            {t('auth.offlineBanner')}
+    <main className="relative min-h-dvh overflow-hidden text-foreground">
+      <div className="pointer-events-none absolute inset-0 bg-app-gradient" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/80 via-white/40 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-white/80 via-white/30 to-transparent" />
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center px-6 py-12">
+        <div className="glass-card w-full space-y-6 px-6 py-8">
+          {!isOnline && (
+            <div className="pill bg-amber-100/80 text-amber-700 shadow-soft normal-case">
+              {t('auth.offlineBanner')}
+            </div>
+          )}
+
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-primary via-teal to-blue text-primary-foreground shadow-glow">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">{t('app.tagline')}</p>
+              <h1 className="text-3xl font-semibold tracking-tight">{t('auth.welcome')}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{t('auth.intro')}</p>
+            </div>
           </div>
-        )}
 
-        <AuthStepIndicator current={step === 'otp' ? 'otp' : 'contact'} />
+          <AuthStepIndicator current={step === 'otp' ? 'otp' : 'contact'} />
 
-        <header className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">{t('auth.welcome')}</h1>
-          <p className="text-muted-foreground">{t('auth.intro')}</p>
-        </header>
+          {step === 'contact' && (
+            <form className="space-y-5" onSubmit={handleSendCode}>
+              <div className="space-y-2">
+                <Label htmlFor="contact" className="text-sm font-semibold text-muted-foreground">
+                  {t('auth.contactLabel')}
+                </Label>
+                <Input
+                  id="contact"
+                  type="text"
+                  inputMode="text"
+                  value={contact}
+                  onChange={event => setContact(event.target.value)}
+                  placeholder={t('auth.contactPlaceholder')}
+                  className="h-12 rounded-2xl border border-white/60 bg-white/80 text-base shadow-sm backdrop-blur focus:border-primary/50 focus:ring-primary/40"
+                  autoComplete="email"
+                  autoFocus
+                />
+                {contactError && <p className="text-sm text-destructive">{contactError}</p>}
+              </div>
 
-        {step === 'contact' && (
-          <form className="space-y-4" onSubmit={handleSendCode}>
-            <div className="space-y-2">
-              <Label htmlFor="contact" className="text-base font-medium">
-                {t('auth.contactLabel')}
-              </Label>
-              <Input
-                id="contact"
-                type="text"
-                inputMode="text"
-                value={contact}
-                onChange={event => setContact(event.target.value)}
-                placeholder={t('auth.contactPlaceholder')}
-                className="h-12 rounded-xl border-2 text-base"
-                autoComplete="email"
-                autoFocus
-              />
-              {contactError && <p className="text-sm text-destructive">{contactError}</p>}
-            </div>
-
-            <Button type="submit" disabled={!isOnline} className="h-12 rounded-xl text-base font-semibold">
-              {t('auth.sendCode')}
-            </Button>
-            {!isOnline && <p className="text-sm text-muted-foreground">{t('auth.sendDisabled')}</p>}
-          </form>
-        )}
-
-        {step === 'otp' && (
-          <form className="space-y-6" onSubmit={handleVerifyCode}>
-            <div className="space-y-2 text-center">
-              <h2 className="text-xl font-semibold tracking-tight">{t('auth.otpTitle')}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t('auth.otpSubtitle', { contact: contact.trim() })}
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-muted-foreground">{t('auth.codeLabel')}</Label>
-              <InputOTP
-                maxLength={6}
-                value={code}
-                onChange={value => setCode(value.replace(/\D/g, ''))}
-                containerClassName="justify-center"
-              >
-                <InputOTPGroup className="gap-2">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <InputOTPSlot
-                      key={`otp-${index}`}
-                      index={index}
-                      className="h-12 w-12 rounded-xl border-2 text-lg font-semibold"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-              {codeError && <p className="text-sm text-destructive">{codeError}</p>}
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Button type="submit" disabled={code.replace(/\D/g, '').length !== 6} className="h-12 rounded-xl text-base font-semibold">
-                {t('auth.verifyCta')}
+              <Button type="submit" disabled={!isOnline} className="h-12 w-full rounded-full text-base font-semibold">
+                {t('auth.sendCode')}
               </Button>
-              <button
-                type="button"
-                onClick={canResend ? handleResend : undefined}
-                className="text-sm font-medium text-primary"
-                disabled={!canResend}
-              >
-                {canResend ? t('auth.resendNow') : t('auth.resendIn', { time: formatTime(timeLeft) })}
-              </button>
-              <button type="button" onClick={() => setStep('contact')} className="text-sm text-muted-foreground">
-                {t('auth.changeContact')}
-              </button>
-            </div>
-          </form>
-        )}
+              {!isOnline && <p className="text-sm text-muted-foreground">{t('auth.sendDisabled')}</p>}
+            </form>
+          )}
 
-        <div className="pt-8 text-center">
-          <button type="button" onClick={handleDemo} className="text-sm font-medium text-primary">
-            {t('auth.useDemo')}
-          </button>
+          {step === 'otp' && (
+            <form className="space-y-6" onSubmit={handleVerifyCode}>
+              <div className="space-y-2 text-center">
+                <h2 className="text-2xl font-semibold tracking-tight">{t('auth.otpTitle')}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {t('auth.otpSubtitle', { contact: contact.trim() })}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-muted-foreground">{t('auth.codeLabel')}</Label>
+                <InputOTP
+                  maxLength={6}
+                  value={code}
+                  onChange={value => setCode(value.replace(/\D/g, ''))}
+                  containerClassName="justify-center"
+                >
+                  <InputOTPGroup className="gap-2">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <InputOTPSlot
+                        key={`otp-${index}`}
+                        index={index}
+                        className="h-12 w-12 rounded-2xl border border-white/60 bg-white/80 text-lg font-semibold shadow-sm backdrop-blur focus:border-primary/60 focus:ring-primary/40"
+                      />
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
+                {codeError && <p className="text-sm text-destructive">{codeError}</p>}
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button type="submit" disabled={code.replace(/\D/g, '').length !== 6} className="h-12 rounded-full text-base font-semibold">
+                  {t('auth.verifyCta')}
+                </Button>
+                <button
+                  type="button"
+                  onClick={canResend ? handleResend : undefined}
+                  className={cn(
+                    'text-sm font-semibold transition-colors',
+                    canResend ? 'text-primary hover:text-teal' : 'text-muted-foreground',
+                  )}
+                  disabled={!canResend}
+                >
+                  {canResend ? t('auth.resendNow') : t('auth.resendIn', { time: formatTime(timeLeft) })}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep('contact')}
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                >
+                  {t('auth.changeContact')}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="pt-4 text-center">
+            <button type="button" onClick={handleDemo} className="text-sm font-semibold text-primary transition-colors hover:text-teal">
+              {t('auth.useDemo')}
+            </button>
+          </div>
         </div>
       </div>
     </main>

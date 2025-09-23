@@ -7,18 +7,29 @@
 @layer base {
   :root {
     /* Brand Colors */
-    --color-primary: 142 81% 40%;        /* #0FBF6D */
-    --color-timer: 142 84% 39%;          /* #0AA66D */
-    --color-teal: 180 97% 33%;           /* #03A6A6 */
-    --color-blue: 195 97% 39%;           /* #049DBF */
-    
+    --color-primary: 152 85% 40%;          /* #0FBF6D */
+    --color-timer: 158 88% 35%;            /* #0AA66D */
+    --color-teal: 180 96% 33%;             /* #03A6A6 */
+    --color-blue: 191 96% 38%;             /* #049DBF */
+    --color-ocean: 197 96% 38%;            /* #048ABF */
+
     /* Base Colors */
-    --color-fg: 0 0% 7%;                 /* #111111 */
-    --color-muted: 0 0% 47%;             /* #777777 */
-    --color-bg: 0 0% 97%;                /* #F7F7F7 */
-    --color-card: 0 0% 100%;             /* #FFFFFF */
-    --color-border: 0 0% 93%;            /* #EEEEEE */
-    
+    --color-fg: 210 27% 12%;               /* #132235 */
+    --color-muted: 210 15% 46%;            /* #6E7C8B */
+    --color-bg: 197 72% 96%;               /* #EFF7FB */
+    --color-card: 0 0% 100%;               /* #FFFFFF */
+    --color-border: 196 56% 86%;           /* #CFE8F4 */
+    --color-glass: 0 0% 100% / 0.78;
+
+    /* Decorative tokens */
+    --gradient-aurora:
+      radial-gradient(circle at 15% 15%, hsl(var(--color-blue) / 0.32), transparent 60%),
+      radial-gradient(circle at 85% 10%, hsl(var(--color-teal) / 0.28), transparent 60%),
+      radial-gradient(120% 120% at 80% 85%, hsl(var(--color-primary) / 0.25), transparent 55%);
+    --shadow-lux: 0 28px 60px -28px rgba(4, 154, 191, 0.55);
+    --shadow-glow: 0 18px 40px -16px rgba(15, 191, 109, 0.45);
+    --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
     /* Semantic tokens for shadcn compatibility */
     --background: var(--color-bg);
     --foreground: var(--color-fg);
@@ -50,28 +61,36 @@ html, body {
 
 /* Component utilities */
 @layer components {
+  .glass-card {
+    @apply rounded-3xl border border-white/40 bg-white/80 shadow-lux backdrop-blur-xl;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 shadow-sm backdrop-blur;
+  }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-white font-semibold shadow-soft active:scale-[0.99] transition-transform;
+    @apply inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-primary via-teal to-blue px-4 py-3 text-primary-foreground font-semibold shadow-glow transition-all duration-200 hover:shadow-lux active:scale-[0.98];
   }
-  
+
   .btn-outline {
-    @apply inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-3 text-foreground font-semibold hover:bg-muted/50;
+    @apply inline-flex items-center justify-center rounded-2xl border border-white/50 bg-white/80 px-4 py-3 text-foreground font-semibold shadow-sm backdrop-blur hover:border-primary/40 hover:text-primary;
   }
-  
+
   .chip {
-    @apply inline-flex items-center gap-2 rounded-xl border px-3 py-1 text-sm font-medium;
+    @apply inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur;
   }
-  
+
   .chip-escrow {
-    @apply border-primary/30 bg-primary/5 text-primary;
+    @apply border-primary/40 bg-primary/10 text-primary;
   }
-  
+
   .chip-lane {
-    @apply border-teal/30 bg-teal/5 text-teal;
+    @apply border-blue/40 bg-blue/10 text-blue;
   }
-  
+
   .chip-timer {
-    @apply border-timer/30 bg-timer/5 text-timer;
+    @apply border-timer/40 bg-timer/10 text-timer;
   }
 }
 
@@ -92,11 +111,24 @@ html, body {
   }
 
   .shadow-soft {
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    box-shadow: 0 10px 30px rgba(10, 52, 84, 0.06);
   }
-  
+
   .shadow-card {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    box-shadow: 0 18px 45px rgba(4, 154, 191, 0.14);
+  }
+
+  .shadow-lux {
+    box-shadow: var(--shadow-lux);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .bg-app-gradient {
+    background-color: hsl(var(--color-bg));
+    background-image: var(--gradient-aurora);
   }
 }
 
@@ -106,6 +138,11 @@ html, body {
   }
 
   body {
-    @apply bg-background text-foreground;
+    font-family: var(--font-primary);
+    background-color: hsl(var(--color-bg));
+    background-image: var(--gradient-aurora);
+    background-attachment: fixed;
+    background-size: cover;
+    color: hsl(var(--color-fg));
   }
 }

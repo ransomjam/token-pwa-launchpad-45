@@ -93,26 +93,26 @@ const buyerNames = ['Fabrice N.', 'Stéphanie K.', 'Roland T.', 'Claudia M.', 'Y
 function getLaneTone(signal: ImporterListing['lane']['signal']) {
   switch (signal) {
     case 'green':
-      return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/40';
+      return 'border border-primary/40 bg-primary/15 text-primary shadow-soft';
     case 'amber':
-      return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
+      return 'border border-amber-300/50 bg-amber-100/40 text-amber-700 shadow-soft';
     case 'red':
-      return 'bg-red-500/15 text-red-600 border-red-500/30';
+      return 'border border-rose-300/50 bg-rose-100/40 text-rose-600 shadow-soft';
     default:
-      return 'bg-muted text-muted-foreground border-border';
+      return 'border border-white/50 bg-white/70 text-muted-foreground shadow-sm';
   }
 }
 
 function getStatusChipTone(status: ReturnType<typeof statusTone>) {
   switch (status) {
     case 'green':
-      return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
+      return 'border border-primary/40 bg-primary/15 text-primary shadow-soft';
     case 'amber':
-      return 'bg-amber-500/20 text-amber-700 border-amber-500/30';
+      return 'border border-amber-300/50 bg-amber-100/40 text-amber-700 shadow-soft';
     case 'blue':
-      return 'bg-sky-500/15 text-sky-600 border-sky-500/30';
+      return 'border border-blue/40 bg-blue/15 text-blue shadow-soft';
     default:
-      return 'bg-slate-500/15 text-slate-600 border-slate-400/30';
+      return 'border border-white/50 bg-white/70 text-muted-foreground shadow-sm';
   }
 }
 
