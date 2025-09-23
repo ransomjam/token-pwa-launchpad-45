@@ -1,5 +1,4 @@
-
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
@@ -36,7 +35,7 @@ type EvidenceKind = 'supplierInvoice' | 'awb';
 
 const milestoneOrder: MilestoneCode[] = ['POOL_LOCKED', 'SUPPLIER_PAID', 'EXPORTED', 'ARRIVED', 'COLLECTED'];
 
-const milestoneIcons: Record<MilestoneCode, React.ComponentType<{ className?: string }>> = {
+const milestoneIcons: Record<MilestoneCode, ComponentType<{ className?: string }>> = {
   POOL_LOCKED: ShieldCheck,
   SUPPLIER_PAID: BadgeCheck,
   EXPORTED: Plane,

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { trackEvent } from '@/lib/analytics';
 
 export type Locale = 'en' | 'fr';
@@ -1730,7 +1730,7 @@ const format = (template: string, vars?: InterpolationValues) => {
   });
 };
 
-export const I18nProvider = ({ children }: { children: React.ReactNode }) => {
+export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const [locale, setLocaleState] = useState<Locale>(() => getPreferredLocale());
 
   useEffect(() => {
