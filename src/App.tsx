@@ -19,6 +19,7 @@ import CreateListingWizard from "./pages/CreateListingWizard";
 import Profile from "./pages/Profile";
 import PublicImporterProfile from "./pages/PublicImporterProfile";
 import ShareRedirect from "./pages/ShareRedirect";
+import RefundPolicy from "./pages/RefundPolicy";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/s/:id" element={<ShareRedirect context="store" />} />
                 <Route path="/mock/psp" element={<MockPsp />} />
                 <Route path="/offline" element={<Offline />} />
+                <Route path="/policy/refunds" element={<RefundPolicy />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
