@@ -31,14 +31,22 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
   const setSession = useCallback((value: Session) => {
     setSessionState(value);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      } catch (error) {
+        console.error('Failed to persist session', error);
+      }
     }
   }, []);
 
   const clearSession = useCallback(() => {
     setSessionState(null);
     if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(STORAGE_KEY);
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch (error) {
+        console.error('Failed to clear session', error);
+      }
     }
   }, []);
 
@@ -47,7 +55,11 @@ export const SessionProvider = ({ children }: { children: React.ReactNode }) => 
       if (!prev) return prev;
       const next = updater(prev);
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch (error) {
+          console.error('Failed to persist session', error);
+        }
       }
       return next;
     });
