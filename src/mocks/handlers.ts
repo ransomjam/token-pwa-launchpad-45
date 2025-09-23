@@ -64,7 +64,14 @@ function orderPayload(order: Order) {
 export const handlers = [
   // Session (stub)
   http.get(`${BASE}/auth/session`, () => {
-    const sess: Session = { userId: 'usr_buyer_1', role: 'buyer', token: 'mock-token' };
+    const sess: Session = {
+      userId: 'usr_buyer_1',
+      displayName: 'Nadege',
+      contact: 'nadege@demo.prolist',
+      role: 'buyer',
+      hasSelectedRole: true,
+      verifiedImporter: false,
+    };
     return HttpResponse.json(sess);
   }),
 
