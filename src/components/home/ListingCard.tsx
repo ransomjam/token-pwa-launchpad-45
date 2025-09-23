@@ -182,10 +182,16 @@ export const ListingCard = ({
       aria-label={cardAria}
       onKeyDown={handleKeyDown}
       onClick={handleOpen}
-      className="group relative flex cursor-pointer flex-col gap-5 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-5 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100"
+      className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-4 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100"
     >
+      {listing.importer.verified && (
+        <span className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary shadow-soft">
+          <CheckCheck className="h-3 w-3" />
+          {t('home.verifiedImporter')}
+        </span>
+      )}
       <div className="relative">
-        <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-2xl bg-muted">
+        <AspectRatio ratio={5 / 2} className="overflow-hidden rounded-2xl bg-muted">
           <img
             src={displayImage}
             loading="lazy"
@@ -210,45 +216,39 @@ export const ListingCard = ({
         <div className="absolute left-4 top-4 flex items-center gap-2">
           <span
             aria-label={etaChipAria}
-            className="pill gap-1.5 bg-white/85 text-foreground/80 shadow-soft normal-case"
+            className="pill gap-1 bg-white/85 px-2 py-1 text-xs text-foreground/80 shadow-soft normal-case"
           >
-            <Clock3 className="h-3.5 w-3.5 text-blue" />
+            <Clock3 className="h-3 w-3 text-blue" />
             {etaChipLabel}
           </span>
         </div>
-        <div className="absolute right-4 top-4">
+        <div className="absolute left-4 bottom-4">
           <span
             className={cn(
-              'pill max-w-[220px] gap-1.5 bg-white/80 text-foreground/80 normal-case',
+              'pill max-w-[220px] gap-1 bg-white/80 px-2 py-1 text-[11px] text-foreground/80 normal-case',
               laneBadgeStyles[tone].base,
             )}
             aria-label={`${laneLabel}`}
           >
-            <LaneIcon className="h-3.5 w-3.5" />
+            <LaneIcon className="h-3 w-3" />
             <span className="truncate">{laneLabel}</span>
           </span>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-start gap-2">
-              <h3 className="line-clamp-2 flex-1 text-base font-semibold leading-tight text-foreground">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex items-start gap-1.5">
+              <h3 className="line-clamp-2 flex-1 text-sm font-semibold leading-snug text-foreground">
                 {listing.title}
               </h3>
-              {listing.importer.verified && (
-                <span className="pill gap-1.5 border-primary/40 bg-primary/15 text-primary normal-case">
-                  <CheckCheck className="h-3.5 w-3.5" />
-                  {t('home.verifiedImporter')}
-                </span>
-              )}
             </div>
             <div>
               <button
                 type="button"
                 onClick={handleImporterProfile}
-                className="inline-flex items-center gap-1 rounded-full border border-white/60 bg-white/80 px-3 py-1 text-xs font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="inline-flex items-center gap-1 rounded-full border border-white/60 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <span className="truncate">
                   {t('home.importerByline', { name: listing.importer.displayName })}
@@ -258,35 +258,35 @@ export const ListingCard = ({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-base font-semibold text-foreground">{formattedPrice}</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{moqLabel}</p>
+            <p className="text-sm font-semibold text-foreground">{formattedPrice}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{moqLabel}</p>
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground/90">{factsLine}</p>
+        <p className="text-xs text-muted-foreground/90">{factsLine}</p>
 
-        <div className="flex items-center gap-3">
-          <Progress value={progressValue} aria-label={progressAria} className="flex-1" />
+        <div className="flex items-center gap-2">
+          <Progress value={progressValue} aria-label={progressAria} className="flex-1 h-1.5" />
           {percent >= 80 && (
-            <span className="pill gap-1 border-primary/40 bg-primary/20 text-primary">
+            <span className="pill gap-1 border-primary/40 bg-primary/20 px-2 py-1 text-[11px] text-primary">
               {t('home.almostThere')}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-sm text-muted-foreground/90">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
-            <ShieldCheck className="h-4 w-4" />
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground/90">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
+            <ShieldCheck className="h-3.5 w-3.5" />
           </span>
-          <span className="font-medium text-foreground/80">{t('home.heroCopy')}</span>
+          <span className="font-medium text-foreground/80 leading-tight">{t('home.heroCopy')}</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 pt-1">
+      <div className="flex items-center justify-between gap-2 pt-1">
         <Button
           onClick={handlePreOrder}
           aria-label={`${t('home.preorder')} ${listing.title}`}
-          className="h-12 flex-1 rounded-full text-base font-semibold shadow-lux"
+          className="h-10 flex-1 rounded-full text-sm font-semibold shadow-lux"
         >
           {t('home.preorder')}
         </Button>
@@ -297,9 +297,9 @@ export const ListingCard = ({
               variant="outline"
               onClick={handleShare}
               aria-label={t('home.shareWhatsapp', { title: listing.title })}
-              className="h-12 w-12 rounded-full border border-white/60 bg-white/80 p-0 text-muted-foreground shadow-soft backdrop-blur hover:border-primary/40 hover:text-primary"
+              className="h-10 w-10 rounded-full border border-white/60 bg-white/80 p-0 text-muted-foreground shadow-soft backdrop-blur hover:border-primary/40 hover:text-primary"
             >
-              <MessageCircle className="h-5 w-5" />
+              <MessageCircle className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">{t('home.share')}</TooltipContent>
