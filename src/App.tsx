@@ -22,6 +22,8 @@ import ShareRedirect from "./pages/ShareRedirect";
 import RefundPolicy from "./pages/RefundPolicy";
 
 const queryClient = new QueryClient();
+const rawBaseUrl = import.meta.env.BASE_URL ?? "/";
+const routerBasename = rawBaseUrl.replace(/\/+$/, "");
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,7 +33,7 @@ const App = () => (
           <MockProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter basename={routerBasename || undefined}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/listings/:id" element={<ListingDetails />} />
