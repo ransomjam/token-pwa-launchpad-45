@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+  type FormEvent,
+  type ReactNode,
+  type SVGProps,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   demoBuyerProfile,
@@ -7,6 +16,7 @@ import {
   loadImporterProfile,
   saveBuyerProfile,
   saveImporterProfile,
+  type PreferredWallet,
   type BuyerProfile,
   type ImporterProfile,
   type VerificationStep,
@@ -38,6 +48,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useNetworkStatus } from '@/hooks/use-network-status';
+import { listDemoOrders, type DemoOrderRecord } from '@/lib/demoOrderStorage';
+import { getDemoListingById } from '@/lib/demoMode';
+import type { OrderStatus } from '@/types';
 import {
   AlertCircle,
   ArrowRight,
@@ -45,16 +68,22 @@ import {
   Banknote,
   BellRing,
   Check,
+  CheckCircle,
   CheckCircle2,
   ChevronRight,
+  Clock,
   CreditCard,
   Globe2,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
+  Mail,
   MapPin,
+  MessageCircle,
   Package,
+  PhoneCall,
   PlusCircle,
+  Search,
   ShieldCheck,
   Sparkles,
   Trash2,
@@ -204,6 +233,103 @@ const QuickActionButton = ({
   </button>
 );
 
+type OrderQuickStatus = 'in_transit' | 'arrived' | 'late' | 'refunded';
+
+type QuickFlow = 'orders' | 'pickups' | 'payments' | 'support';
+
+type OrderEtaCustomKey = 'tracking';
+
+type OrderSummary = {
+  id: string;
+  title: string;
+  image: string;
+  quantity: number;
+  unitPrice: number;
+  status: OrderQuickStatus;
+  etaType?: 'days' | 'hours' | 'ready' | 'late' | 'refunded' | 'custom';
+  etaValue?: number | OrderEtaCustomKey;
+  pickupHub: string;
+  createdAt: string;
+};
+
+const FALLBACK_ORDERS: OrderSummary[] = [
+  {
+    id: 'demo-order-1',
+    title: 'Baseus 30W Charger (EU Plug)',
+    image: 'https://images.unsplash.com/photo-1582719478173-d83e7e913b95?auto=format&fit=crop&w=600&q=80',
+    quantity: 2,
+    unitPrice: 6500,
+    status: 'in_transit',
+    etaType: 'days',
+    etaValue: 3,
+    pickupHub: 'Akwa Pickup Hub',
+    createdAt: '2025-07-18T09:00:00Z',
+  },
+  {
+    id: 'demo-order-2',
+    title: 'Wireless Earbuds (TWS, USB-C)',
+    image: 'https://images.unsplash.com/photo-1585386959984-a4155229a1ab?auto=format&fit=crop&w=600&q=80',
+    quantity: 1,
+    unitPrice: 8900,
+    status: 'arrived',
+    etaType: 'ready',
+    pickupHub: 'Biyem-Assi Hub',
+    createdAt: '2025-07-12T09:00:00Z',
+  },
+  {
+    id: 'demo-order-3',
+    title: 'Velvet Matte Lipstick (3-pack)',
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80',
+    quantity: 3,
+    unitPrice: 5200,
+    status: 'late',
+    etaType: 'late',
+    pickupHub: 'Akwa Pickup Hub',
+    createdAt: '2025-07-05T09:00:00Z',
+  },
+];
+
+type SupportTopic = 'order' | 'payment' | 'app';
+
+const WALLET_OPTIONS: Array<{
+  id: PreferredWallet;
+  labelKey: `profile.paymentsFlow.options.${string}`;
+  helperKey: `profile.paymentsFlow.helpers.${string}`;
+}> = [
+  {
+    id: 'mtn-momo',
+    labelKey: 'profile.paymentsFlow.options.mtn',
+    helperKey: 'profile.paymentsFlow.helpers.mtn',
+  },
+  {
+    id: 'orange-money',
+    labelKey: 'profile.paymentsFlow.options.orange',
+    helperKey: 'profile.paymentsFlow.helpers.orange',
+  },
+];
+
+const SUPPORT_TOPIC_OPTIONS: Array<{ id: SupportTopic; labelKey: `profile.supportFlow.topics.${string}` }> = [
+  { id: 'order', labelKey: 'profile.supportFlow.topics.order' },
+  { id: 'payment', labelKey: 'profile.supportFlow.topics.payment' },
+  { id: 'app', labelKey: 'profile.supportFlow.topics.app' },
+];
+
+const normaliseOrderStatus = (status?: OrderStatus | null): OrderQuickStatus => {
+  switch (status) {
+    case 'ARRIVED':
+    case 'COLLECTED':
+    case 'ESCROW_RELEASED':
+    case 'CLOSED':
+      return 'arrived';
+    case 'LATE':
+      return 'late';
+    case 'REFUNDED':
+      return 'refunded';
+    default:
+      return 'in_transit';
+  }
+};
+
 const computeStepProgress = (steps: VerificationStep[]) => {
   const completed = steps.filter(step => step.status === 'complete').length;
   return Math.round((completed / steps.length) * 100);
@@ -215,14 +341,77 @@ const Profile = () => {
   const { t, locale } = useI18n();
 
   const mode: 'buyer' | 'importer' = session?.role ?? 'buyer';
+  const isOnline = useNetworkStatus();
 
   const [buyerProfile, setBuyerProfile] = useState<BuyerProfile | null>(null);
   const [importerProfile, setImporterProfile] = useState<ImporterProfile | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [verificationStep, setVerificationStep] = useState<VerificationStep | null>(null);
+  const [activeFlow, setActiveFlow] = useState<QuickFlow | null>(null);
+  const [storedOrders, setStoredOrders] = useState<OrderSummary[]>([]);
+  const [orderFilter, setOrderFilter] = useState<OrderQuickStatus | 'all'>('all');
+  const [orderSearch, setOrderSearch] = useState('');
+  const [walletSelection, setWalletSelection] = useState<PreferredWallet | null>(null);
+  const [pickupSearch, setPickupSearch] = useState('');
+  const [pendingPickupId, setPendingPickupId] = useState<string | null>(null);
+  const [addingHub, setAddingHub] = useState(false);
+  const [newHub, setNewHub] = useState({ name: '', address: '', city: '', phone: '' });
+  const [supportTopic, setSupportTopic] = useState<SupportTopic>('order');
+  const [supportMessage, setSupportMessage] = useState('');
 
   const activeBuyer = buyerProfile ?? demoBuyerProfile;
   const activeImporter = importerProfile ?? demoImporterProfile;
+
+  const mapDemoOrderToSummary = useCallback(
+    (order: DemoOrderRecord): OrderSummary => {
+      const listingId = order.listingId ?? order.listing?.id;
+      const listingMeta = getDemoListingById(listingId ?? undefined);
+      const title = order.listing?.title ?? listingMeta?.title ?? t('profile.ordersFlow.fallbackTitle');
+      const quantity = order.qty ?? 1;
+      const unitPrice = order.listing?.priceXAF ?? listingMeta?.priceXAF ?? 0;
+    const image = listingMeta?.images?.[0] ?? '/demo/charger-front.svg';
+    const pickupHub = order.pickupPoint?.name ?? listingMeta?.importer?.displayName ?? activeBuyer.pickups[0]?.name ?? '';
+    const status = normaliseOrderStatus(order.status);
+
+    let etaType: OrderSummary['etaType'];
+    let etaValue: OrderSummary['etaValue'];
+    if (status === 'arrived') {
+      etaType = 'ready';
+    } else if (status === 'late') {
+      etaType = 'late';
+    } else if (status === 'refunded') {
+      etaType = 'refunded';
+    } else {
+      const secondsLeft = order.countdown?.secondsLeft ?? 0;
+      if (secondsLeft > 0) {
+        if (secondsLeft >= 86_400) {
+          etaType = 'days';
+          etaValue = Math.ceil(secondsLeft / 86_400);
+        } else {
+          etaType = 'hours';
+          etaValue = Math.max(1, Math.ceil(secondsLeft / 3_600));
+        }
+      } else {
+        etaType = 'custom';
+        etaValue = 'tracking';
+      }
+    }
+
+      return {
+        id: order.id,
+        title,
+        image,
+        quantity,
+        unitPrice,
+        status,
+        etaType,
+        etaValue,
+        pickupHub,
+        createdAt: order.createdAt ?? new Date().toISOString(),
+      };
+    },
+    [activeBuyer.pickups, t],
+  );
 
   useEffect(() => {
     if (mode === 'buyer') {
@@ -243,6 +432,16 @@ const Profile = () => {
     trackEvent('kyc_step_view', { step: verificationStep.id });
   }, [verificationStep]);
 
+  useEffect(() => {
+    if (mode !== 'buyer') return;
+    const demoOrders = listDemoOrders();
+    if (!demoOrders.length) {
+      setStoredOrders([]);
+      return;
+    }
+    setStoredOrders(demoOrders.map(mapDemoOrderToSummary));
+  }, [mode, mapDemoOrderToSummary]);
+
   const maskedContact = useMemo(() => {
     if (mode === 'buyer') {
       return `${activeBuyer.maskedPhone} • ${activeBuyer.maskedEmail}`;
@@ -257,6 +456,16 @@ const Profile = () => {
     return activeImporter.storeName || session?.displayName || demoImporterProfile.storeName;
   }, [mode, activeBuyer, activeImporter, session]);
 
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
+        style: 'currency',
+        currency: 'XAF',
+        maximumFractionDigits: 0,
+      }),
+    [locale],
+  );
+
   const initials = headerName
     .split(' ')
     .map(part => part[0])
@@ -267,28 +476,330 @@ const Profile = () => {
   const buyerDefaultPickup = activeBuyer.pickups.find(pickup => pickup.id === activeBuyer.defaultPickupId) ??
     demoBuyerProfile.pickups[0];
 
+  const orders = useMemo(() => {
+    const base = (() => {
+      if (!storedOrders.length) return FALLBACK_ORDERS;
+      const needed = Math.max(0, 3 - storedOrders.length);
+      return needed > 0 ? [...storedOrders, ...FALLBACK_ORDERS.slice(0, needed)] : storedOrders;
+    })();
+    return [...base].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [storedOrders]);
+
+  const hasStoredOrders = storedOrders.length > 0;
+
+  const orderStatusMeta = useMemo<Record<OrderQuickStatus, { label: string; className: string }>>(
+    () => ({
+      in_transit: {
+        label: t('profile.ordersFlow.status.inTransit'),
+        className: 'border-sky-200 bg-sky-50 text-sky-600',
+      },
+      arrived: {
+        label: t('profile.ordersFlow.status.arrived'),
+        className: 'border-emerald-200 bg-emerald-50 text-emerald-600',
+      },
+      late: {
+        label: t('profile.ordersFlow.status.late'),
+        className: 'border-amber-200 bg-amber-50 text-amber-600',
+      },
+      refunded: {
+        label: t('profile.ordersFlow.status.refunded'),
+        className: 'border-slate-200 bg-slate-50 text-slate-600',
+      },
+    }),
+    [t],
+  );
+
+  const orderFilterOptions = useMemo(
+    () => [
+      { id: 'all' as const, label: t('profile.ordersFlow.filters.all') },
+      { id: 'in_transit' as const, label: t('profile.ordersFlow.filters.inTransit') },
+      { id: 'arrived' as const, label: t('profile.ordersFlow.filters.arrived') },
+      { id: 'late' as const, label: t('profile.ordersFlow.filters.late') },
+      { id: 'refunded' as const, label: t('profile.ordersFlow.filters.refunded') },
+    ],
+    [t],
+  );
+
+  const filteredOrders = useMemo(() => {
+    const search = orderSearch.trim().toLowerCase();
+    return orders.filter(order => {
+      const matchesFilter = orderFilter === 'all' || order.status === orderFilter;
+      if (!matchesFilter) return false;
+      if (!search) return true;
+      return (
+        order.title.toLowerCase().includes(search) ||
+        order.pickupHub.toLowerCase().includes(search) ||
+        order.id.toLowerCase().includes(search)
+      );
+    });
+  }, [orders, orderFilter, orderSearch]);
+
+  const isOrdersEmpty = filteredOrders.length === 0;
+
+  const openOrdersCount = useMemo(
+    () => orders.filter(order => order.status === 'in_transit' || order.status === 'late').length,
+    [orders],
+  );
+
+  const recentOrder = orders[0] ?? null;
+
+  const getOrderEtaLabel = useCallback(
+    (order: OrderSummary) => {
+      if (order.etaType === 'days' && typeof order.etaValue === 'number') {
+        return t('profile.ordersFlow.eta.days', { value: order.etaValue });
+      }
+      if (order.etaType === 'hours' && typeof order.etaValue === 'number') {
+        return t('profile.ordersFlow.eta.hours', { value: order.etaValue });
+      }
+      if (order.etaType === 'ready') {
+        return t('profile.ordersFlow.eta.ready');
+      }
+      if (order.etaType === 'late') {
+        return t('profile.ordersFlow.eta.late');
+      }
+      if (order.etaType === 'refunded') {
+        return t('profile.ordersFlow.eta.refunded');
+      }
+      if (order.etaType === 'custom' && order.etaValue) {
+        return order.etaValue === 'tracking'
+          ? t('profile.ordersFlow.eta.custom.tracking')
+          : t('profile.ordersFlow.eta.fallback');
+      }
+      return t('profile.ordersFlow.eta.fallback');
+    },
+    [t],
+  );
+
+  const preferredWalletLabel = useMemo(() => {
+    if (!activeBuyer.payments.preferredWallet) return null;
+    const option = WALLET_OPTIONS.find(item => item.id === activeBuyer.payments.preferredWallet);
+    return option ? t(option.labelKey) : null;
+  }, [activeBuyer.payments.preferredWallet, t]);
+
+  const notifyActive = activeBuyer.payments.notifyOnLaunch;
+
+  const filteredPickupOptions = useMemo(() => {
+    const pool = activeBuyer.pickups.length ? activeBuyer.pickups : demoBuyerProfile.pickups;
+    const search = pickupSearch.trim().toLowerCase();
+    if (!search) return pool;
+    return pool.filter(
+      pickup =>
+        pickup.name.toLowerCase().includes(search) ||
+        pickup.city.toLowerCase().includes(search) ||
+        pickup.address.toLowerCase().includes(search),
+    );
+  }, [activeBuyer.pickups, pickupSearch]);
+
+  const sortedPickupOptions = useMemo(
+    () =>
+      [...filteredPickupOptions].sort((a, b) => {
+        if (a.id === activeBuyer.defaultPickupId) return -1;
+        if (b.id === activeBuyer.defaultPickupId) return 1;
+        return a.name.localeCompare(b.name);
+      }),
+    [filteredPickupOptions, activeBuyer.defaultPickupId],
+  );
+
+  const supportContacts = useMemo(
+    () => [
+      {
+        id: 'whatsapp' as const,
+        label: t('profile.supportFlow.contacts.whatsapp'),
+        href: 'https://wa.me/237651000020',
+        icon: MessageCircle,
+      },
+      {
+        id: 'call' as const,
+        label: t('profile.supportFlow.contacts.call'),
+        href: 'tel:+237651000020',
+        icon: PhoneCall,
+      },
+      {
+        id: 'email' as const,
+        label: t('profile.supportFlow.contacts.email'),
+        href: 'mailto:support@prolist.africa',
+        icon: Mail,
+      },
+    ],
+    [t],
+  );
+
+  const openQuickFlow = useCallback(
+    (flow: QuickFlow) => {
+      setActiveFlow(flow);
+      trackEvent('profile_quick_action_open', { flow, mode });
+    },
+    [mode],
+  );
+
+  const closeQuickFlow = useCallback(() => setActiveFlow(null), []);
+
+  useEffect(() => {
+    if (activeFlow === 'orders') {
+      setOrderFilter('all');
+      setOrderSearch('');
+    } else if (activeFlow === 'pickups') {
+      setPickupSearch('');
+      setPendingPickupId(activeBuyer.defaultPickupId);
+      setAddingHub(false);
+      setNewHub({ name: '', address: '', city: '', phone: '' });
+    } else if (activeFlow === 'payments') {
+      setWalletSelection(activeBuyer.payments.preferredWallet);
+    } else if (activeFlow === 'support') {
+      setSupportTopic('order');
+      setSupportMessage('');
+    }
+  }, [activeFlow, activeBuyer.defaultPickupId, activeBuyer.payments.preferredWallet]);
+
+  const handleOpenOrder = (orderId: string) => {
+    closeQuickFlow();
+    trackEvent('profile_order_open', { orderId });
+    navigate(`/order/${orderId}`);
+  };
+
+  const handleConfirmPickup = () => {
+    if (!pendingPickupId) {
+      closeQuickFlow();
+      return;
+    }
+    if (pendingPickupId === activeBuyer.defaultPickupId) {
+      closeQuickFlow();
+      return;
+    }
+    setBuyerProfile(prev => {
+      const base = prev ?? loadBuyerProfile();
+      const updated = { ...base, defaultPickupId: pendingPickupId };
+      saveBuyerProfile(updated);
+      return updated;
+    });
+    trackEvent('pickup_default_change', { mode: 'buyer', pickupId: pendingPickupId });
+    toast({ title: t('profile.toast.pickupSaved') });
+    closeQuickFlow();
+  };
+
+  const handleAddPickupHub = () => {
+    const name = newHub.name.trim();
+    const address = newHub.address.trim();
+    const city = newHub.city.trim();
+    const phone = newHub.phone.trim();
+    if (!name || !address || !city) {
+      toast({ title: t('profile.pickupsFlow.toastMissingFields') });
+      return;
+    }
+    const id = `pickup-${Date.now()}`;
+    const entry = { id, name, address, city, phone: phone || undefined };
+    setBuyerProfile(prev => {
+      const base = prev ?? loadBuyerProfile();
+      const updated: BuyerProfile = {
+        ...base,
+        pickups: [...base.pickups, entry],
+      };
+      saveBuyerProfile(updated);
+      return updated;
+    });
+    trackEvent('pickup_added', { mode: 'buyer', pickupId: id });
+    setPendingPickupId(id);
+    setAddingHub(false);
+    setNewHub({ name: '', address: '', city: '', phone: '' });
+    toast({ title: t('profile.pickupsFlow.toastHubAdded') });
+  };
+
+  const handleSaveWallet = () => {
+    if (!walletSelection) {
+      closeQuickFlow();
+      return;
+    }
+    setBuyerProfile(prev => {
+      const base = prev ?? loadBuyerProfile();
+      const updated: BuyerProfile = {
+        ...base,
+        payments: {
+          ...base.payments,
+          preferredWallet: walletSelection,
+        },
+      };
+      saveBuyerProfile(updated);
+      return updated;
+    });
+    trackEvent('profile_payment_preference_save', { wallet: walletSelection });
+    toast({ title: t('profile.toast.paymentSaved') });
+    closeQuickFlow();
+  };
+
+  const handleNotifyMe = () => {
+    if (activeBuyer.payments.notifyOnLaunch) {
+      toast({ title: t('profile.toast.notifyExisting') });
+      return;
+    }
+    setBuyerProfile(prev => {
+      const base = prev ?? loadBuyerProfile();
+      const updated: BuyerProfile = {
+        ...base,
+        payments: {
+          ...base.payments,
+          notifyOnLaunch: true,
+        },
+      };
+      saveBuyerProfile(updated);
+      return updated;
+    });
+    trackEvent('profile_payment_notify_subscribe');
+    toast({ title: t('profile.toast.notifySaved') });
+  };
+
+  const handleSupportSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedMessage = supportMessage.trim();
+    if (!trimmedMessage) {
+      toast({ title: t('profile.supportFlow.toastMissingMessage') });
+      return;
+    }
+    trackEvent('profile_support_request', { topic: supportTopic, offline: !isOnline });
+    toast({ title: t('profile.toast.supportSent') });
+    setSupportMessage('');
+    closeQuickFlow();
+  };
+
+  const handleOpenDispute = (orderId: string) => {
+    closeQuickFlow();
+    trackEvent('profile_support_dispute_shortcut', { orderId });
+    toast({ title: t('profile.supportFlow.toastDisputeOpened') });
+    navigate(`/order/${orderId}`);
+  };
+
   const quickActions = mode === 'buyer'
     ? [
         {
           label: t('profile.actions.orders'),
-          description: t('profile.actions.ordersHint'),
+          description:
+            openOrdersCount > 0
+              ? t('profile.quickSummary.orders', { count: openOrdersCount })
+              : t('profile.quickSummary.ordersZero'),
           icon: Package,
+          onClick: () => openQuickFlow('orders'),
         },
         {
           label: t('profile.actions.pickups'),
-          description: t('profile.actions.pickupsHint'),
+          description: t('profile.quickSummary.pickups', { name: buyerDefaultPickup.name }),
           icon: MapPin,
+          onClick: () => openQuickFlow('pickups'),
         },
         {
           label: t('profile.actions.paymentsSoon'),
-          description: t('profile.actions.paymentsSoonHint'),
+          description: preferredWalletLabel
+            ? t('profile.quickSummary.payments', { wallet: preferredWalletLabel })
+            : t('profile.quickSummary.paymentsUnset'),
           icon: CreditCard,
           badge: t('profile.badges.comingSoon'),
+          onClick: () => openQuickFlow('payments'),
         },
         {
           label: t('profile.actions.support'),
-          description: t('profile.actions.supportHint'),
+          description: t('profile.quickSummary.support'),
           icon: LifeBuoy,
+          onClick: () => openQuickFlow('support'),
         },
       ]
     : [
@@ -1025,6 +1536,453 @@ const Profile = () => {
           </SectionCard>
         </Accordion>
       </div>
+
+      <Drawer open={activeFlow === 'orders'} onOpenChange={open => (!open ? closeQuickFlow() : undefined)}>
+        <DrawerContent className="rounded-t-3xl">
+          <DrawerHeader className="px-6 pt-6 text-left">
+            <DrawerTitle>{t('profile.ordersFlow.title')}</DrawerTitle>
+            <DrawerDescription>{t('profile.ordersFlow.subtitle')}</DrawerDescription>
+          </DrawerHeader>
+          <div className="space-y-4 px-6 pb-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
+                {orderFilterOptions.map(option => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setOrderFilter(option.id)}
+                    className={cn(
+                      'rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors',
+                      orderFilter === option.id && 'border-primary bg-primary text-primary-foreground shadow-soft',
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className="relative ml-auto w-full max-w-[220px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={orderSearch}
+                  onChange={event => setOrderSearch(event.target.value)}
+                  placeholder={t('profile.ordersFlow.searchPlaceholder')}
+                  className="rounded-full border-border/70 bg-muted/40 pl-9"
+                />
+              </div>
+            </div>
+            <div className="space-y-3">
+              {isOrdersEmpty ? (
+                <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border/60 bg-muted/40 px-6 py-12 text-center">
+                  <Package className="h-8 w-8 text-muted-foreground" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{t('profile.ordersFlow.emptyTitle')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {hasStoredOrders ? t('profile.ordersFlow.emptyFiltered') : t('profile.ordersFlow.emptySubtitle')}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      closeQuickFlow();
+                      navigate('/');
+                    }}
+                    className="rounded-full"
+                  >
+                    {t('profile.ordersFlow.emptyAction')}
+                  </Button>
+                </div>
+              ) : (
+                filteredOrders.map(order => (
+                  <button
+                    key={order.id}
+                    type="button"
+                    onClick={() => handleOpenOrder(order.id)}
+                    className="flex items-stretch gap-3 rounded-2xl border border-border/70 bg-card/80 p-3 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px]"
+                  >
+                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl bg-muted">
+                      <img src={order.image} alt={order.title} className="h-full w-full object-cover" loading="lazy" />
+                    </div>
+                    <div className="flex flex-1 flex-col justify-between gap-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="line-clamp-2 text-sm font-semibold text-foreground">{order.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {order.quantity} × {currencyFormatter.format(order.unitPrice)}
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            'whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-semibold shadow-soft',
+                            orderStatusMeta[order.status].className,
+                          )}
+                        >
+                          {orderStatusMeta[order.status].label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-medium text-amber-600">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{getOrderEtaLabel(order)}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t('profile.ordersFlow.pickupLabel', { hub: order.pickupHub })}
+                      </p>
+                    </div>
+                    <ChevronRight className="mt-4 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={activeFlow === 'pickups'} onOpenChange={open => (!open ? closeQuickFlow() : undefined)}>
+        <DrawerContent className="rounded-t-3xl">
+          <DrawerHeader className="px-6 pt-6 text-left">
+            <DrawerTitle>{t('profile.pickupsFlow.title')}</DrawerTitle>
+            <DrawerDescription>{t('profile.pickupsFlow.subtitle')}</DrawerDescription>
+          </DrawerHeader>
+          <div className="space-y-4 px-6 pb-6">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={pickupSearch}
+                onChange={event => setPickupSearch(event.target.value)}
+                placeholder={t('profile.pickupsFlow.searchPlaceholder')}
+                className="rounded-2xl border-border/70 bg-muted/40 pl-10"
+              />
+            </div>
+            <div className="space-y-3">
+              {sortedPickupOptions.map(pickup => {
+                const isDefault = pickup.id === activeBuyer.defaultPickupId;
+                const selected = pendingPickupId === pickup.id;
+                const phoneHref = pickup.phone ? pickup.phone.replace(/\s+/g, '') : '';
+                return (
+                  <button
+                    key={pickup.id}
+                    type="button"
+                    onClick={() => setPendingPickupId(pickup.id)}
+                    className={cn(
+                      'flex items-start justify-between gap-3 rounded-2xl border border-border/70 bg-card/80 p-4 text-left shadow-soft transition-all hover:border-primary/40',
+                      selected && 'border-primary bg-primary/10',
+                    )}
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-foreground">{pickup.name}</p>
+                        {isDefault ? (
+                          <Badge className="rounded-full bg-emerald-600/90 text-[11px] text-emerald-50">
+                            {t('profile.pickupsFlow.defaultBadge')}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{pickup.address}</p>
+                      <p className="text-xs text-muted-foreground">{pickup.city}</p>
+                      {pickup.note ? (
+                        <p className="text-xs text-muted-foreground/80">{pickup.note}</p>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        {selected ? (
+                          <CheckCircle className="h-5 w-5 text-primary" />
+                        ) : (
+                          <CircleIcon />
+                        )}
+                      </div>
+                      {pickup.phone ? (
+                        <a
+                          href={`tel:${phoneHref}`}
+                          onClick={event => event.stopPropagation()}
+                          className="flex items-center gap-1 rounded-full border border-border/60 bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted/80"
+                        >
+                          <PhoneCall className="h-3.5 w-3.5" />
+                          {t('profile.pickupsFlow.callAction')}
+                        </a>
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {addingHub ? (
+              <div className="space-y-3 rounded-2xl border border-dashed border-border/70 bg-muted/20 p-4">
+                <div className="grid gap-2">
+                  <Label className="text-xs font-semibold text-muted-foreground" htmlFor="new-hub-name">
+                    {t('profile.pickupsFlow.form.name')}
+                  </Label>
+                  <Input
+                    id="new-hub-name"
+                    value={newHub.name}
+                    onChange={event => setNewHub(prev => ({ ...prev, name: event.target.value }))}
+                    className="rounded-2xl"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-xs font-semibold text-muted-foreground" htmlFor="new-hub-address">
+                    {t('profile.pickupsFlow.form.address')}
+                  </Label>
+                  <Input
+                    id="new-hub-address"
+                    value={newHub.address}
+                    onChange={event => setNewHub(prev => ({ ...prev, address: event.target.value }))}
+                    className="rounded-2xl"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-xs font-semibold text-muted-foreground" htmlFor="new-hub-city">
+                    {t('profile.pickupsFlow.form.city')}
+                  </Label>
+                  <Input
+                    id="new-hub-city"
+                    value={newHub.city}
+                    onChange={event => setNewHub(prev => ({ ...prev, city: event.target.value }))}
+                    className="rounded-2xl"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-xs font-semibold text-muted-foreground" htmlFor="new-hub-phone">
+                    {t('profile.pickupsFlow.form.phone')}
+                  </Label>
+                  <Input
+                    id="new-hub-phone"
+                    value={newHub.phone}
+                    onChange={event => setNewHub(prev => ({ ...prev, phone: event.target.value }))}
+                    className="rounded-2xl"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button onClick={handleAddPickupHub} className="flex-1 rounded-full">
+                    {t('profile.pickupsFlow.form.save')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-full"
+                    onClick={() => {
+                      setAddingHub(false);
+                      setNewHub({ name: '', address: '', city: '', phone: '' });
+                    }}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAddingHub(true)}
+                className="flex items-center gap-2 text-sm font-semibold text-primary"
+              >
+                <PlusCircle className="h-4 w-4" />
+                {t('profile.pickupsFlow.addNew')}
+              </button>
+            )}
+          </div>
+          <DrawerFooter className="px-6 pb-6">
+            <Button
+              onClick={handleConfirmPickup}
+              className="w-full rounded-full text-base font-semibold"
+              disabled={!pendingPickupId || pendingPickupId === activeBuyer.defaultPickupId}
+            >
+              {t('profile.pickupsFlow.confirm')}
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="ghost" className="w-full rounded-full">
+                {t('common.cancel')}
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={activeFlow === 'payments'} onOpenChange={open => (!open ? closeQuickFlow() : undefined)}>
+        <DrawerContent className="rounded-t-3xl">
+          <DrawerHeader className="px-6 pt-6 text-left">
+            <DrawerTitle>{t('profile.paymentsFlow.title')}</DrawerTitle>
+            <DrawerDescription>{t('profile.paymentsFlow.subtitle')}</DrawerDescription>
+          </DrawerHeader>
+          <div className="space-y-4 px-6 pb-6">
+            <div className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">
+              {t('profile.paymentsFlow.note')}
+            </div>
+            <RadioGroup value={walletSelection ?? ''} onValueChange={value => setWalletSelection(value as PreferredWallet)}>
+              {WALLET_OPTIONS.map(option => (
+                <Label
+                  key={option.id}
+                  htmlFor={`wallet-${option.id}`}
+                  className={cn(
+                    'flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft transition-all hover:border-primary/40',
+                    walletSelection === option.id && 'border-primary bg-primary/10',
+                  )}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t(option.labelKey)}</p>
+                    <p className="text-xs text-muted-foreground">{t(option.helperKey)}</p>
+                  </div>
+                  <RadioGroupItem value={option.id} id={`wallet-${option.id}`} className="h-5 w-5" />
+                </Label>
+              ))}
+            </RadioGroup>
+            <Button
+              type="button"
+              variant={notifyActive ? 'outline' : 'secondary'}
+              className={cn('w-full rounded-full', notifyActive && 'border-emerald-300 text-emerald-700')}
+              onClick={handleNotifyMe}
+            >
+              {notifyActive ? (
+                <span className="flex items-center justify-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  {t('profile.paymentsFlow.notifyActive')}
+                </span>
+              ) : (
+                t('profile.paymentsFlow.notifyCta')
+              )}
+            </Button>
+            <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{t('profile.paymentsFlow.faqTitle')}</p>
+                  <p className="text-xs text-muted-foreground">{t('profile.paymentsFlow.faqAnswer')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DrawerFooter className="px-6 pb-6">
+            <Button onClick={handleSaveWallet} className="w-full rounded-full text-base font-semibold">
+              {t('profile.paymentsFlow.save')}
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="ghost" className="w-full rounded-full">
+                {t('common.cancel')}
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer open={activeFlow === 'support'} onOpenChange={open => (!open ? closeQuickFlow() : undefined)}>
+        <DrawerContent className="rounded-t-3xl">
+          <DrawerHeader className="px-6 pt-6 text-left">
+            <DrawerTitle>{t('profile.supportFlow.title')}</DrawerTitle>
+            <DrawerDescription>{t('profile.supportFlow.subtitle')}</DrawerDescription>
+          </DrawerHeader>
+          <div className="space-y-4 px-6 pb-6">
+            {recentOrder ? (
+              <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{recentOrder.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('profile.supportFlow.recentOrderStatus', {
+                        status: orderStatusMeta[recentOrder.status].label,
+                      })}
+                    </p>
+                  </div>
+                  <Badge className="rounded-full bg-primary/10 text-primary">
+                    {orderStatusMeta[recentOrder.status].label}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" className="rounded-full" onClick={() => handleOpenOrder(recentOrder.id)}>
+                    {t('profile.supportFlow.viewStatus')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => handleOpenDispute(recentOrder.id)}
+                  >
+                    {t('profile.supportFlow.openDispute')}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card/80 px-4 py-3"
+              onClick={() => {
+                closeQuickFlow();
+                navigate('/policy/refunds');
+              }}
+            >
+              <span className="text-left">
+                <p className="text-sm font-semibold text-foreground">{t('profile.supportFlow.refundPolicyTitle')}</p>
+                <p className="text-xs text-muted-foreground">{t('profile.supportFlow.refundPolicySubtitle')}</p>
+              </span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </Button>
+
+            <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+              <div className="flex items-center gap-3">
+                <LifeBuoy className="h-5 w-5 text-primary" />
+                <p className="text-sm font-semibold text-foreground">{t('profile.supportFlow.contactTitle')}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {supportContacts.map(contact => {
+                  const Icon = contact.icon;
+                  return (
+                    <a
+                      key={contact.id}
+                      href={contact.href}
+                      target={contact.href.startsWith('http') ? '_blank' : undefined}
+                      rel={contact.href.startsWith('http') ? 'noreferrer' : undefined}
+                      onClick={() => trackEvent('profile_support_contact', { channel: contact.id })}
+                      className="flex items-center gap-2 rounded-full border border-border/70 bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted/80"
+                    >
+                      <Icon className="h-4 w-4" />
+                      {contact.label}
+                    </a>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">{t('profile.supportFlow.hours')}</p>
+              <p className="text-xs font-medium text-primary">{t('profile.supportFlow.promise')}</p>
+              {!isOnline ? (
+                <p className="rounded-2xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                  {t('profile.supportFlow.offline')}
+                </p>
+              ) : null}
+            </div>
+
+            <form onSubmit={handleSupportSubmit} className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-muted-foreground">{t('profile.supportFlow.form.topic')}</Label>
+                <Select value={supportTopic} onValueChange={value => setSupportTopic(value as SupportTopic)}>
+                  <SelectTrigger className="rounded-2xl">
+                    <SelectValue placeholder={t('profile.supportFlow.form.topicPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORT_TOPIC_OPTIONS.map(option => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {t(option.labelKey)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-muted-foreground" htmlFor="support-message">
+                  {t('profile.supportFlow.form.message')}
+                </Label>
+                <Textarea
+                  id="support-message"
+                  value={supportMessage}
+                  onChange={event => setSupportMessage(event.target.value)}
+                  rows={4}
+                  placeholder={t('profile.supportFlow.form.placeholder')}
+                  className="rounded-2xl"
+                />
+              </div>
+              <Button type="submit" className="w-full rounded-full">
+                {t('profile.supportFlow.form.submit')}
+              </Button>
+            </form>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <Drawer open={Boolean(editState)} onOpenChange={open => (!open ? closeEdit() : undefined)}>
         <DrawerContent className="rounded-t-3xl">

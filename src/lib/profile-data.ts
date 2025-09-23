@@ -39,6 +39,8 @@ export type DeviceInfo = {
   current?: boolean;
 };
 
+export type PreferredWallet = 'mtn-momo' | 'orange-money';
+
 export type BuyerProfile = {
   id: string;
   name: string;
@@ -56,6 +58,10 @@ export type BuyerProfile = {
   };
   privacy: {
     shareNameWithSellers: boolean;
+  };
+  payments: {
+    preferredWallet: PreferredWallet | null;
+    notifyOnLaunch: boolean;
   };
   kyc: {
     status: 'verified' | 'pending' | 'not_started';
@@ -204,6 +210,10 @@ export const demoBuyerProfile: BuyerProfile = {
   },
   privacy: {
     shareNameWithSellers: true,
+  },
+  payments: {
+    preferredWallet: 'mtn-momo',
+    notifyOnLaunch: false,
   },
   kyc: {
     status: 'pending',
@@ -482,6 +492,10 @@ export const loadBuyerProfile = (): BuyerProfile => {
     privacy: {
       ...demoBuyerProfile.privacy,
       ...stored.privacy,
+    },
+    payments: {
+      ...demoBuyerProfile.payments,
+      ...stored.payments,
     },
     devices: stored.devices?.length ? stored.devices : demoBuyerProfile.devices,
   };

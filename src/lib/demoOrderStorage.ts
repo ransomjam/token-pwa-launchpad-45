@@ -72,3 +72,21 @@ export const getLastDemoOrderId = (): string | null => {
   const state = readState();
   return state.activeOrderId ?? null;
 };
+
+export const listDemoOrders = (): DemoOrderRecord[] => {
+  if (typeof window === 'undefined') return [];
+  const state = readState();
+  return Object.values(state.orders)
+    .map(order => {
+      const deadline = new Date(order.countdown.deadline).getTime();
+      const secondsLeft = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+      return {
+        ...order,
+        countdown: {
+          ...order.countdown,
+          secondsLeft,
+        },
+      };
+    })
+    .sort((a, b) => new Date(b.createdAt ?? '').getTime() - new Date(a.createdAt ?? '').getTime());
+};
