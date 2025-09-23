@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { nanoid } from 'nanoid';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -24,6 +25,7 @@ import {
   setLastPickupId,
 } from '@/lib/checkoutStorage';
 import { activateDemoMode, DEMO_PICKUPS, getDemoListingById, isDemoActive, primaryDemoListing } from '@/lib/demoMode';
+import { saveDemoOrder, type DemoOrderRecord } from '@/lib/demoOrderStorage';
 
 const paymentOptions: { id: CheckoutPaymentMethod; labelKey: string; hintKey: string }[] = [
   { id: 'mtn', labelKey: 'checkout.paymentOptions.mtn', hintKey: 'checkout.paymentHints.mtn' },
@@ -221,51 +223,109 @@ const Checkout = () => {
   );
 
   const handleSubmit = useCallback(async () => {
-    if (!listing) return;
-    if (!selectedPickupId) {
+    const activeListing = listing ?? fallbackListing;
+    if (!activeListing) {
+      setOrderError(t('checkout.orderError'));
+      return;
+    }
+
+    const resolvedPickup = selectedPickup ?? pickupOptions[0] ?? null;
+    if (!resolvedPickup) {
       toast({ description: t('checkout.selectPickupToast') });
       setPickupSheetOpen(true);
       return;
     }
+    if (!selectedPickupId) {
+      setSelectedPickupId(resolvedPickup.id);
+    }
+
     if (!paymentMethod) {
       toast({ description: t('checkout.selectPaymentToast') });
       return;
     }
+
+    const orderId = `demo-${nanoid(10)}`;
+    const now = new Date();
+    const etaDays = Math.max(
+      1,
+      activeListing.etaDays?.max ?? activeListing.etaDays?.min ?? activeListing.lane?.medianDays ?? 14,
+    );
+    const deadlineDate = new Date(now.getTime() + etaDays * 24 * 60 * 60 * 1000);
+    const countdownSeconds = Math.max(0, Math.floor((deadlineDate.getTime() - now.getTime()) / 1000));
+
+    const demoOrder: DemoOrderRecord = {
+      id: orderId,
+      listingId: activeListing.id,
+      pickupPointId: resolvedPickup.id,
+      createdAt: now.toISOString(),
+      status: 'POOL_LOCKED',
+      countdown: {
+        deadline: deadlineDate.toISOString(),
+        secondsLeft: countdownSeconds,
+      },
+      milestones: [
+        { code: 'POOL_LOCKED', at: now.toISOString() },
+        { code: 'SUPPLIER_PAID', at: null },
+        { code: 'EXPORTED', at: null },
+        { code: 'ARRIVED', at: null },
+        { code: 'COLLECTED', at: null },
+      ],
+      eligibility: { canRefund: false, canDispute: false },
+      listing: {
+        id: activeListing.id,
+        title: activeListing.title,
+        priceXAF: activeListing.priceXAF,
+      },
+      qty,
+      pickupPoint: {
+        id: resolvedPickup.id,
+        name: resolvedPickup.name,
+        address: resolvedPickup.address,
+        city: resolvedPickup.city,
+        phone: resolvedPickup.phone ?? null,
+      },
+    };
+
     try {
       setSubmitting(true);
       setOrderError(null);
       trackEvent('checkout_create_order', {
-        listingId: listing.id,
+        listingId: activeListing.id,
         qty,
-        pickupPointId: selectedPickupId,
+        pickupPointId: resolvedPickup.id,
         paymentMethod,
-      });
-      const response = await api<{ orderId: string; pspRedirectUrl: string; returnUrl: string }>(`/api/orders`, {
-        method: 'POST',
-        body: JSON.stringify({
-          listingId: listing.id,
-          qty,
-          pickupPointId: selectedPickupId,
-          paymentMethod,
-        }),
       });
       setCheckoutDraft({
-        listingId: listing.id,
+        listingId: activeListing.id,
         qty,
-        pickupPointId: selectedPickupId,
+        pickupPointId: resolvedPickup.id,
         paymentMethod,
       });
-      const redirectUrl = new URL(response.pspRedirectUrl, window.location.origin);
-      redirectUrl.searchParams.set('return', response.returnUrl);
-      trackEvent('psp_redirect', { orderId: response.orderId, paymentMethod });
-      window.location.href = redirectUrl.toString();
+
+      await new Promise(resolve => window.setTimeout(resolve, 1_200));
+
+      saveDemoOrder(demoOrder);
+      toast({ description: t('checkout.paymentSuccessToast') });
+      trackEvent('psp_return_success', { orderId, paymentMethod });
+      navigate(`/order/${orderId}`);
     } catch (error) {
       console.error(error);
       setOrderError(t('checkout.orderError'));
     } finally {
       setSubmitting(false);
     }
-  }, [listing, paymentMethod, qty, selectedPickupId, t, toast]);
+  }, [
+    listing,
+    fallbackListing,
+    selectedPickup,
+    pickupOptions,
+    paymentMethod,
+    qty,
+    selectedPickupId,
+    t,
+    toast,
+    navigate,
+  ]);
 
   const itemSkeleton = (
     <div className="flex flex-col gap-4 md:flex-row md:items-center">

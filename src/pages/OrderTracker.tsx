@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { trackEvent } from '@/lib/analytics';
 import { activateDemoMode, primaryDemoListing, primaryDemoListingId } from '@/lib/demoMode';
+import { getDemoOrder } from '@/lib/demoOrderStorage';
 import type { MilestoneCode, OrderDetailResponse, OrderStatus } from '@/types';
 
 type EvidenceKind = 'supplierInvoice' | 'awb';
@@ -147,20 +148,26 @@ const OrderTracker = () => {
     queryKey: ['order', id],
     queryFn: async () => {
       if (!id) throw new Error('Missing order id');
+      const stored = getDemoOrder(id);
+      if (stored) return stored;
       return api<OrderDetailResponse>(`/api/orders/${id}`);
     },
     enabled: Boolean(id),
     staleTime: 0,
     refetchOnWindowFocus: false,
+    initialData: () => {
+      if (!id) return undefined;
+      return getDemoOrder(id) ?? undefined;
+    },
   });
 
   const order = orderQuery.data;
 
   useEffect(() => {
-    if (orderQuery.isError) {
+    if (orderQuery.isError && !order) {
       activateDemoMode();
     }
-  }, [orderQuery.isError]);
+  }, [order, orderQuery.isError]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

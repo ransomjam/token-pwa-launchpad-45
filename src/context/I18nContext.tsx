@@ -605,6 +605,7 @@ const translations = {
       orderError: 'Unable to create the order. Please try again.',
       emptyPickup: 'No pickup hubs available yet.',
       processing: 'Processing payment…',
+      paymentSuccessToast: 'Payment confirmed — escrow held.',
       retry: 'Retry payment',
       statusBanner: {
         failed: 'Payment failed. No charge was made.',
@@ -1447,6 +1448,7 @@ const translations = {
       orderError: 'Impossible de créer la commande. Réessayez.',
       emptyPickup: 'Aucun hub de retrait disponible pour le moment.',
       processing: 'Traitement du paiement…',
+      paymentSuccessToast: 'Paiement confirmé — séquestre sécurisé.',
       retry: 'Réessayer le paiement',
       statusBanner: {
         failed: 'Paiement refusé. Aucun débit effectué.',
