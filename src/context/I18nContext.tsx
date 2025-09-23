@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '@/lib/analytics';
 
-type Locale = 'en' | 'fr';
+export type Locale = 'en' | 'fr';
 
 const translations = {
   en: {
@@ -101,6 +101,39 @@ const translations = {
       cardAriaLabel: 'View details for {{title}}',
       cardPosition: 'Card position {{position}}',
       shareMessage: 'Check this preorder: {{title}} – {{price}}\n{{url}}',
+    },
+    share: {
+      sheetTitleListing: 'Share listing',
+      sheetTitleStore: 'Share store',
+      sheetSubtitle: 'Send a trust-rich WhatsApp message in two taps.',
+      trustLine: 'Protected by Escrow • Auto-refund if late.',
+      shortLinkLabel: 'Short link',
+      shortLinkHint: 'Keeps the message tidy for WhatsApp.',
+      shortLinkAria: 'Toggle short link',
+      whatsappLabel: 'WhatsApp',
+      whatsappAria: 'Share via WhatsApp',
+      copyLabel: 'Copy link',
+      copyAria: 'Copy link',
+      moreLabel: 'More…',
+      moreAria: 'Open system share options',
+      previewPlaceholder: 'Preview loads as soon as the listing is ready.',
+      footnote: 'Escrow protected • Auto-refund if late.',
+      offlineBanner: 'No internet—link copied; send when you’re back online.',
+      offlineToast: 'No internet—link copied; send when you’re back online.',
+      copyError: 'Copy failed. Try again.',
+      rateLimitHint: 'Share thoughtfully—your message performs best in active groups.',
+      demoBadge: 'Demo',
+      etaChip: 'ETA {{min}}–{{max}} days',
+      laneChip: '{{lane}} • {{pct}} on-time',
+      storePerformance: '{{onTime}}% on-time • {{disputes}}% disputes',
+      redirecting: 'Redirecting…',
+      toast: {
+        whatsapp: 'Opened WhatsApp.',
+        whatsappFallback: 'WhatsApp blocked—message copied.',
+        copied: 'Copied.',
+        shared: 'Shared via device options.',
+        sharedFallback: 'Device share unavailable—message copied.',
+      },
     },
     common: {
       continue: 'Continue',
@@ -788,6 +821,39 @@ const translations = {
       cardAriaLabel: 'Voir les détails de {{title}}',
       cardPosition: 'Position de la carte {{position}}',
       shareMessage: 'Découvrez cette précommande : {{title}} – {{price}}\n{{url}}',
+    },
+    share: {
+      sheetTitleListing: 'Partager l’annonce',
+      sheetTitleStore: 'Partager la boutique',
+      sheetSubtitle: 'Envoyez un message WhatsApp rassurant en deux gestes.',
+      trustLine: 'Paiement séquestré • Remboursement automatique en cas de retard.',
+      shortLinkLabel: 'Lien court',
+      shortLinkHint: 'Garde le message compact sur WhatsApp.',
+      shortLinkAria: 'Activer le lien court',
+      whatsappLabel: 'WhatsApp',
+      whatsappAria: 'Partager via WhatsApp',
+      copyLabel: 'Copier le lien',
+      copyAria: 'Copier le lien',
+      moreLabel: 'Plus…',
+      moreAria: 'Ouvrir le partage système',
+      previewPlaceholder: 'L’aperçu du message arrive dans un instant.',
+      footnote: 'Paiement séquestré • Remboursement automatique en cas de retard.',
+      offlineBanner: 'Pas d’internet—lien copié ; envoyez au retour du réseau.',
+      offlineToast: 'Pas d’internet—lien copié ; envoyez au retour du réseau.',
+      copyError: 'Échec de la copie. Réessayez.',
+      rateLimitHint: 'Partagez avec tact—meilleure performance dans les groupes actifs.',
+      demoBadge: 'Démo',
+      etaChip: 'Délai {{min}}–{{max}} jours',
+      laneChip: '{{lane}} • {{pct}} ponctualité',
+      storePerformance: '{{onTime}} % ponctualité • {{disputes}} % litiges',
+      redirecting: 'Redirection…',
+      toast: {
+        whatsapp: 'WhatsApp ouvert.',
+        whatsappFallback: 'WhatsApp bloqué — message copié.',
+        copied: 'Copié.',
+        shared: 'Partage système envoyé.',
+        sharedFallback: 'Partage système indisponible — message copié.',
+      },
     },
     common: {
       continue: 'Continuer',

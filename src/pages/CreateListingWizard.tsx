@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Sparkles, Upload, Info, Trash2, MoveLeft, MoveRight, Send, Copy } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Sparkles, Upload, Info, Trash2, MoveLeft, MoveRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -15,6 +14,8 @@ import { toast } from '@/components/ui/sonner';
 import { useI18n } from '@/context/I18nContext';
 import { useSession } from '@/context/SessionContext';
 import { DEMO_LISTINGS, DEMO_PICKUPS } from '@/lib/demoMode';
+import ShareSheet from '@/components/share/ShareSheet';
+import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
 
 const STORAGE_KEY = 'importer_listing_draft_v1';
 
@@ -116,16 +117,6 @@ const formatNumber = (value: number, locale: string) => {
   return formatter.format(value).replace(/\u00A0/g, '\u202F');
 };
 
-const formatShareSnippet = (draft: ListingDraft, locale: string) => {
-  const lane = LANE_OPTIONS.find(item => item.code === draft.laneCode) ?? LANE_OPTIONS[0];
-  const price = formatNumber(draft.priceXAF, locale);
-  const eta = `${draft.etaMin}–${draft.etaMax}`;
-  if (locale === 'fr') {
-    return `${draft.title}\nXAF ${price} • MOQ ${draft.moqTarget}\nETA ${eta} j • ${lane.label}\nPaiement séquestré • Remboursement automatique en cas de retard`;
-  }
-  return `${draft.title}\nXAF ${price} • MOQ ${draft.moqTarget}\nETA ${eta} days • ${lane.label}\nProtected by Escrow • Auto-refund if late`;
-};
-
 const getLaneSafeBand = (code: string): LaneOption['safe'] => {
   const lane = LANE_OPTIONS.find(item => item.code === code);
   return lane?.safe ?? { min: 7, max: 21 };
@@ -166,6 +157,36 @@ const CreateListingWizard = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [published, setPublished] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+
+  const shareContent = useMemo<ListingShareContent>(() => {
+    const lane = LANE_OPTIONS.find(item => item.code === draft.laneCode) ?? LANE_OPTIONS[0];
+    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const absoluteOrigin = ensureAbsoluteUrl(origin);
+    const trimmedOrigin = absoluteOrigin.endsWith('/') ? absoluteOrigin.slice(0, -1) : absoluteOrigin;
+    const slug = draft.title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'new-listing';
+    const shareId = `draft-${slug}`;
+    return {
+      id: shareId,
+      title: draft.title || demoListing.title,
+      priceXAF: draft.priceXAF || demoListing.priceXAF,
+      etaMin: draft.etaMin,
+      etaMax: draft.etaMax,
+      laneCode: draft.laneCode || lane.code,
+      onTimePct: (lane?.onTime ?? 0.85) * 100,
+      committed: 0,
+      target: draft.moqTarget,
+      image: draft.photos[0]?.url ?? demoListing.images[0] ?? '/placeholder.svg',
+      shareUrls: {
+        short: `${trimmedOrigin}/l/${shareId}`,
+        long: `${trimmedOrigin}/listings/${shareId}`,
+      },
+      isDemo: true,
+    };
+  }, [draft]);
 
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
@@ -378,8 +399,6 @@ const CreateListingWizard = () => {
   const minInvalid = draft.minPerBuyer < 1;
   const safeBand = getLaneSafeBand(draft.laneCode);
   const etaTooShort = draft.etaMax < safeBand.min;
-
-  const shareSnippet = formatShareSnippet(draft, locale);
 
   if (!session) {
     return <Navigate to="/" replace />;
@@ -737,56 +756,7 @@ const CreateListingWizard = () => {
         </div>
       </div>
 
-      <Sheet open={shareOpen} onOpenChange={setShareOpen}>
-        <SheetContent side="bottom" className="h-[65vh] rounded-t-3xl">
-          <SheetHeader className="text-left">
-            <SheetTitle>{t('listingWizard.shareSheetTitle')}</SheetTitle>
-            <SheetDescription>{t('listingWizard.shareSheetSubtitle')}</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 flex flex-1 flex-col gap-4">
-            <div className="rounded-2xl border bg-muted/40 p-4 text-sm leading-relaxed">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-foreground">{shareSnippet}</pre>
-            </div>
-            <div className="rounded-2xl border border-dashed bg-primary/5 p-4 text-sm text-primary">
-              {t('listingWizard.review.shareNudge')}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Button
-                className="h-12 rounded-full"
-                onClick={() => {
-                  const url = `https://wa.me/?text=${encodeURIComponent(shareSnippet)}`;
-                  window.open(url, '_blank', 'noopener,noreferrer');
-                  toast(t('listingWizard.shareWhatsappToast'));
-                }}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                {t('listingWizard.shareWhatsapp')}
-              </Button>
-              <Button
-                variant="outline"
-                className="h-12 rounded-full"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(shareSnippet);
-                    toast.success(t('listingWizard.shareCopied'));
-                  } catch (error) {
-                    console.error(error);
-                    toast.error(t('listingWizard.shareFailed'));
-                  }
-                }}
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                {t('listingWizard.shareCopy')}
-              </Button>
-            </div>
-            {published && (
-              <div className="rounded-2xl border bg-emerald-500/10 p-4 text-sm text-emerald-700">
-                {t('listingWizard.publishCelebration')}
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ShareSheet open={shareOpen} onOpenChange={setShareOpen} context="listing" data={shareContent} />
     </main>
   );
 };
