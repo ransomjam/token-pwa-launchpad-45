@@ -5,36 +5,10 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { ListingSummary } from '@/types';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  MessageCircle,
-  ShieldCheck,
-  XCircle,
-  CheckCheck,
-  ArrowUpRight,
-} from 'lucide-react';
+import { Clock3, MessageCircle, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import { useIntersectionOnce } from '@/hooks/use-intersection-once';
 import { useI18n } from '@/context/I18nContext';
 import { useNavigate } from 'react-router-dom';
-
-const laneBadgeStyles = {
-  green: {
-    base: 'border border-primary/40 bg-primary/15 text-primary shadow-soft',
-    icon: CheckCircle2,
-  },
-  amber: {
-    base: 'border border-amber-300/50 bg-amber-100/40 text-amber-700 shadow-soft',
-    icon: AlertTriangle,
-  },
-  red: {
-    base: 'border border-rose-300/50 bg-rose-100/40 text-rose-600 shadow-soft',
-    icon: XCircle,
-  },
-} as const;
-
-type LaneTone = keyof typeof laneBadgeStyles;
 
 type ListingCardProps = {
   listing: ListingSummary;
@@ -45,12 +19,6 @@ type ListingCardProps = {
   onShare: (listing: ListingSummary) => void;
   formattedPrice: string;
   lockCountdown: string;
-};
-
-const laneTone = (pct: number): LaneTone => {
-  if (pct >= 0.9) return 'green';
-  if (pct >= 0.75) return 'amber';
-  return 'red';
 };
 
 const preloadImage = (src: string) => {
@@ -127,17 +95,6 @@ export const ListingCard = ({
   const intersectionOptions = useMemo<IntersectionObserverInit>(() => ({ threshold: 0.5 }), []);
   const viewRef = useIntersectionOnce<HTMLDivElement>(notifyView, intersectionOptions);
 
-  const tone = laneTone(listing.lane.onTimePct);
-  const LaneIcon = laneBadgeStyles[tone].icon;
-  const [origin = '', destination = '', modeRaw = ''] = listing.lane.code.split('-');
-  const modeLabel = modeRaw.toLowerCase() === 'air' ? t('home.modeAir') : t('home.modeSea');
-  const laneLabel = t('home.laneLabel', {
-    origin,
-    destination,
-    mode: modeLabel,
-    pct: Math.round(listing.lane.onTimePct * 100),
-  });
-
   const cardAria = useMemo(
     () => t('home.cardAriaLabel', { title: listing.title }),
     [listing.title, t],
@@ -182,16 +139,10 @@ export const ListingCard = ({
       aria-label={cardAria}
       onKeyDown={handleKeyDown}
       onClick={handleOpen}
-      className="group relative flex cursor-pointer flex-col gap-3 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-4 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100"
+      className="group relative flex cursor-pointer flex-col gap-4 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-5 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100"
     >
-      {listing.importer.verified && (
-        <span className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary shadow-soft">
-          <CheckCheck className="h-3 w-3" />
-          {t('home.verifiedImporter')}
-        </span>
-      )}
       <div className="relative">
-        <AspectRatio ratio={5 / 2} className="overflow-hidden rounded-2xl bg-muted">
+        <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-3xl bg-muted">
           <img
             src={displayImage}
             loading="lazy"
@@ -213,34 +164,22 @@ export const ListingCard = ({
             <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-muted via-muted/60 to-muted/40" aria-hidden />
           )}
         </AspectRatio>
-        <div className="absolute left-4 top-4 flex items-center gap-2">
+        <div className="absolute left-5 top-5 flex items-center gap-2">
           <span
             aria-label={etaChipAria}
-            className="pill gap-1 bg-white/85 px-2 py-1 text-xs text-foreground/80 shadow-soft normal-case"
+            className="pill gap-1 bg-white/90 px-2.5 py-1 text-[13px] font-medium text-foreground/80 shadow-soft normal-case"
           >
-            <Clock3 className="h-3 w-3 text-blue" />
+            <Clock3 className="h-3.5 w-3.5 text-blue" />
             {etaChipLabel}
-          </span>
-        </div>
-        <div className="absolute left-4 bottom-4">
-          <span
-            className={cn(
-              'pill max-w-[220px] gap-1 bg-white/80 px-2 py-1 text-[11px] text-foreground/80 normal-case',
-              laneBadgeStyles[tone].base,
-            )}
-            aria-label={`${laneLabel}`}
-          >
-            <LaneIcon className="h-3 w-3" />
-            <span className="truncate">{laneLabel}</span>
           </span>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <div className="flex items-start gap-1.5">
-              <h3 className="line-clamp-2 flex-1 text-sm font-semibold leading-snug text-foreground">
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="flex items-start gap-2">
+              <h3 className="line-clamp-2 flex-1 text-base font-semibold leading-snug text-foreground">
                 {listing.title}
               </h3>
             </div>
@@ -248,37 +187,37 @@ export const ListingCard = ({
               <button
                 type="button"
                 onClick={handleImporterProfile}
-                className="inline-flex items-center gap-1 rounded-full border border-white/60 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/80 px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <span className="truncate">
                   {t('home.importerByline', { name: listing.importer.displayName })}
                 </span>
-                <ArrowUpRight className="h-3 w-3" />
+                <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold text-foreground">{formattedPrice}</p>
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{moqLabel}</p>
+            <p className="text-lg font-semibold text-foreground">{formattedPrice}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{moqLabel}</p>
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground/90">{factsLine}</p>
+        <p className="text-sm text-muted-foreground/90">{factsLine}</p>
 
         <div className="flex items-center gap-2">
-          <Progress value={progressValue} aria-label={progressAria} className="flex-1 h-1.5" />
+          <Progress value={progressValue} aria-label={progressAria} className="flex-1 h-2" />
           {percent >= 80 && (
-            <span className="pill gap-1 border-primary/40 bg-primary/20 px-2 py-1 text-[11px] text-primary">
+            <span className="pill gap-1.5 border-primary/40 bg-primary/20 px-2.5 py-1 text-xs text-primary">
               {t('home.almostThere')}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground/90">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
-            <ShieldCheck className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-3 text-xs text-muted-foreground/90">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
+            <ShieldCheck className="h-4 w-4" />
           </span>
-          <span className="font-medium text-foreground/80 leading-tight">{t('home.heroCopy')}</span>
+          <span className="text-sm font-medium leading-tight text-foreground/80">{t('home.heroCopy')}</span>
         </div>
       </div>
 
