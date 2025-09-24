@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { AuthStepIndicator } from './AuthStepIndicator';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import type { Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
+import { Logo } from '@/components/Logo';
 
 const OTP_CODE = '123456';
 
@@ -138,9 +138,7 @@ export const SignInFlow = ({ onAuthenticated }: SignInFlowProps) => {
           )}
 
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-primary via-teal to-blue text-primary-foreground shadow-glow">
-              <Sparkles className="h-6 w-6" />
-            </div>
+            <Logo className="h-12 w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">{t('app.tagline')}</p>
               <h1 className="text-3xl font-semibold tracking-tight">{t('auth.welcome')}</h1>

@@ -40,6 +40,7 @@ import { useIntersectionOnce } from '@/hooks/use-intersection-once';
 import { cn } from '@/lib/utils';
 import { activateDemoMode, DEMO_LISTINGS, isDemoActive } from '@/lib/demoMode';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Logo } from '@/components/Logo';
 
 const RECENT_KEY = 'pl.recentListings';
 const RECENT_SEARCH_KEY = 'pl.recentSearches';
@@ -916,9 +917,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
           <div className="space-y-3">
             <div className="glass-card flex items-center justify-between gap-4 px-5 py-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-teal to-blue text-primary-foreground shadow-glow">
-                  <Sparkles className="h-5 w-5" />
-                </div>
+                <Logo className="h-9 w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-primary/80">{t('app.tagline')}</p>
                   <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('app.name')}</h1>
