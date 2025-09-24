@@ -45,7 +45,9 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,avif}']
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,avif}'],
+          // Allow larger static assets like the full-resolution logo to be precached.
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
         manifest: {
