@@ -23,23 +23,21 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/80 via-white/40 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-white/80 via-white/30 to-transparent" />
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-8 px-6 py-10">
-        <header className="glass-card flex flex-col gap-5 px-5 py-5 shadow-lux sm:px-6 sm:py-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">{t('app.tagline')}</p>
-                <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{t('app.name')}</h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <LanguageToggle className="rounded-2xl border border-white/40 bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm backdrop-blur transition-colors hover:border-primary/40 hover:text-primary" />
+        <header className="flex flex-col gap-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="sm:order-1">
               <AccountSheet session={session} />
+            </div>
+            <div className="flex justify-end sm:order-3">
+              <div className="glass-card inline-flex items-center justify-center rounded-3xl p-3 shadow-lux">
+                <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
+              </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className="pill bg-primary/20 text-primary normal-case">{modeLabel}</span>
             <span className="pill bg-white/75 text-muted-foreground/80 normal-case">{languageNames[locale]}</span>
+            <LanguageToggle className="hidden h-10 items-center rounded-full border border-white/50 bg-white/80 px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary sm:inline-flex" />
           </div>
         </header>
 
