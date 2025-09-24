@@ -6,6 +6,7 @@ import type { Session } from '@/types';
 import { HomeFeed } from '@/components/home/HomeFeed';
 import { AccountSheet, LanguageToggle, languageNames } from '@/components/shell/AccountControls';
 import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
+import { Logo } from '@/components/Logo';
 
 const AuthenticatedShell = ({ session }: { session: Session }) => {
   const { t, locale } = useI18n();
@@ -22,11 +23,14 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/80 via-white/40 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-white/80 via-white/30 to-transparent" />
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-8 px-6 py-10">
-        <header className="glass-card flex flex-col gap-6 px-6 py-6 shadow-lux">
+        <header className="glass-card flex flex-col gap-5 px-5 py-5 shadow-lux sm:px-6 sm:py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">{t('app.tagline')}</p>
-              <h1 className="text-4xl font-semibold tracking-tight text-foreground">{t('app.name')}</h1>
+            <div className="flex items-center gap-3">
+              <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">{t('app.tagline')}</p>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{t('app.name')}</h1>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <LanguageToggle className="rounded-2xl border border-white/40 bg-white/70 px-3 py-2 text-sm font-semibold text-muted-foreground shadow-sm backdrop-blur transition-colors hover:border-primary/40 hover:text-primary" />
