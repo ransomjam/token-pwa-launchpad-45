@@ -914,9 +914,28 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-white/70 via-white/40 to-transparent" />
       <div className="relative z-10 flex min-h-dvh flex-col">
         <header className="sticky top-0 z-40 px-4 pt-6 pb-4 backdrop-blur-sm">
-          <div className="space-y-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="sm:order-1">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <div className="order-1 flex items-center gap-3">
+                <div className="glass-card inline-flex items-center justify-center rounded-2xl p-3 shadow-lux">
+                  <Logo className="h-10 w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
+                </div>
+              </div>
+              <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    'inline-flex h-11 items-center gap-2 rounded-full border border-white/60 bg-white/90 px-4 text-sm font-semibold text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40',
+                    activeFilterCount > 0 ? 'border-primary bg-primary/15 text-primary' : '',
+                  )}
+                  onClick={() => handleFilterOpen(true)}
+                  aria-label={filterLabel}
+                >
+                  <Filter className="h-4 w-4" />
+                  <span className="hidden sm:inline">{filterLabel}</span>
+                </Button>
+                <LanguageToggle className="h-11 rounded-full border border-white/60 bg-white/90 px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
                 <AccountSheet session={session} />
               </div>
               <button
@@ -926,7 +945,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                   setSearchOpen(true);
                   trackEvent('search_open');
                 }}
-                className="group flex h-12 w-full items-center gap-3 rounded-full border border-white/50 bg-white/75 px-4 text-left text-sm text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:order-2 sm:flex-1"
+                className="group order-3 flex h-12 w-full flex-1 items-center gap-3 rounded-full border border-white/60 bg-white/90 px-4 text-left text-sm text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:order-2 sm:min-w-[260px]"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-teal/15 to-blue/20 text-primary shadow-inner">
                   <Search className="h-4 w-4" />
@@ -950,29 +969,24 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                   </Button>
                 )}
               </button>
-              <div className="flex justify-end sm:order-3">
-                <div className="glass-card inline-flex items-center justify-center rounded-3xl p-3 shadow-lux">
-                  <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
-                </div>
-              </div>
             </div>
 
             <div className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <Popover open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-white/80 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
+                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/60 bg-white/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
                       aria-label={t('home.sortMenu')}
                       aria-expanded={sortMenuOpen}
                     >
                       <ListFilter className="h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-56 rounded-3xl border border-white/50 bg-white/80 p-3 shadow-soft backdrop-blur">
+                  <PopoverContent align="start" className="w-56 rounded-3xl border border-white/50 bg-white/80 p-3 shadow-soft backdrop-blur">
                     <div className="space-y-2">
                       <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t('home.sortMenu')}
@@ -1008,14 +1022,14 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-white/80 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
+                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/60 bg-white/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
                       aria-label={t('home.categoriesMenu')}
                       aria-expanded={categoryMenuOpen}
                     >
                       <Grid2X2 className="h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64 rounded-3xl border border-white/50 bg-white/80 p-3 shadow-soft backdrop-blur">
+                  <PopoverContent align="start" className="w-64 rounded-3xl border border-white/50 bg-white/80 p-3 shadow-soft backdrop-blur">
                     <div className="space-y-2">
                       <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t('home.categoriesMenu')}
@@ -1048,18 +1062,6 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'flex h-12 items-center gap-2 rounded-full border border-white/50 bg-white/80 px-5 text-sm font-semibold shadow-soft transition-all hover:border-primary/40 hover:text-primary',
-                    activeFilterCount > 0 ? 'border-primary bg-primary/15 text-primary' : '',
-                  )}
-                  onClick={() => handleFilterOpen(true)}
-                >
-                  <Filter className="h-4 w-4" />
-                  <span>{filterLabel}</span>
-                </Button>
-                <LanguageToggle className="hidden h-12 items-center rounded-full border border-white/50 bg-white/80 px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary sm:inline-flex" />
               </div>
               {filterPills.length > 0 && (
                 <div className="flex flex-wrap gap-2">
