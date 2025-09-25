@@ -8,7 +8,7 @@ import {
   type ReactNode,
   type SVGProps,
 } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   demoBuyerProfile,
   demoImporterProfile,
@@ -338,6 +338,7 @@ const computeStepProgress = (steps: VerificationStep[]) => {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { session } = useSession();
   const { t, locale } = useI18n();
 
@@ -359,6 +360,14 @@ const Profile = () => {
   const [newHub, setNewHub] = useState({ name: '', address: '', city: '', phone: '' });
   const [supportTopic, setSupportTopic] = useState<SupportTopic>('order');
   const [supportMessage, setSupportMessage] = useState('');
+
+  useEffect(() => {
+    const state = location.state as { quickFlow?: QuickFlow } | null;
+    if (state?.quickFlow) {
+      setActiveFlow(state.quickFlow);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const activeBuyer = buyerProfile ?? demoBuyerProfile;
   const activeImporter = importerProfile ?? demoImporterProfile;

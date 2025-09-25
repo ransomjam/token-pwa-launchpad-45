@@ -9,10 +9,17 @@ import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
 import { Logo } from '@/components/Logo';
 import { InstallPwaButton } from '@/components/pwa/InstallPwaButton';
 import { Badge } from '@/components/ui/badge';
+import { useLocation } from 'react-router-dom';
 
 const AuthenticatedShell = ({ session }: { session: Session }) => {
   const { t, locale } = useI18n();
+  const location = useLocation();
   const showPreviewBadge = import.meta.env.MODE !== 'production' || import.meta.env.DEV;
+
+  const experience =
+    location.pathname === '/auctions' || location.pathname.startsWith('/auction')
+      ? 'auctions'
+      : 'preorder';
 
   if (session.role === 'buyer') {
     return <HomeFeedWithToggle session={session} />;
@@ -28,10 +35,7 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-8 px-6 py-10">
         <header className="sticky top-6 z-20 flex flex-col gap-5 rounded-3xl bg-background p-6 shadow-soft">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="sm:order-1">
-              <AccountSheet session={session} />
-            </div>
-            <div className="flex items-center justify-end gap-3 sm:order-3">
+            <div className="flex items-center justify-end gap-3 sm:order-3 sm:ml-auto">
               <InstallPwaButton className="shadow-glow sm:order-2" />
               <div className="glass-card inline-flex items-center justify-center rounded-3xl p-3 shadow-lux">
                 <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
@@ -41,6 +45,7 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
                   {t('common.preview')}
                 </Badge>
               )}
+              <AccountSheet session={session} experience={experience} />
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">

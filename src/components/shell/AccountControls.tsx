@@ -23,6 +23,17 @@ import {
 } from '@/components/ui/sheet';
 
 type Role = Session['role'];
+type ExperienceMode = 'preorder' | 'auctions';
+
+type QuickLink = {
+  key: string;
+  label: string;
+  description: string;
+  href?: string;
+  state?: unknown;
+  badge?: string;
+  disabled?: boolean;
+};
 
 export const languageNames: Record<'en' | 'fr', string> = {
   en: 'English',
@@ -96,7 +107,12 @@ const AccountRoleOption = ({ active, label, description, onClick }: AccountRoleO
   </button>
 );
 
-export const AccountSheet = ({ session }: { session: Session }) => {
+type AccountSheetProps = {
+  session: Session;
+  experience?: ExperienceMode;
+};
+
+export const AccountSheet = ({ session, experience = 'preorder' }: AccountSheetProps) => {
   const { t, locale } = useI18n();
   const { updateSession } = useSession();
   const [open, setOpen] = useState(false);
@@ -106,6 +122,96 @@ export const AccountSheet = ({ session }: { session: Session }) => {
     if (session.role === role) return;
     updateSession(current => ({ ...current, role, hasSelectedRole: true }));
     trackEvent('role_switch', { role });
+    setOpen(false);
+  };
+
+  const quickLinks: QuickLink[] = experience === 'auctions'
+    ? [
+        {
+          key: 'bids',
+          label: t('profile.bids.title'),
+          description: t('profile.bids.subtitle'),
+          href: '/profile/bids',
+        },
+        {
+          key: 'watchlist',
+          label: t('profile.watchlist.title'),
+          description: t('profile.watchlist.subtitle'),
+          href: '/profile/watchlist',
+        },
+        {
+          key: 'wins',
+          label: t('profile.wins.title'),
+          description: t('profile.wins.subtitle'),
+          href: '/profile/wins',
+        },
+      ]
+    : session.role === 'buyer'
+      ? [
+          {
+            key: 'orders',
+            label: t('profile.actions.orders'),
+            description: t('profile.actions.ordersHint'),
+            href: '/account',
+            state: { quickFlow: 'orders' },
+          },
+          {
+            key: 'pickups',
+            label: t('profile.actions.pickups'),
+            description: t('profile.actions.pickupsHint'),
+            href: '/account',
+            state: { quickFlow: 'pickups' },
+          },
+          {
+            key: 'payments',
+            label: t('profile.actions.paymentsSoon'),
+            description: t('profile.actions.paymentsSoonHint'),
+            href: '/account',
+            state: { quickFlow: 'payments' },
+          },
+          {
+            key: 'support',
+            label: t('profile.actions.support'),
+            description: t('profile.actions.supportHint'),
+            href: '/account',
+            state: { quickFlow: 'support' },
+          },
+        ]
+      : [
+          {
+            key: 'create-listing',
+            label: t('profile.actions.createListing'),
+            description: t('profile.actions.createListingHint'),
+            href: '/importer/create',
+          },
+          {
+            key: 'dashboard',
+            label: t('profile.actions.dashboard'),
+            description: t('profile.actions.dashboardHint'),
+            href: '/',
+          },
+          {
+            key: 'payouts',
+            label: t('profile.actions.payouts'),
+            description: t('profile.actions.payoutsHint'),
+            disabled: true,
+            badge: t('profile.badges.comingSoon'),
+          },
+          {
+            key: 'support',
+            label: t('profile.actions.support'),
+            description: t('profile.actions.supportHint'),
+            href: '/account',
+            state: { quickFlow: 'support' },
+          },
+        ];
+
+  const handleQuickLinkSelect = (link: QuickLink) => {
+    if (link.disabled) return;
+    if (link.href) {
+      navigate(link.href, link.state ? { state: link.state } : undefined);
+    }
+    trackEvent('account_quick_link', { key: link.key, experience });
     setOpen(false);
   };
 
@@ -138,6 +244,47 @@ export const AccountSheet = ({ session }: { session: Session }) => {
           <span>{t('profile.viewProfile')}</span>
           <ChevronRight className="h-4 w-4" />
         </Button>
+
+        {quickLinks.length > 0 && (
+          <section className="space-y-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {t('common.quickLinks')}
+            </h3>
+            <div className="grid gap-2">
+              {quickLinks.map(link => {
+                const disabled = link.disabled;
+                return (
+                  <button
+                    key={link.key}
+                    type="button"
+                    onClick={() => handleQuickLinkSelect(link)}
+                    disabled={disabled}
+                    className={cn(
+                      'w-full rounded-2xl border border-border/70 bg-card px-4 py-3 text-left shadow-soft transition-all',
+                      disabled
+                        ? 'cursor-not-allowed opacity-60'
+                        : 'hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:translate-y-[1px]',
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-foreground">{link.label}</p>
+                        <p className="text-xs text-muted-foreground">{link.description}</p>
+                      </div>
+                      {link.badge ? (
+                        <span className="pill bg-muted/70 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {link.badge}
+                        </span>
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="space-y-3">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
