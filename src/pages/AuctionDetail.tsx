@@ -295,7 +295,7 @@ const AuctionDetail = () => {
             <Button
               onClick={handlePlaceBid}
               disabled={hasEnded}
-              className="flex-1 h-12 rounded-2xl text-base font-semibold"
+              className="flex-1 rounded-2xl py-3 text-base font-semibold"
             >
               {hasEnded ? t('auctions.ended') : t('auctions.placeBid')}
             </Button>
