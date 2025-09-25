@@ -395,11 +395,13 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   const [deferredSections, setDeferredSections] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [demoActive, setDemoActive] = useState(() => isDemoActive);
 
   const hasInitializedFilters = useRef(false);
   const pullDistanceRef = useRef(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const infiniteRef = useRef<HTMLDivElement | null>(null);
 
   const sortLabels = useMemo<Record<SortOption, string>>(
@@ -501,6 +503,27 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     } catch (error) {
       console.warn('Failed to parse recent searches', error);
     }
+  }, []);
+
+  useEffect(() => {
+    const node = headerRef.current;
+    if (!node) return;
+
+    const updateHeight = () => {
+      setHeaderHeight(node.getBoundingClientRect().height);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => updateHeight());
+      observer.observe(node);
+      return () => observer.disconnect();
+    }
+
+    const handleResize = () => updateHeight();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -913,8 +936,11 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
       <div className="pointer-events-none absolute inset-0 bg-app-gradient" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-white/70 via-white/40 to-transparent" />
       <div className="relative z-10 flex min-h-dvh flex-col">
-        <header className="sticky inset-x-0 top-0 z-50 border-b border-border/40 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
+        <header
+          ref={headerRef}
+          className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80"
+        >
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="order-1 flex items-center gap-3">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
@@ -992,6 +1018,8 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
             </div>
           </div>
         </header>
+
+        <div aria-hidden className="shrink-0" style={{ height: headerHeight }} />
 
         <div className="px-5 pb-4">
           <div className="pill gap-2 bg-white/75 text-muted-foreground shadow-soft">
