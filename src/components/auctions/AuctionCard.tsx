@@ -1,5 +1,5 @@
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { ArrowUpRight, Clock, Eye, MapPin } from 'lucide-react';
+import { ArrowUpRight, Clock, Eye, MapPin, Share2, Users } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { useI18n } from '@/context/I18nContext';
 import { trackEvent } from '@/lib/analytics';
 import { formatTimeLeft } from '@/lib/auctionData';
 import type { AuctionListing } from '@/types/auctions';
+import { useToast } from '@/components/ui/use-toast';
 
 type AuctionCardProps = {
   auction: AuctionListing;
@@ -18,6 +19,7 @@ type AuctionCardProps = {
 
 export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }: AuctionCardProps) => {
   const { t, locale } = useI18n();
+  const { toast } = useToast();
   const [timeLeft, setTimeLeft] = useState(auction.timeLeftSec);
 
   const currencyFormatter = new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
@@ -39,6 +41,49 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
   const handlePlaceBid = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onPlaceBid(auction);
+  };
+
+  const handleQuickView = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    handleViewDetails();
+  };
+
+  const handleShare = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    trackEvent('auction_share', { auctionId: auction.id });
+
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
+
+    const shareUrl = `${window.location.origin}/auction/${auction.id}`;
+    const message = t('auctions.shareMessage', {
+      title: auction.title,
+      price: currencyFormatter.format(auction.currentBidXAF),
+      url: shareUrl,
+    });
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: auction.title,
+          text: message,
+          url: shareUrl,
+        });
+        return;
+      } catch (error) {
+        // ignore cancellation and attempt clipboard fallback
+      }
+    }
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(message);
+        toast({ description: t('auctions.shareCopied') });
+      } catch (error) {
+        toast({ description: t('auctions.shareFailed'), variant: 'destructive' });
+      }
+    } else {
+      toast({ description: `${t('auctions.shareFallback')} ${shareUrl}` });
+    }
   };
 
   const handleViewDetails = () => {
@@ -98,7 +143,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </AspectRatio>
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="space-y-0.5">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
               {t('auctions.startedAt')}
@@ -107,7 +152,13 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
               {currencyFormatter.format(startingBidXAF)}
             </p>
           </div>
-          <div className="pt-1">{timeBadge}</div>
+          <div className="space-y-1 pt-1">
+            {timeBadge}
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-soft sm:text-xs">
+              <Users className="h-3 w-3 text-muted-foreground/70" />
+              <span className="text-muted-foreground/80">{watchersLabel}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -136,10 +187,6 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
                 {auction.seller.city}
               </p>
             )}
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white shadow-soft sm:text-xs">
-              <Eye className="h-3 w-3" />
-              {watchersLabel}
-            </div>
             <div className="space-y-0.5">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
                 {t('auctions.currentBid')}
@@ -153,9 +200,28 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
 
         <div className="flex items-center gap-2">
           <Button
+            type="button"
+            variant="outline"
+            onClick={handleQuickView}
+            aria-label={t('auctions.viewAria', { title: auction.title })}
+            className="h-9 w-9 rounded-full border border-white/60 bg-white/80 p-0 text-muted-foreground shadow-soft transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleShare}
+            aria-label={t('auctions.shareAria', { title: auction.title })}
+            className="h-9 rounded-full px-3 text-sm font-semibold shadow-soft"
+          >
+            <Share2 className="mr-2 h-4 w-4" />
+            {t('auctions.shareAction')}
+          </Button>
+          <Button
             onClick={handlePlaceBid}
             disabled={hasEnded}
-            className="h-9 flex-1 rounded-full text-sm font-semibold shadow-lux"
+            className="h-9 flex-1 basis-1/2 rounded-full text-sm font-semibold shadow-lux"
           >
             {hasEnded ? t('auctions.ended') : t('auctions.placeBid')}
           </Button>
