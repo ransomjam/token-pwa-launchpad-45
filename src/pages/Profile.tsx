@@ -369,7 +369,7 @@ const Profile = () => {
       const title = order.listing?.title ?? listingMeta?.title ?? t('profile.ordersFlow.fallbackTitle');
       const quantity = order.qty ?? 1;
       const unitPrice = order.listing?.priceXAF ?? listingMeta?.priceXAF ?? 0;
-    const image = listingMeta?.images?.[0] ?? '/demo/charger-front.svg';
+    const image = listingMeta?.images?.[0] ?? '/demo/blue-airforce-shoes.jfif';
     const pickupHub = order.pickupPoint?.name ?? listingMeta?.importer?.displayName ?? activeBuyer.pickups[0]?.name ?? '';
     const status = normaliseOrderStatus(order.status);
 
