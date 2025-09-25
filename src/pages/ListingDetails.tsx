@@ -376,26 +376,21 @@ const ListingDetails = () => {
     <TooltipProvider delayDuration={0}>
       <main className="min-h-dvh bg-background pb-28">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-8">
-          <div className="sticky top-4 z-20">
-            <div className="relative">
-              <div aria-hidden className="absolute inset-0 rounded-3xl bg-background shadow-sm" />
-              <header className="relative flex items-center gap-3 px-4 py-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-full border"
-                  onClick={() => navigate(-1)}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                  <span className="sr-only">Back</span>
-                </Button>
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing</p>
-                  <h1 className="line-clamp-2 text-xl font-semibold text-foreground">{listing.title}</h1>
-                </div>
-              </header>
+          <header className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full border"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">Back</span>
+            </Button>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing</p>
+              <h1 className="line-clamp-2 text-xl font-semibold text-foreground">{listing.title}</h1>
             </div>
-          </div>
+          </header>
 
           <section ref={heroRef} className="space-y-5">
             <div className="rounded-3xl bg-card p-3 shadow-soft">
