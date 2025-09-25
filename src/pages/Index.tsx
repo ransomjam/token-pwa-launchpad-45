@@ -24,7 +24,7 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/80 via-white/40 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-white/80 via-white/30 to-transparent" />
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-8 px-6 py-10">
-        <header className="flex flex-col gap-5">
+        <header className="sticky top-6 z-20 flex flex-col gap-5 rounded-3xl bg-background p-6 shadow-soft">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="sm:order-1">
               <AccountSheet session={session} />
