@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuctionCard } from './AuctionCard';
 import { PlaceBidSheet } from './PlaceBidSheet';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/context/I18nContext';
 import { AppNav } from '@/components/navigation/AppNav';
 import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
+import { Logo } from '@/components/Logo';
 
 type AuctionsFeedProps = {
   variant?: 'embedded' | 'page';
@@ -22,9 +23,44 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
   const navigate = useNavigate();
   const { t } = useI18n();
   const [selectedAuction, setSelectedAuction] = useState<AuctionListing | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const headerRef = useRef<HTMLElement | null>(null);
 
   const auctions = useMemo(() => (AUCTION_LISTINGS.length > 0 ? AUCTION_LISTINGS : []), []);
   const usingDemoData = useMemo(() => isDemoAuctionsSeed(auctions), [auctions]);
+  const isPage = variant === 'page';
+
+  useEffect(() => {
+    if (!isPage) return;
+    const node = headerRef.current;
+    if (!node) return;
+
+    const updateHeight = () => {
+      setHeaderHeight(node.getBoundingClientRect().height);
+    };
+
+    updateHeight();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(updateHeight);
+      resizeObserver.observe(node);
+    }
+
+    window.addEventListener('resize', updateHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, [isPage]);
+
+  useEffect(() => {
+    if (auctions.length === 0) return;
+    trackEvent('auction_feed_view', { count: auctions.length });
+  }, [auctions.length]);
 
   const handleViewDetails = (auction: AuctionListing) => {
     navigate(`/auction/${auction.id}`);
@@ -42,57 +78,71 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
     setSelectedAuction(null);
   };
 
-  // Track feed view
-  const handleFeedView = () => {
-    trackEvent('auction_feed_view', { count: AUCTION_LISTINGS.length });
-  };
-
   return (
-    <div className={variant === 'page' ? 'min-h-dvh bg-muted/20 pb-10' : ''}>
-      {variant === 'page' && (
-        <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-lg font-semibold tracking-tight text-foreground">{t('auctions.header')}</span>
-                {PREVIEW_BADGE_VISIBLE && (
-                  <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                    {t('common.preview')}
-                  </Badge>
-                )}
-              </div>
-              <div className="ml-auto flex items-center gap-2 sm:gap-3">
-                <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
-                {session && <AccountSheet session={session} />}
-              </div>
-            </div>
-            <AppNav className="justify-start" />
-          </div>
-        </header>
+    <div className={isPage ? 'relative min-h-dvh overflow-x-hidden' : undefined}>
+      {isPage && (
+        <>
+          <div className="pointer-events-none absolute inset-0 bg-app-gradient" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-white/70 via-white/40 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-white/80 via-white/30 to-transparent" />
+        </>
       )}
 
-      <div className={`mx-auto w-full ${variant === 'page' ? 'max-w-5xl px-6 pt-6' : 'px-6 py-6'}`}>
-        {usingDemoData && (
-          <Badge variant="outline" className="mb-4 inline-flex items-center gap-1 rounded-full border-dashed border-border/70 bg-card/80 px-3 py-1 text-[11px] font-medium text-muted-foreground">
-            {t('home.demoData')}
-          </Badge>
+      <div className={isPage ? 'relative z-10 flex min-h-dvh flex-col' : undefined}>
+        {isPage && (
+          <>
+            <header
+              ref={headerRef}
+              className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80"
+            >
+              <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                  <div className="order-1 flex items-center gap-3">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
+                      <Logo className="h-8 w-auto" />
+                    </div>
+                    <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
+                    {PREVIEW_BADGE_VISIBLE && (
+                      <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                        {t('common.preview')}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
+                    <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
+                    {session && <AccountSheet session={session} />}
+                  </div>
+                </div>
+                <AppNav className="justify-start" />
+              </div>
+            </header>
+            <div aria-hidden className="shrink-0" style={{ height: headerHeight }} />
+          </>
         )}
-        <div className="grid grid-cols-2 gap-4" onLoad={handleFeedView}>
-          {auctions.map(auction => (
-            <AuctionCard
-              key={auction.id}
-              auction={auction}
-              onViewDetails={handleViewDetails}
-              onViewSeller={handleViewSeller}
-              onPlaceBid={handlePlaceBid}
-            />
-          ))}
+
+        <div className={isPage ? 'flex-1 px-5 pb-10 pt-4' : 'px-6 py-6'}>
+          <div className={`mx-auto w-full ${isPage ? 'max-w-6xl' : ''}`}>
+            {usingDemoData && (
+              <Badge variant="outline" className="mb-4 inline-flex items-center gap-1 rounded-full border-dashed border-border/70 bg-card/80 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                {t('home.demoData')}
+              </Badge>
+            )}
+            <div className="grid gap-4">
+              {auctions.map(auction => (
+                <AuctionCard
+                  key={auction.id}
+                  auction={auction}
+                  onViewDetails={handleViewDetails}
+                  onViewSeller={handleViewSeller}
+                  onPlaceBid={handlePlaceBid}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {selectedAuction && (
-        <PlaceBidSheet auction={selectedAuction} open={true} onClose={handleCloseBidSheet} />
-      )}
+      {selectedAuction && <PlaceBidSheet auction={selectedAuction} open={true} onClose={handleCloseBidSheet} />}
     </div>
   );
 };

@@ -123,6 +123,9 @@ const translations = {
       removedFromWatchlist: 'Removed from watchlist',
       watchlistAdded: 'We’ll ping you when this moves.',
       watchlistRemoved: 'No more notifications for this auction.',
+      watchersLabel: '{{count}} watching',
+      laneOnTime: '{{percent}}% on-time',
+      sellerByline: 'Seller: {{name}}',
       ended: 'Ended',
     },
     auctions: {
@@ -142,6 +145,9 @@ const translations = {
       removedFromWatchlist: 'Retiré de la liste de suivi',
       watchlistAdded: 'On vous prévient dès que ça bouge.',
       watchlistRemoved: 'Plus de notifications pour cette enchère.',
+      watchersLabel: '{{count}} suivent',
+      laneOnTime: '{{percent}} % à l’heure',
+      sellerByline: 'Vendeur : {{name}}',
       ended: 'Terminé',
     },
     share: {
