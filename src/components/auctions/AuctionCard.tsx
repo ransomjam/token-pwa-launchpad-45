@@ -158,7 +158,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <h3 className="line-clamp-1 text-sm font-semibold leading-snug text-foreground sm:text-base">
+              <h3 className="truncate text-sm font-semibold leading-snug text-foreground sm:text-base">
                 {auction.title}
               </h3>
               <button
@@ -179,8 +179,8 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
                 {auction.seller.city}
               </p>
             )}
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2">
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2 -ml-1">
                 <span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
                   {t('auctions.startedAt')}
                 </span>
@@ -222,7 +222,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
           <Button
             onClick={handlePlaceBid}
             disabled={hasEnded}
-            className="h-9 flex-1 basis-1/2 rounded-full text-sm font-semibold shadow-lux"
+            className="h-9 flex-none rounded-full px-4 text-sm font-semibold shadow-lux"
           >
             {hasEnded ? t('auctions.ended') : t('auctions.placeBid')}
           </Button>
