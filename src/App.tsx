@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Offline from "./pages/Offline";
 import NotFound from "./pages/NotFound";
 import AuctionDetail from "./pages/AuctionDetail";
+import ListingDetails from "./pages/ListingDetails";
 import VendorProfile from "./pages/VendorProfile";
 import { SessionProvider } from "./context/SessionContext";
 import { I18nProvider } from "./context/I18nContext";
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auctions" element={<Index />} />
                 <Route path="/auction/:id" element={<AuctionDetail />} />
+                <Route path="/listings/:id" element={<ListingDetails />} />
                 <Route path="/seller/:id" element={<VendorProfile />} />
                 <Route path="/checkout/:listingId" element={<Checkout />} />
                 <Route path="/checkout/return" element={<CheckoutReturn />} />
