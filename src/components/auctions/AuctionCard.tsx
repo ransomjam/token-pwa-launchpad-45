@@ -109,6 +109,10 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
   const timeRemainingLabel = hasEnded ? t('auctions.ended') : formatTimeLeft(timeLeft, locale);
   const watchersLabel = t('auctions.watchersLabel', { count: auction.watchers });
   const startingBidXAF = Math.max(0, auction.currentBidXAF - auction.minIncrementXAF);
+  const halfTitleLength = Math.ceil(auction.title.length / 2);
+  const displayedTitle = auction.title.slice(0, halfTitleLength);
+  const truncatedTitle =
+    displayedTitle.length < auction.title.length ? `${displayedTitle}\u2026` : auction.title;
 
   const timeBadge = (
     <Badge
@@ -159,7 +163,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <h3 className="truncate text-sm font-semibold leading-snug text-foreground sm:text-base">
-                {auction.title}
+                {truncatedTitle}
               </h3>
               <button
                 type="button"
@@ -179,18 +183,18 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
                 {auction.seller.city}
               </p>
             )}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
-              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2">
-                <span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-                  {t('auctions.startedAt')}
+            <div className="flex items-center justify-between gap-3 rounded-full bg-white/70 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                  Start
                 </span>
                 <p className="inline-flex items-center justify-center rounded-full bg-blue/10 px-2 py-1 text-xs font-semibold text-blue">
                   {currencyFormatter.format(startingBidXAF)}
                 </p>
               </div>
-              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2 sm:text-right">
-                <span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 sm:text-right">
-                  {t('auctions.currentBid')}
+              <div className="flex items-center gap-2">
+                <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                  Current
                 </span>
                 <p className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
                   {currencyFormatter.format(auction.currentBidXAF)}
