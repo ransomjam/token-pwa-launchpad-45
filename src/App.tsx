@@ -18,6 +18,9 @@ import OrderTracker from "./pages/OrderTracker";
 import OrderPickupQr from "./pages/OrderPickupQr";
 import CreateListingWizard from "./pages/CreateListingWizard";
 import Profile from "./pages/Profile";
+import ProfileBids from "./pages/ProfileBids";
+import ProfileWatchlist from "./pages/ProfileWatchlist";
+import ProfileWins from "./pages/ProfileWins";
 import PublicImporterProfile from "./pages/PublicImporterProfile";
 import ShareRedirect from "./pages/ShareRedirect";
 import RefundPolicy from "./pages/RefundPolicy";
@@ -37,14 +40,18 @@ const App = () => (
             <BrowserRouter basename={routerBasename || undefined}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/auctions/:id" element={<AuctionDetail />} />
-                <Route path="/vendors/:id" element={<VendorProfile />} />
+                <Route path="/auctions" element={<Index />} />
+                <Route path="/auction/:id" element={<AuctionDetail />} />
+                <Route path="/seller/:id" element={<VendorProfile />} />
                 <Route path="/checkout/:listingId" element={<Checkout />} />
                 <Route path="/checkout/return" element={<CheckoutReturn />} />
                 <Route path="/order/:id" element={<OrderTracker />} />
                 <Route path="/order/:id/qr" element={<OrderPickupQr />} />
                 <Route path="/importer/create" element={<CreateListingWizard />} />
                 <Route path="/account" element={<Profile />} />
+                <Route path="/profile/bids" element={<ProfileBids />} />
+                <Route path="/profile/watchlist" element={<ProfileWatchlist />} />
+                <Route path="/profile/wins" element={<ProfileWins />} />
                 <Route path="/importers/:id/profile" element={<PublicImporterProfile />} />
                 <Route path="/l/:id" element={<ShareRedirect context="listing" />} />
                 <Route path="/s/:id" element={<ShareRedirect context="store" />} />

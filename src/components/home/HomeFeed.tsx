@@ -33,6 +33,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/context/I18nContext';
 import { ListingCard } from './ListingCard';
+import { AppNav } from '@/components/navigation/AppNav';
 import type { ListingSummary, Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
 import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
@@ -44,6 +45,7 @@ import { Logo } from '@/components/Logo';
 
 const RECENT_KEY = 'pl.recentListings';
 const RECENT_SEARCH_KEY = 'pl.recentSearches';
+const PREVIEW_BADGE_VISIBLE = import.meta.env.MODE !== 'production' || import.meta.env.DEV;
 
 type SortOption = 'relevance' | 'endingSoon' | 'priceLowHigh' | 'priceHighLow';
 
@@ -947,6 +949,11 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                   <Logo className="h-8 w-auto" />
                 </div>
                 <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
+                {PREVIEW_BADGE_VISIBLE && (
+                  <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                    {t('common.preview')}
+                  </Badge>
+                )}
               </div>
               <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
                 <Button
@@ -999,6 +1006,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
             </div>
 
             <div className="flex flex-col gap-3">
+              <AppNav className="justify-start" />
               {filterPills.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {filterPills.map(pill => (

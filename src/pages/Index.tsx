@@ -8,9 +8,11 @@ import { AccountSheet, LanguageToggle, languageNames } from '@/components/shell/
 import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
 import { Logo } from '@/components/Logo';
 import { InstallPwaButton } from '@/components/pwa/InstallPwaButton';
+import { Badge } from '@/components/ui/badge';
 
 const AuthenticatedShell = ({ session }: { session: Session }) => {
   const { t, locale } = useI18n();
+  const showPreviewBadge = import.meta.env.MODE !== 'production' || import.meta.env.DEV;
 
   if (session.role === 'buyer') {
     return <HomeFeedWithToggle session={session} />;
@@ -34,6 +36,11 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
               <div className="glass-card inline-flex items-center justify-center rounded-3xl p-3 shadow-lux">
                 <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
               </div>
+              {showPreviewBadge && (
+                <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                  {t('common.preview')}
+                </Badge>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">

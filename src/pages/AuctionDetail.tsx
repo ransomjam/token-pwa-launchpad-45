@@ -51,7 +51,7 @@ const AuctionDetail = () => {
       image: auction.images[0] ?? '/placeholder.svg',
       shareUrls: {
         short: `${trimmedOrigin}/a/${auction.id}`,
-        long: `${trimmedOrigin}/auctions/${auction.id}`,
+        long: `${trimmedOrigin}/auction/${auction.id}`,
       },
       isDemo: true,
     };
@@ -124,7 +124,7 @@ const AuctionDetail = () => {
   const handleViewSeller = () => {
     if (!auction) return;
     trackEvent('vendor_profile_view', { vendorId: auction.seller.id });
-    navigate(`/vendors/${auction.seller.id}`);
+    navigate(`/seller/${auction.seller.id}`);
   };
 
   if (!auction) {
