@@ -272,25 +272,33 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-4 rounded-3xl border border-border bg-gradient-to-br from-muted/40 to-background p-6 shadow-sm">
+      <header className="flex flex-col gap-5 rounded-3xl border border-white/80 bg-gradient-to-br from-white/95 via-primary/5 to-blue/10 p-6 shadow-[0_20px_45px_rgba(14,116,144,0.12)] backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <Badge className="rounded-full bg-primary/10 px-3 py-1 text-primary" variant="outline">
+              <Badge className="rounded-full border-primary/20 bg-primary/15 px-3 py-1 text-primary" variant="outline">
                 {t('roles.importerBadge')}
               </Badge>
-              <span className="text-sm text-muted-foreground">{session.displayName}</span>
+              <span className="text-sm font-medium text-muted-foreground">{session.displayName}</span>
             </div>
-            <h1 className="text-2xl font-semibold text-foreground">{t('importerDashboard.heading')}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('importerDashboard.heading')}</h1>
             <p className="text-sm text-muted-foreground">{t('importerDashboard.tagline')}</p>
             <Badge
               variant={session.verifiedImporter ? 'default' : 'outline'}
-              className={`rounded-full px-3 py-1 text-xs ${session.verifiedImporter ? 'bg-emerald-500/10 text-emerald-700' : 'bg-amber-500/10 text-amber-700'}`}
+              className={`rounded-full px-3 py-1 text-xs ${
+                session.verifiedImporter
+                  ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-700'
+                  : 'border-amber-500/40 bg-amber-500/15 text-amber-700'
+              }`}
             >
               {session.verifiedImporter ? t('dashboard.importerStatusVerified') : t('dashboard.importerStatusPending')}
             </Badge>
           </div>
-          <Button size="lg" className="rounded-full px-6" onClick={() => navigate('/importer/create')}>
+          <Button
+            size="lg"
+            className="rounded-full bg-primary px-6 text-primary-foreground shadow-soft transition-transform hover:-translate-y-0.5"
+            onClick={() => navigate('/importer/create')}
+          >
             {t('importerDashboard.createListing')}
           </Button>
         </div>
@@ -317,8 +325,8 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
                   key={kpi.id}
                   type="button"
                   onClick={() => setSelectedKpi(kpi.id)}
-                  className={`flex h-24 flex-col justify-between rounded-2xl border p-4 text-left transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-                    selectedKpi === kpi.id ? 'shadow-md ring-1 ring-primary/30' : 'shadow-sm'
+                  className={`flex h-24 flex-col justify-between rounded-2xl border border-white/60 bg-white/90 p-4 text-left shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                    selectedKpi === kpi.id ? 'shadow-lg ring-1 ring-primary/30' : 'hover:-translate-y-0.5'
                   }`}
                 >
                   <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -338,10 +346,13 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
         </div>
 
         {listings.length === 0 && !isLoading ? (
-          <Card className="rounded-3xl border-dashed bg-muted/30 p-8 text-center">
+          <Card className="rounded-3xl border border-dashed border-primary/20 bg-white/90 p-8 text-center shadow-soft">
             <h3 className="text-lg font-semibold">{t('importerDashboard.emptyTitle')}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{t('importerDashboard.emptyBody')}</p>
-            <Button className="mt-6 rounded-full" onClick={() => navigate('/importer/create')}>
+            <Button
+              className="mt-6 rounded-full bg-primary px-5 text-primary-foreground shadow-soft"
+              onClick={() => navigate('/importer/create')}
+            >
               {t('importerDashboard.createListing')}
             </Button>
           </Card>
@@ -350,7 +361,7 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
             {isLoading && listings.length === 0 && (
               <div className="space-y-3">
                 {Array.from({ length: 2 }).map((_, index) => (
-                  <Card key={index} className="rounded-3xl p-4">
+                  <Card key={index} className="rounded-3xl border border-white/70 bg-white/90 p-4 shadow-sm">
                     <CardContent className="flex items-center gap-4 p-0">
                       <Skeleton className="h-24 w-24 rounded-2xl" />
                       <div className="flex-1 space-y-3">
@@ -371,19 +382,19 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
               return (
                 <Card
                   key={listing.id}
-                  className="group relative overflow-hidden rounded-3xl border border-border/80 bg-background/95 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  className="group relative overflow-hidden rounded-3xl border border-white/70 bg-white/95 p-4 shadow-[0_18px_45px_rgba(15,118,180,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_26px_60px_rgba(15,118,180,0.12)]"
                 >
                   <CardContent className="flex gap-4 p-0">
-                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-muted">
+                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/70 bg-muted shadow-inner">
                       <img src={listing.image} alt={listing.title} className="h-full w-full object-cover" />
                     </div>
                     <div className="flex flex-1 flex-col gap-4">
                       <div className="flex flex-col gap-2">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="text-base font-semibold text-foreground">{listing.title}</h3>
-                            <p className="text-sm text-muted-foreground">{formatPrice(listing.priceXAF, locale)}</p>
-                          </div>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h3 className="text-base font-semibold tracking-tight text-foreground">{listing.title}</h3>
+                              <p className="text-sm text-muted-foreground">{formatPrice(listing.priceXAF, locale)}</p>
+                            </div>
                           <Badge className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${statusToneClass(listing.status)}`}>
                             {statusLabel(listing.status, locale)}
                           </Badge>
@@ -398,7 +409,7 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
                           <span className="text-muted-foreground">{locksInCopy(listing.moq.lockAt, locale)}</span>
                         </div>
                         <div className="space-y-2">
-                          <Progress value={progressValue} className="h-2 overflow-hidden rounded-full bg-muted" />
+                          <Progress value={progressValue} className="h-2 overflow-hidden rounded-full bg-blue/10" />
                           <div className="flex justify-between text-xs text-muted-foreground">
                             <span>{t('importerDashboard.progressLabel', { committed: listing.moq.committed, target: listing.moq.target })}</span>
                             <span>{formatPct(listing.moq.committed / Math.max(1, listing.moq.target))}</span>
@@ -407,11 +418,21 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <Button variant="secondary" size="sm" className="h-11 flex-1 rounded-full" onClick={() => openShare(listing)}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-11 flex-1 rounded-full bg-primary/10 text-primary shadow-soft transition-colors hover:bg-primary/20"
+                          onClick={() => openShare(listing)}
+                        >
                           <Share2 className="mr-2 h-4 w-4" />
                           {t('importerDashboard.actions.share')}
                         </Button>
-                        <Button variant="secondary" size="sm" className="h-11 flex-1 rounded-full" onClick={() => openEvidence(listing)}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-11 flex-1 rounded-full bg-blue/10 text-blue-700 shadow-soft transition-colors hover:bg-blue/20"
+                          onClick={() => openEvidence(listing)}
+                        >
                           <UploadCloud className="mr-2 h-4 w-4" />
                           {t('importerDashboard.actions.evidence')}
                           {Object.keys(evidence).length > 0 && <span className="ml-2 text-xs text-emerald-600">•</span>}
@@ -423,7 +444,12 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
                           onConfirm={() => markArrived(listing)}
                           disabled={listing.status === 'arrived'}
                         />
-                        <Button variant="outline" size="sm" className="h-11 flex-1 rounded-full" onClick={() => openBuyers(listing)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-11 flex-1 rounded-full border-primary/30 text-primary shadow-soft hover:bg-primary/10"
+                          onClick={() => openBuyers(listing)}
+                        >
                           <Users className="mr-2 h-4 w-4" />
                           {t('importerDashboard.actions.buyers')}
                         </Button>
@@ -506,7 +532,7 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
           <div className="mt-6 space-y-4">
             {buyersListing && (
               <>
-                <div className="rounded-2xl border bg-muted/30 p-4 text-sm text-muted-foreground">
+                <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-primary">
                   {t('importerDashboard.buyersSummary', {
                     count: buyersListing.buyersCount,
                     committed: buyersListing.moq.committed,
@@ -515,7 +541,7 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
                 </div>
                 <div className="space-y-3">
                   {buyerNames.slice(0, Math.min(4, buyersListing.buyersCount)).map((name, index) => (
-                    <div key={name} className="flex items-center justify-between rounded-2xl border p-4 text-sm">
+                    <div key={name} className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/95 p-4 text-sm shadow-sm">
                       <div>
                         <p className="font-medium text-foreground">{name}</p>
                         <p className="text-xs text-muted-foreground">
@@ -549,7 +575,12 @@ const AlertDialogTriggerButton = ({ label, onConfirm, disabled }: AlertDialogTri
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" className="h-11 flex-1 rounded-full" disabled={disabled}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-11 flex-1 rounded-full border-emerald-500/40 bg-emerald-500/10 text-emerald-700 shadow-soft transition-colors hover:bg-emerald-500/20"
+          disabled={disabled}
+        >
           <PackageCheck className="mr-2 h-4 w-4" />
           {label}
         </Button>
@@ -560,9 +591,11 @@ const AlertDialogTriggerButton = ({ label, onConfirm, disabled }: AlertDialogTri
           <AlertDialogDescription>{t('importerDashboard.arrivedConfirmBody')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-full px-6">{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel className="rounded-full px-6 text-muted-foreground hover:bg-muted/40">
+            {t('common.cancel')}
+          </AlertDialogCancel>
           <AlertDialogAction
-            className="rounded-full px-6"
+            className="rounded-full bg-primary px-6 text-primary-foreground shadow-soft hover:bg-primary/90"
             onClick={() => {
               onConfirm();
               setOpen(false);
