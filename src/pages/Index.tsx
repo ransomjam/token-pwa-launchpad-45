@@ -34,7 +34,7 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
             <div className="flex items-center justify-end gap-3 sm:order-3">
               <InstallPwaButton className="shadow-glow sm:order-2" />
               <div className="glass-card inline-flex items-center justify-center rounded-3xl p-3 shadow-lux">
-                <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
+                <Logo wrapperClassName="h-[4.5rem] w-[4.5rem] drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
               </div>
               {showPreviewBadge && (
                 <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">

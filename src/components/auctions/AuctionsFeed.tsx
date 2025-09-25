@@ -113,7 +113,7 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                   <div className="order-1 flex items-center gap-3">
                     <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
-                      <Logo className="h-8 w-auto" />
+                      <Logo wrapperClassName="h-8 w-8" />
                     </div>
                     <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
                     {PREVIEW_BADGE_VISIBLE && (
