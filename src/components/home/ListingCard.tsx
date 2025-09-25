@@ -207,7 +207,7 @@ export const ListingCard = ({
           <Button
             onClick={handlePreOrder}
             aria-label={`${t('home.preorder')} ${listing.title}`}
-            className="h-8 flex-1 rounded-full text-[11px] font-semibold shadow-lux sm:h-9 sm:text-xs"
+            className="h-8 basis-1/2 rounded-full text-[11px] font-semibold shadow-lux sm:h-9 sm:text-xs"
           >
             {t('home.preorder')}
           </Button>
