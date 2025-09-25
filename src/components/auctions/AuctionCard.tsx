@@ -144,15 +144,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
           />
         </AspectRatio>
         <div className="space-y-2">
-          <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-              {t('auctions.startedAt')}
-            </span>
-            <p className="text-xs font-semibold text-muted-foreground sm:text-sm">
-              {currencyFormatter.format(startingBidXAF)}
-            </p>
-          </div>
-          <div className="space-y-1 pt-1">
+          <div className="space-y-1">
             {timeBadge}
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-soft sm:text-xs">
               <Users className="h-3 w-3 text-muted-foreground/70" />
@@ -187,13 +179,23 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
                 {auction.seller.city}
               </p>
             )}
-            <div className="space-y-0.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-                {t('auctions.currentBid')}
-              </span>
-              <p className="text-sm font-semibold text-foreground sm:text-base">
-                {currencyFormatter.format(auction.currentBidXAF)}
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-blue/80">
+                  {t('auctions.startedAt')}
+                </span>
+                <p className="text-xs font-semibold text-blue">
+                  {currencyFormatter.format(startingBidXAF)}
+                </p>
+              </div>
+              <div className="space-y-0.5 text-right">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-primary/80">
+                  {t('auctions.currentBid')}
+                </span>
+                <p className="text-xs font-semibold text-primary">
+                  {currencyFormatter.format(auction.currentBidXAF)}
+                </p>
+              </div>
             </div>
           </div>
         </div>
