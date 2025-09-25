@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ModeToggle } from './ModeToggle';
 import { AuctionsFeed } from '@/components/auctions/AuctionsFeed';
 import { HomeFeed } from './HomeFeed';
@@ -11,18 +12,30 @@ type HomeFeedWithToggleProps = {
 };
 
 export const HomeFeedWithToggle = ({ session }: HomeFeedWithToggleProps) => {
-  const [currentMode, setCurrentMode] = useState<Mode>('preorder');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const modeFromPath = useMemo<Mode>(() => (location.pathname === '/auctions' ? 'auctions' : 'preorder'), [location.pathname]);
+  const [currentMode, setCurrentMode] = useState<Mode>(modeFromPath);
+
+  useEffect(() => {
+    setCurrentMode(modeFromPath);
+  }, [modeFromPath]);
+
+  const handleModeChange = (mode: Mode) => {
+    setCurrentMode(mode);
+    navigate(mode === 'auctions' ? '/auctions' : '/', { replace: location.pathname === (mode === 'auctions' ? '/auctions' : '/') });
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-center px-6 pt-6">
-        <ModeToggle currentMode={currentMode} onModeChange={setCurrentMode} />
+        <ModeToggle currentMode={currentMode} onModeChange={handleModeChange} />
       </div>
-      
+
       {currentMode === 'preorder' ? (
         <HomeFeed session={session} />
       ) : (
-        <AuctionsFeed />
+        <AuctionsFeed variant={location.pathname === '/auctions' ? 'page' : 'embedded'} />
       )}
     </div>
   );

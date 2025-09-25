@@ -90,7 +90,7 @@ const VendorProfile = () => {
   };
 
   const handleViewAuction = (auction: AuctionListing) => {
-    navigate(`/auctions/${auction.id}`);
+    navigate(`/auction/${auction.id}`);
   };
 
   const handleViewListing = (listing: ListingSummary) => {
@@ -99,12 +99,12 @@ const VendorProfile = () => {
 
   const handlePlaceBid = (auction: AuctionListing) => {
     // This would open the bid sheet - for now just navigate to auction detail
-    navigate(`/auctions/${auction.id}`);
+    navigate(`/auction/${auction.id}`);
   };
 
   const handleViewSellerForAuction = (sellerId: string) => {
     if (sellerId !== id) {
-      navigate(`/vendors/${sellerId}`);
+      navigate(`/seller/${sellerId}`);
     }
   };
 

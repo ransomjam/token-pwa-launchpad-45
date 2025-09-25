@@ -1,5 +1,37 @@
 import type { AuctionListing, BidRecord, WatchlistItem, AuctionWin } from '@/types/auctions';
 
+const FALLBACK_BIDS: BidRecord[] = [
+  {
+    id: 'bid_demo_001',
+    auctionId: 'auct_001',
+    yourBidXAF: 850000,
+    highestBidXAF: 875000,
+    timeLeftSec: 3600 * 8,
+    createdAt: '2025-09-24T12:30:00Z'
+  }
+];
+
+const FALLBACK_WATCHLIST: WatchlistItem[] = [
+  {
+    auctionId: 'auct_002',
+    addedAt: '2025-09-23T14:20:00Z'
+  },
+  {
+    auctionId: 'auct_003',
+    addedAt: '2025-09-24T09:15:00Z'
+  }
+];
+
+const FALLBACK_WINS: AuctionWin[] = [
+  {
+    id: 'win_demo_001',
+    auctionId: 'auct_004',
+    finalBidXAF: 415000,
+    status: 'pending_payment',
+    wonAt: '2025-09-20T10:45:00Z'
+  }
+];
+
 // Demo auction listings
 export const AUCTION_LISTINGS: AuctionListing[] = [
   {
@@ -94,64 +126,41 @@ const WATCHLIST_KEY = 'pl.auctionWatchlist';
 const WINS_KEY = 'pl.auctionWins';
 
 // Demo data getters with localStorage fallback
-export const loadBids = (): BidRecord[] => {
+const parseStored = <T,>(key: string): { data: T | null; hasValue: boolean } => {
   try {
-    const stored = localStorage.getItem(BIDS_KEY);
-    if (stored) {
-      return JSON.parse(stored);
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      return { data: null, hasValue: false };
     }
+    return { data: JSON.parse(raw) as T, hasValue: true };
   } catch (error) {
-    console.warn('Failed to load bids from localStorage:', error);
+    console.warn(`Failed to read ${key} from localStorage:`, error);
+    return { data: null, hasValue: false };
   }
-  
-  // Return demo bid if none stored
-  return [
-    {
-      id: 'bid_001',
-      auctionId: 'auct_001',
-      yourBidXAF: 850000,
-      highestBidXAF: 875000,
-      timeLeftSec: 3600 * 8,
-      createdAt: '2025-09-24T12:30:00Z'
-    }
-  ];
+};
+
+export const loadBids = (): BidRecord[] => {
+  const { data } = parseStored<BidRecord[]>(BIDS_KEY);
+  if (Array.isArray(data) && data.length > 0) {
+    return data;
+  }
+  return FALLBACK_BIDS;
 };
 
 export const loadWatchlist = (): WatchlistItem[] => {
-  try {
-    const stored = localStorage.getItem(WATCHLIST_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.warn('Failed to load watchlist from localStorage:', error);
+  const { data } = parseStored<WatchlistItem[]>(WATCHLIST_KEY);
+  if (Array.isArray(data) && data.length > 0) {
+    return data;
   }
-  
-  // Return demo watchlist if none stored
-  return [
-    {
-      auctionId: 'auct_002',
-      addedAt: '2025-09-23T14:20:00Z'
-    },
-    {
-      auctionId: 'auct_003',
-      addedAt: '2025-09-24T09:15:00Z'
-    }
-  ];
+  return FALLBACK_WATCHLIST;
 };
 
 export const loadWins = (): AuctionWin[] => {
-  try {
-    const stored = localStorage.getItem(WINS_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.warn('Failed to load wins from localStorage:', error);
+  const { data } = parseStored<AuctionWin[]>(WINS_KEY);
+  if (Array.isArray(data) && data.length > 0) {
+    return data;
   }
-  
-  // Return empty array initially - wins are earned through the app
-  return [];
+  return FALLBACK_WINS;
 };
 
 // Setters
@@ -178,6 +187,20 @@ export const saveWins = (wins: AuctionWin[]): void => {
     console.warn('Failed to save wins to localStorage:', error);
   }
 };
+
+const isDemoSeed = (key: string): boolean => {
+  const { data, hasValue } = parseStored<unknown[]>(key);
+  if (!hasValue) return true;
+  return !Array.isArray(data) || data.length === 0;
+};
+
+export const isDemoBidsSeed = (): boolean => isDemoSeed(BIDS_KEY);
+
+export const isDemoWatchlistSeed = (): boolean => isDemoSeed(WATCHLIST_KEY);
+
+export const isDemoWinsSeed = (): boolean => isDemoSeed(WINS_KEY);
+
+export const isDemoAuctionsSeed = (auctions: AuctionListing[]): boolean => auctions === AUCTION_LISTINGS || auctions.length === 0;
 
 // Helper functions
 export const getAuctionById = (id: string): AuctionListing | undefined => {

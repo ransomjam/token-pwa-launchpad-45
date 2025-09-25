@@ -90,6 +90,7 @@ import {
   Truck,
 } from 'lucide-react';
 import { LanguageToggle } from '@/components/shell/AccountControls';
+import { loadBids, loadWatchlist, loadWins } from '@/lib/auctionData';
 
 type EditState =
   | {
@@ -361,6 +362,52 @@ const Profile = () => {
 
   const activeBuyer = buyerProfile ?? demoBuyerProfile;
   const activeImporter = importerProfile ?? demoImporterProfile;
+
+  const bidsCount = useMemo(() => loadBids().length, []);
+  const watchlistCount = useMemo(() => loadWatchlist().length, []);
+  const winsCount = useMemo(() => loadWins().length, []);
+
+  const openBids = useCallback(() => {
+    trackEvent('profile_nav_bids');
+    navigate('/profile/bids');
+  }, [navigate]);
+
+  const openWatchlist = useCallback(() => {
+    trackEvent('profile_nav_watchlist');
+    navigate('/profile/watchlist');
+  }, [navigate]);
+
+  const openWins = useCallback(() => {
+    trackEvent('profile_nav_wins');
+    navigate('/profile/wins');
+  }, [navigate]);
+
+  const auctionTiles = useMemo(
+    () => [
+      {
+        key: 'bids',
+        label: t('profile.bids.title'),
+        hint: t('profile.bids.subtitle'),
+        count: bidsCount,
+        onClick: openBids,
+      },
+      {
+        key: 'watchlist',
+        label: t('profile.watchlist.title'),
+        hint: t('profile.watchlist.subtitle'),
+        count: watchlistCount,
+        onClick: openWatchlist,
+      },
+      {
+        key: 'wins',
+        label: t('profile.wins.title'),
+        hint: t('profile.wins.subtitle'),
+        count: winsCount,
+        onClick: openWins,
+      },
+    ],
+    [bidsCount, openBids, openWatchlist, openWins, t, watchlistCount, winsCount],
+  );
 
   const mapDemoOrderToSummary = useCallback(
     (order: DemoOrderRecord): OrderSummary => {
@@ -1057,6 +1104,28 @@ const Profile = () => {
               )}
             </div>
           </div>
+
+          {mode === 'buyer' && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {auctionTiles.map(tile => (
+                <button
+                  key={tile.key}
+                  type="button"
+                  onClick={tile.onClick}
+                  className="group flex flex-col gap-2 rounded-3xl border border-border/70 bg-card/90 p-4 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:translate-y-[1px]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-semibold text-foreground">{tile.count}</span>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{tile.label}</p>
+                    <p className="text-xs text-muted-foreground">{tile.hint}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="flex flex-col gap-3 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-soft">
             <div className="flex items-center justify-between">
