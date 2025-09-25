@@ -35,7 +35,10 @@ export const HomeFeedWithToggle = ({ session }: HomeFeedWithToggleProps) => {
       {currentMode === 'preorder' ? (
         <HomeFeed session={session} />
       ) : (
-        <AuctionsFeed variant={location.pathname === '/auctions' ? 'page' : 'embedded'} />
+        <AuctionsFeed
+          session={session}
+          variant={location.pathname === '/auctions' ? 'page' : 'embedded'}
+        />
       )}
     </div>
   );

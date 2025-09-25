@@ -5,18 +5,20 @@ import { PlaceBidSheet } from './PlaceBidSheet';
 import { AUCTION_LISTINGS, isDemoAuctionsSeed } from '@/lib/auctionData';
 import { trackEvent } from '@/lib/analytics';
 import type { AuctionListing } from '@/types/auctions';
+import type { Session } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useI18n } from '@/context/I18nContext';
 import { AppNav } from '@/components/navigation/AppNav';
+import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
 
 type AuctionsFeedProps = {
   variant?: 'embedded' | 'page';
+  session?: Session;
 };
 
 const PREVIEW_BADGE_VISIBLE = import.meta.env.MODE !== 'production' || import.meta.env.DEV;
 
-export const AuctionsFeed = ({ variant = 'embedded' }: AuctionsFeedProps) => {
+export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProps) => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [selectedAuction, setSelectedAuction] = useState<AuctionListing | null>(null);
@@ -50,7 +52,7 @@ export const AuctionsFeed = ({ variant = 'embedded' }: AuctionsFeedProps) => {
       {variant === 'page' && (
         <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-3">
                 <span className="text-lg font-semibold tracking-tight text-foreground">{t('auctions.header')}</span>
                 {PREVIEW_BADGE_VISIBLE && (
@@ -59,14 +61,10 @@ export const AuctionsFeed = ({ variant = 'embedded' }: AuctionsFeedProps) => {
                   </Badge>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full px-4 text-xs font-semibold"
-                onClick={() => navigate('/')}
-              >
-                {t('navigation.preorder')}
-              </Button>
+              <div className="ml-auto flex items-center gap-2 sm:gap-3">
+                <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
+                {session && <AccountSheet session={session} />}
+              </div>
             </div>
             <AppNav className="justify-start" />
           </div>
