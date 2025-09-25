@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share2, Eye, Clock, ShieldCheck, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
 } from '@/lib/auctionData';
 import { PlaceBidSheet } from '@/components/auctions/PlaceBidSheet';
 import ShareSheet from '@/components/share/ShareSheet';
+import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
 import type { AuctionListing } from '@/types/auctions';
 
 const AuctionDetail = () => {
@@ -30,6 +31,31 @@ const AuctionDetail = () => {
   const [showBidSheet, setShowBidSheet] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const shareContent = useMemo<ListingShareContent | null>(() => {
+    if (!auction) return null;
+    const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const absoluteOrigin = ensureAbsoluteUrl(origin);
+    const trimmedOrigin = absoluteOrigin.endsWith('/') ? absoluteOrigin.slice(0, -1) : absoluteOrigin;
+
+    return {
+      id: auction.id,
+      title: auction.title,
+      priceXAF: auction.currentBidXAF,
+      etaMin: 7,
+      etaMax: 14,
+      laneCode: auction.lane?.code || 'GZ-DLA-AIR',
+      onTimePct: (auction.lane?.onTimePct ?? 0.9) * 100,
+      committed: auction.currentBidXAF,
+      target: auction.currentBidXAF + auction.minIncrementXAF,
+      image: auction.images[0] ?? '/placeholder.svg',
+      shareUrls: {
+        short: `${trimmedOrigin}/a/${auction.id}`,
+        long: `${trimmedOrigin}/auctions/${auction.id}`,
+      },
+      isDemo: true,
+    };
+  }, [auction]);
 
   const currencyFormatter = new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
     style: 'currency',
@@ -295,24 +321,12 @@ const AuctionDetail = () => {
           />
         )}
 
-        {showShareSheet && (
-          <ShareSheet
-            open={showShareSheet}
-            onClose={() => setShowShareSheet(false)}
-            context="listing"
-            data={{
-              id: auction.id,
-              title: auction.title,
-              priceXAF: auction.currentBidXAF,
-              image: auction.images[0],
-              etaMin: 7,
-              etaMax: 14,
-              laneCode: auction.lane?.code || 'GZ-DLA-AIR',
-              onTimePct: auction.lane?.onTimePct || 0.9,
-              isDemo: true,
-            }}
-          />
-        )}
+        <ShareSheet
+          open={showShareSheet}
+          onOpenChange={setShowShareSheet}
+          context="listing"
+          data={shareContent}
+        />
       </div>
     </div>
   );
