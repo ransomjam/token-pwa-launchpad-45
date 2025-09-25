@@ -91,6 +91,8 @@ const ProfileWatchlist = () => {
           {watchlist.map(item => {
             const auction = lookupAuction(item);
             const seller = auction?.seller;
+            const hasEnded = (auction?.timeLeftSec ?? 0) <= 0;
+            const timeRemaining = auction ? formatTimeLeft(auction.timeLeftSec, locale) : null;
 
             return (
               <article
@@ -122,7 +124,9 @@ const ProfileWatchlist = () => {
                     </p>
                     {auction && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {t('profile.watchlist.timeLeft', { value: formatTimeLeft(auction.timeLeftSec) })}
+                        {hasEnded
+                          ? t('profile.watchlist.ended')
+                          : t('profile.watchlist.timeLeft', { value: timeRemaining })}
                       </p>
                     )}
                   </div>

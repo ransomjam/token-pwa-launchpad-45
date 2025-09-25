@@ -25,14 +25,6 @@ export const AppNav = ({ className }: AppNavProps) => {
         location.pathname === '/auctions' ||
         location.pathname.startsWith('/auction'),
     },
-    {
-      key: 'profile',
-      label: t('navigation.profile'),
-      href: '/account',
-      active:
-        location.pathname.startsWith('/account') ||
-        location.pathname.startsWith('/profile'),
-    },
   ];
 
   return (
