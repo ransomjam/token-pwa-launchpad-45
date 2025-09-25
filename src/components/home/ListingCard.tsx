@@ -136,7 +136,7 @@ export const ListingCard = ({
       onClick={handleOpen}
       className="group relative flex cursor-pointer flex-row items-stretch gap-4 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-4 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100 sm:p-5 md:flex-col"
     >
-      <div className="relative flex w-28 flex-shrink-0 flex-col gap-2 sm:w-32 md:w-full">
+      <div className="relative flex w-32 flex-shrink-0 flex-col gap-2 sm:w-36 md:w-full">
         <AspectRatio ratio={4 / 3} className="h-full overflow-hidden rounded-2xl bg-muted">
           <img
             src={displayImage}
@@ -197,7 +197,9 @@ export const ListingCard = ({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner sm:h-8 sm:w-8">
               <ShieldCheck className="h-4 w-4" />
             </span>
-            <span className="text-xs font-medium leading-tight text-foreground/80 sm:text-sm">{t('home.heroCopy')}</span>
+            <span className="whitespace-nowrap text-xs font-medium leading-tight text-foreground/80 sm:text-sm">
+              {t('home.heroCopy')}
+            </span>
           </div>
         </div>
 
@@ -205,7 +207,7 @@ export const ListingCard = ({
           <Button
             onClick={handlePreOrder}
             aria-label={`${t('home.preorder')} ${listing.title}`}
-            className="h-9 flex-1 rounded-full text-xs font-semibold shadow-lux sm:h-10 sm:text-sm"
+            className="h-8 flex-1 rounded-full text-[11px] font-semibold shadow-lux sm:h-9 sm:text-xs"
           >
             {t('home.preorder')}
           </Button>
@@ -227,7 +229,7 @@ export const ListingCard = ({
       </div>
 
       <span className="sr-only">{cardPositionLabel}</span>
-      <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-1">
+      <div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-1">
         <span
           aria-label={etaChipAria}
           className="pill gap-1 bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground/80 shadow-soft normal-case"
