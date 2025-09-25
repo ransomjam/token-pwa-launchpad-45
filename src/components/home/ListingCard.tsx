@@ -134,9 +134,9 @@ export const ListingCard = ({
       aria-label={cardAria}
       onKeyDown={handleKeyDown}
       onClick={handleOpen}
-      className="group relative flex cursor-pointer flex-col items-stretch gap-4 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-4 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100 sm:p-5 md:flex-row"
+      className="group relative flex cursor-pointer flex-row items-stretch gap-4 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-4 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100 sm:p-5 md:flex-col"
     >
-      <div className="relative flex w-full flex-shrink-0 flex-col gap-2 md:w-40 lg:w-48">
+      <div className="relative flex w-32 flex-shrink-0 flex-col gap-2 sm:w-36 md:w-full">
         <AspectRatio ratio={4 / 3} className="h-full overflow-hidden rounded-2xl bg-muted">
           <img
             src={displayImage}
@@ -166,7 +166,7 @@ export const ListingCard = ({
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:text-base">
+              <h3 className="line-clamp-1 text-sm font-semibold leading-snug text-foreground sm:text-base">
                 {listing.title}
               </h3>
               <button
@@ -203,11 +203,11 @@ export const ListingCard = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 pt-1">
+        <div className="flex items-center justify-between gap-2 pt-1">
           <Button
             onClick={handlePreOrder}
             aria-label={`${t('home.preorder')} ${listing.title}`}
-            className="h-8 basis-1/2 rounded-full text-[11px] font-semibold shadow-lux sm:h-9 sm:text-xs"
+            className="h-8 flex-1 rounded-full text-[11px] font-semibold shadow-lux sm:h-9 sm:text-xs"
           >
             {t('home.preorder')}
           </Button>
