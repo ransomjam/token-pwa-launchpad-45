@@ -283,17 +283,36 @@ export const updateWinStatus = (winId: string, status: AuctionWin['status']): vo
   }
 };
 
-export const formatTimeLeft = (seconds: number): string => {
-  if (seconds <= 0) return 'Ended';
-  
+export const formatTimeLeft = (seconds: number, locale: 'en' | 'fr' = 'en'): string => {
+  if (seconds <= 0) {
+    return locale === 'fr' ? 'Terminé' : 'Ended';
+  }
+
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  
+  const remainingSeconds = seconds % 60;
+  const formatter = new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US');
+
+  const suffixes = {
+    hour: locale === 'fr' ? '\u202Fh' : 'h',
+    minute: locale === 'fr' ? '\u202Fmin' : 'm',
+    second: locale === 'fr' ? '\u202Fs' : 's',
+  } as const;
+
+  const formatPart = (value: number, unit: keyof typeof suffixes) =>
+    `${formatter.format(value)}${suffixes[unit]}`;
+
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  } else if (minutes > 0) {
-    return `${minutes}m`;
-  } else {
-    return `${seconds}s`;
+    const parts = [formatPart(hours, 'hour')];
+    if (minutes > 0) {
+      parts.push(formatPart(minutes, 'minute'));
+    }
+    return parts.join(' ');
   }
+
+  if (minutes > 0) {
+    return formatPart(minutes, 'minute');
+  }
+
+  return formatPart(remainingSeconds, 'second');
 };

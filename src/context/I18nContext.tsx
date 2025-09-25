@@ -312,6 +312,7 @@ const translations = {
         sellerFallback: 'Seller unavailable',
         viewAuction: 'Open auction',
         viewSeller: 'View seller',
+        ended: 'Auction ended',
       },
       watchlist: {
         title: 'Watchlist',
@@ -324,6 +325,7 @@ const translations = {
         sellerFallback: 'Seller unavailable',
         viewAuction: 'Open auction',
         viewSeller: 'View seller',
+        ended: 'Auction ended',
       },
       wins: {
         title: 'Wins',
@@ -1323,6 +1325,7 @@ const translations = {
         sellerFallback: 'Vendeur indisponible',
         viewAuction: 'Ouvrir l’enchère',
         viewSeller: 'Voir le vendeur',
+        ended: 'Enchère terminée',
       },
       watchlist: {
         title: 'Suivi',
@@ -1335,6 +1338,7 @@ const translations = {
         sellerFallback: 'Vendeur indisponible',
         viewAuction: 'Ouvrir l’enchère',
         viewSeller: 'Voir le vendeur',
+        ended: 'Enchère terminée',
       },
       wins: {
         title: 'Gagnées',

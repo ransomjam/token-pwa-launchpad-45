@@ -144,6 +144,7 @@ const AuctionDetail = () => {
 
   const isEnding = timeLeft <= 3600; // Less than 1 hour
   const hasEnded = timeLeft <= 0;
+  const timeDisplay = hasEnded ? t('auctions.ended') : formatTimeLeft(timeLeft, locale);
   const minBid = auction.currentBidXAF + auction.minIncrementXAF;
 
   return (
@@ -192,7 +193,7 @@ const AuctionDetail = () => {
               )}
             >
               <Clock className="h-4 w-4" />
-              {formatTimeLeft(timeLeft)}
+              {timeDisplay}
             </Badge>
           </div>
 

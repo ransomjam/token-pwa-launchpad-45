@@ -72,6 +72,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
 
   const isEnding = timeLeft <= 3600;
   const hasEnded = timeLeft <= 0;
+  const timeRemainingLabel = hasEnded ? t('auctions.ended') : formatTimeLeft(timeLeft, locale);
   const watchersLabel = t('auctions.watchersLabel', { count: auction.watchers });
   const laneLabel = auction.lane ? t('auctions.laneOnTime', { percent: Math.round(auction.lane.onTimePct * 100) }) : null;
 
@@ -103,7 +104,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
               )}
             >
               <Clock className="h-3 w-3" />
-              {formatTimeLeft(timeLeft)}
+              {timeRemainingLabel}
             </Badge>
           </div>
         </AspectRatio>

@@ -1106,22 +1106,20 @@ const Profile = () => {
           </div>
 
           {mode === 'buyer' && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid w-full max-w-sm grid-cols-2 gap-2 sm:max-w-md">
               {auctionTiles.map(tile => (
                 <button
                   key={tile.key}
                   type="button"
                   onClick={tile.onClick}
-                  className="group flex flex-col gap-2 rounded-3xl border border-border/70 bg-card/90 p-4 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:translate-y-[1px]"
+                  className="group flex flex-col gap-1.5 rounded-xl border border-border/70 bg-card/80 px-3 py-3 text-left text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-semibold text-foreground">{tile.count}</span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                  <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="truncate">{tile.label}</span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground transition-colors group-hover:text-primary" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-foreground">{tile.label}</p>
-                    <p className="text-xs text-muted-foreground">{tile.hint}</p>
-                  </div>
+                  <span className="text-lg font-semibold text-foreground">{tile.count}</span>
+                  <p className="text-[11px] leading-snug text-muted-foreground/90">{tile.hint}</p>
                 </button>
               ))}
             </div>
