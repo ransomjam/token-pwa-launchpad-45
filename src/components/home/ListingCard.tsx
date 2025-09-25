@@ -139,10 +139,10 @@ export const ListingCard = ({
       aria-label={cardAria}
       onKeyDown={handleKeyDown}
       onClick={handleOpen}
-      className="group relative flex cursor-pointer flex-col gap-4 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-5 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100"
+      className="group relative flex cursor-pointer flex-row items-stretch gap-4 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-4 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100 sm:p-5 md:flex-col"
     >
-      <div className="relative">
-        <AspectRatio ratio={4 / 3} className="overflow-hidden rounded-3xl bg-muted">
+      <div className="relative w-28 flex-shrink-0 sm:w-32 md:w-full">
+        <AspectRatio ratio={4 / 3} className="h-full overflow-hidden rounded-2xl bg-muted">
           <img
             src={displayImage}
             loading="lazy"
@@ -164,10 +164,10 @@ export const ListingCard = ({
             <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-muted via-muted/60 to-muted/40" aria-hidden />
           )}
         </AspectRatio>
-        <div className="absolute left-5 top-5 flex items-center gap-2">
+        <div className="absolute left-3 top-3 flex items-center gap-2 md:left-5 md:top-5">
           <span
             aria-label={etaChipAria}
-            className="pill gap-1 bg-white/90 px-2.5 py-1 text-[13px] font-medium text-foreground/80 shadow-soft normal-case"
+            className="pill gap-1 bg-white/90 px-2 py-0.5 text-xs font-medium text-foreground/80 shadow-soft normal-case md:px-2.5 md:py-1 md:text-[13px]"
           >
             <Clock3 className="h-3.5 w-3.5 text-blue" />
             {etaChipLabel}
@@ -175,19 +175,17 @@ export const ListingCard = ({
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-start gap-2">
-              <h3 className="line-clamp-2 flex-1 text-base font-semibold leading-snug text-foreground">
+      <div className="flex flex-1 flex-col justify-between gap-3 md:gap-4">
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:text-base">
                 {listing.title}
               </h3>
-            </div>
-            <div>
               <button
                 type="button"
                 onClick={handleImporterProfile}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/80 px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/60 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:px-3 sm:py-1.5 sm:text-xs"
               >
                 <span className="truncate">
                   {t('home.importerByline', { name: listing.importer.displayName })}
@@ -195,54 +193,54 @@ export const ListingCard = ({
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
             </div>
+            <div className="flex flex-col items-end gap-1 text-right">
+              <p className="text-base font-semibold text-foreground sm:text-lg">{formattedPrice}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:text-xs">{moqLabel}</p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-lg font-semibold text-foreground">{formattedPrice}</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{moqLabel}</p>
+
+          <p className="text-xs text-muted-foreground/90 sm:text-sm">{factsLine}</p>
+
+          <div className="flex items-center gap-2">
+            <Progress value={progressValue} aria-label={progressAria} className="h-2 flex-1" />
+            {percent >= 80 && (
+              <span className="pill gap-1.5 border-primary/40 bg-primary/20 px-2 py-0.5 text-[11px] text-primary sm:px-2.5 sm:py-1 sm:text-xs">
+                {t('home.almostThere')}
+              </span>
+            )}
           </div>
-        </div>
 
-        <p className="text-sm text-muted-foreground/90">{factsLine}</p>
-
-        <div className="flex items-center gap-2">
-          <Progress value={progressValue} aria-label={progressAria} className="flex-1 h-2" />
-          {percent >= 80 && (
-            <span className="pill gap-1.5 border-primary/40 bg-primary/20 px-2.5 py-1 text-xs text-primary">
-              {t('home.almostThere')}
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground/90 sm:gap-3 sm:text-xs">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner sm:h-8 sm:w-8">
+              <ShieldCheck className="h-4 w-4" />
             </span>
-          )}
+            <span className="text-xs font-medium leading-tight text-foreground/80 sm:text-sm">{t('home.heroCopy')}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground/90">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shadow-inner">
-            <ShieldCheck className="h-4 w-4" />
-          </span>
-          <span className="text-sm font-medium leading-tight text-foreground/80">{t('home.heroCopy')}</span>
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <Button
+            onClick={handlePreOrder}
+            aria-label={`${t('home.preorder')} ${listing.title}`}
+            className="h-9 flex-1 rounded-full text-xs font-semibold shadow-lux sm:h-10 sm:text-sm"
+          >
+            {t('home.preorder')}
+          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleShare}
+                aria-label={t('home.shareWhatsapp', { title: listing.title })}
+                className="h-9 w-9 rounded-full border border-white/60 bg-white/80 p-0 text-muted-foreground shadow-soft backdrop-blur transition-colors hover:border-primary/40 hover:text-primary sm:h-10 sm:w-10"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">{t('home.share')}</TooltipContent>
+          </Tooltip>
         </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-2 pt-1">
-        <Button
-          onClick={handlePreOrder}
-          aria-label={`${t('home.preorder')} ${listing.title}`}
-          className="h-10 flex-1 rounded-full text-sm font-semibold shadow-lux"
-        >
-          {t('home.preorder')}
-        </Button>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleShare}
-              aria-label={t('home.shareWhatsapp', { title: listing.title })}
-              className="h-10 w-10 rounded-full border border-white/60 bg-white/80 p-0 text-muted-foreground shadow-soft backdrop-blur hover:border-primary/40 hover:text-primary"
-            >
-              <MessageCircle className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">{t('home.share')}</TooltipContent>
-        </Tooltip>
       </div>
 
       <span className="sr-only">{cardPositionLabel}</span>
