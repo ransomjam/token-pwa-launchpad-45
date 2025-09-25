@@ -334,6 +334,12 @@ const translations = {
           completed: 'Completed',
         },
       },
+      points: {
+        title: 'Points',
+        subtitle: 'Rewards launching soon for loyal buyers.',
+        placeholder: '0 pts',
+        badge: 'Loyalty beta',
+      },
       ordersFlow: {
         title: 'Recent orders',
         subtitle: 'Track every escrow purchase at a glance.',
@@ -1381,6 +1387,12 @@ const translations = {
           paid: 'Payé — planifiez le retrait',
           completed: 'Terminé',
         },
+      },
+      points: {
+        title: 'Points',
+        subtitle: 'Les récompenses arrivent bientôt pour les fidèles.',
+        placeholder: '0 pts',
+        badge: 'Fidélité beta',
       },
       ordersFlow: {
         title: 'Commandes récentes',
