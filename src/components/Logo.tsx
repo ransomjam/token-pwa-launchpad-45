@@ -29,7 +29,7 @@ export const Logo = ({
         src="/images/logo-transparent.png"
         alt={alt ?? t('app.name')}
         className={cn(
-          'h-full w-full origin-center rounded-2xl object-cover transform scale-[3]',
+          'h-full w-full origin-center rounded-2xl object-contain',
           className,
         )}
         style={style}
