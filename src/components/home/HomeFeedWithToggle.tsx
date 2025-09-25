@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ModeToggle } from './ModeToggle';
 import { AuctionsFeed } from '@/components/auctions/AuctionsFeed';
 import { HomeFeed } from './HomeFeed';
+import { AppBottomNav } from '@/components/navigation/AppBottomNav';
 import type { Session } from '@/types';
 
 type Mode = 'preorder' | 'auctions';
@@ -27,19 +28,22 @@ export const HomeFeedWithToggle = ({ session }: HomeFeedWithToggleProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-center px-6 pt-6">
-        <ModeToggle currentMode={currentMode} onModeChange={handleModeChange} />
-      </div>
+    <>
+      <div className="space-y-6 pb-28">
+        <div className="flex justify-center px-6 pt-6">
+          <ModeToggle currentMode={currentMode} onModeChange={handleModeChange} />
+        </div>
 
-      {currentMode === 'preorder' ? (
-        <HomeFeed session={session} />
-      ) : (
-        <AuctionsFeed
-          session={session}
-          variant={location.pathname === '/auctions' ? 'page' : 'embedded'}
-        />
-      )}
-    </div>
+        {currentMode === 'preorder' ? (
+          <HomeFeed session={session} />
+        ) : (
+          <AuctionsFeed
+            session={session}
+            variant={location.pathname === '/auctions' ? 'page' : 'embedded'}
+          />
+        )}
+      </div>
+      <AppBottomNav />
+    </>
   );
 };
