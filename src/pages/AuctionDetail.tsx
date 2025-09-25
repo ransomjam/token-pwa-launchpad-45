@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2, Eye, Clock, ShieldCheck, Heart } from 'lucide-react';
+import { ArrowLeft, Share2, Eye, Clock, ShieldCheck, Heart, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -146,6 +146,7 @@ const AuctionDetail = () => {
   const hasEnded = timeLeft <= 0;
   const timeDisplay = hasEnded ? t('auctions.ended') : formatTimeLeft(timeLeft, locale);
   const minBid = auction.currentBidXAF + auction.minIncrementXAF;
+  const watchersLabel = t('auctions.watchersLabel', { count: auction.watchers });
 
   return (
     <div className="min-h-dvh bg-background">
@@ -182,8 +183,8 @@ const AuctionDetail = () => {
           />
           
           {/* Time left overlay */}
-          <div className="absolute left-4 top-4">
-            <Badge 
+          <div className="absolute left-4 top-4 flex flex-col gap-2">
+            <Badge
               variant={hasEnded ? "secondary" : isEnding ? "destructive" : "default"}
               className={cn(
                 "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold",
@@ -195,14 +196,10 @@ const AuctionDetail = () => {
               <Clock className="h-4 w-4" />
               {timeDisplay}
             </Badge>
-          </div>
-
-          {/* Watchers count */}
-          <div className="absolute right-4 top-4">
-            <Badge variant="secondary" className="inline-flex items-center gap-1 rounded-full bg-black/60 px-3 py-1.5 text-sm text-white">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-sm font-medium text-white">
               <Eye className="h-4 w-4" />
-              {auction.watchers}
-            </Badge>
+              {watchersLabel}
+            </div>
           </div>
 
           {/* Image indicators */}
@@ -273,7 +270,8 @@ const AuctionDetail = () => {
                   )}
                 </div>
                 {auction.seller.city && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
                     {auction.seller.city}
                   </p>
                 )}
