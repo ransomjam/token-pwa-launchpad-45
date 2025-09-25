@@ -7,6 +7,7 @@ import { HomeFeed } from '@/components/home/HomeFeed';
 import { AccountSheet, LanguageToggle, languageNames } from '@/components/shell/AccountControls';
 import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
 import { Logo } from '@/components/Logo';
+import { InstallPwaButton } from '@/components/pwa/InstallPwaButton';
 
 const AuthenticatedShell = ({ session }: { session: Session }) => {
   const { t, locale } = useI18n();
@@ -28,7 +29,8 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
             <div className="sm:order-1">
               <AccountSheet session={session} />
             </div>
-            <div className="flex justify-end sm:order-3">
+            <div className="flex items-center justify-end gap-3 sm:order-3">
+              <InstallPwaButton className="shadow-glow sm:order-2" />
               <div className="glass-card inline-flex items-center justify-center rounded-3xl p-3 shadow-lux">
                 <Logo className="h-[4.5rem] w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
               </div>
