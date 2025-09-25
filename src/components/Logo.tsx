@@ -20,7 +20,7 @@ export const Logo = ({
   return (
     <div
       className={cn(
-        'inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-gradient-to-br from-primary via-teal to-blue p-2',
+        'inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-teal to-blue',
         wrapperClassName,
       )}
       style={wrapperStyle}
@@ -28,7 +28,10 @@ export const Logo = ({
       <img
         src="/images/logo-transparent.png"
         alt={alt ?? t('app.name')}
-        className={cn('h-full w-full rounded-2xl object-contain', className)}
+        className={cn(
+          'h-full w-full origin-center rounded-2xl object-cover transform scale-[3]',
+          className,
+        )}
         style={style}
         {...props}
       />
