@@ -1,12 +1,12 @@
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { ArrowUpRight, Clock, Eye, Heart } from 'lucide-react';
+import { ArrowUpRight, Clock, Eye, Share2 } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
 import { trackEvent } from '@/lib/analytics';
-import { formatTimeLeft, toggleWatchlist, isWatched } from '@/lib/auctionData';
+import { formatTimeLeft } from '@/lib/auctionData';
 import type { AuctionListing } from '@/types/auctions';
 
 type AuctionCardProps = {
@@ -18,7 +18,6 @@ type AuctionCardProps = {
 
 export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }: AuctionCardProps) => {
   const { t, locale } = useI18n();
-  const [watched, setWatched] = useState(() => isWatched(auction.id));
   const [timeLeft, setTimeLeft] = useState(auction.timeLeftSec);
 
   const currencyFormatter = new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
@@ -36,16 +35,6 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
 
     return () => window.clearInterval(interval);
   }, [timeLeft]);
-
-  const handleToggleWatch = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    const newWatchedState = toggleWatchlist(auction.id);
-    setWatched(newWatchedState);
-    trackEvent('auction_watch_toggle', {
-      auctionId: auction.id,
-      watched: newWatchedState,
-    });
-  };
 
   const handlePlaceBid = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -75,6 +64,22 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
   const timeRemainingLabel = hasEnded ? t('auctions.ended') : formatTimeLeft(timeLeft, locale);
   const watchersLabel = t('auctions.watchersLabel', { count: auction.watchers });
   const laneLabel = auction.lane ? t('auctions.laneOnTime', { percent: Math.round(auction.lane.onTimePct * 100) }) : null;
+  const startingBidXAF = Math.max(0, auction.currentBidXAF - auction.minIncrementXAF);
+
+  const timeBadge = (
+    <Badge
+      variant={hasEnded ? 'secondary' : isEnding ? 'destructive' : 'default'}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-soft',
+        hasEnded && 'bg-muted/80 text-muted-foreground',
+        isEnding && 'bg-destructive/90 text-destructive-foreground animate-pulse',
+        !hasEnded && !isEnding && 'bg-primary/90 text-primary-foreground',
+      )}
+    >
+      <Clock className="h-3 w-3" />
+      {timeRemainingLabel}
+    </Badge>
+  );
 
   return (
     <article
@@ -93,28 +98,25 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
             decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute left-3 top-3">
-            <Badge
-              variant={hasEnded ? 'secondary' : isEnding ? 'destructive' : 'default'}
-              className={cn(
-                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-soft',
-                hasEnded && 'bg-muted/80 text-muted-foreground',
-                isEnding && 'bg-destructive/90 text-destructive-foreground animate-pulse',
-                !hasEnded && !isEnding && 'bg-primary/90 text-primary-foreground',
-              )}
-            >
-              <Clock className="h-3 w-3" />
-              {timeRemainingLabel}
-            </Badge>
-          </div>
         </AspectRatio>
         <div className="space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-            {t('auctions.currentBid')}
-          </span>
-          <p className="text-sm font-semibold text-foreground sm:text-base">
-            {currencyFormatter.format(auction.currentBidXAF)}
-          </p>
+          <div className="space-y-0.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+              {t('auctions.startedAt')}
+            </span>
+            <p className="text-xs font-semibold text-muted-foreground sm:text-sm">
+              {currencyFormatter.format(startingBidXAF)}
+            </p>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+              {t('auctions.currentBid')}
+            </span>
+            <p className="text-sm font-semibold text-foreground sm:text-base">
+              {currencyFormatter.format(auction.currentBidXAF)}
+            </p>
+          </div>
+          <div className="pt-1">{timeBadge}</div>
         </div>
       </div>
 
@@ -122,7 +124,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:text-base">
+              <h3 className="line-clamp-1 text-sm font-semibold leading-snug text-foreground sm:text-base">
                 {auction.title}
               </h3>
               <button
@@ -156,23 +158,10 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
           <Button
             onClick={handlePlaceBid}
             disabled={hasEnded}
-            className="h-11 flex-1 rounded-full text-sm font-semibold shadow-lux"
+            className="h-9 flex-1 rounded-full text-sm font-semibold shadow-lux"
           >
+            <Share2 className="mr-2 h-4 w-4" aria-hidden />
             {hasEnded ? t('auctions.ended') : t('auctions.placeBid')}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleToggleWatch}
-            aria-label={watched ? t('auctions.removedFromWatchlist') : t('auctions.addedToWatchlist')}
-            className={cn(
-              'rounded-full border-white/70 bg-white/80 text-muted-foreground shadow-soft transition hover:text-destructive',
-              watched && 'border-destructive/40 bg-destructive/10 text-destructive',
-            )}
-          >
-            <Heart className={cn('h-4 w-4', watched && 'fill-current')} />
           </Button>
         </div>
       </div>
