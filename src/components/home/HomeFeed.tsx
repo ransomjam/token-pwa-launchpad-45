@@ -642,8 +642,8 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   }, [filteredListings, sort]);
 
   useEffect(() => {
-    setVisibleTrending(4);
-  }, [sort, selectedCategory, filters, searchTerm]);
+    setVisibleTrending(fallbackActive ? 14 : 4);
+  }, [fallbackActive, sort, selectedCategory, filters, searchTerm]);
 
   const trendingListings = useMemo(() => sortedListings.slice(0, Math.min(sortedListings.length, visibleTrending)), [sortedListings, visibleTrending]);
 
