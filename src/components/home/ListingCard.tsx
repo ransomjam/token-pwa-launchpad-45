@@ -67,11 +67,6 @@ export const ListingCard = ({
 
   const percent = Math.min(100, Math.round((listing.moq.committed / listing.moq.target) * 100));
 
-  const moqLabel = useMemo(
-    () => t('home.moqLabel', { value: listing.moq.target }),
-    [listing.moq.target, t],
-  );
-
   const factsLine = useMemo(
     () => t('home.factsLine', {
       joined: `${listing.moq.committed}/${listing.moq.target}`,
@@ -141,7 +136,7 @@ export const ListingCard = ({
       onClick={handleOpen}
       className="group relative flex cursor-pointer flex-row items-stretch gap-4 overflow-hidden rounded-3xl border border-white/50 bg-white/75 p-4 shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px] before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-gradient-to-br before:from-blue/20 before:via-transparent before:to-primary/20 before:opacity-0 before:transition-opacity before:content-[''] group-hover:before:opacity-100 sm:p-5 md:flex-col"
     >
-      <div className="relative w-28 flex-shrink-0 sm:w-32 md:w-full">
+      <div className="relative flex w-28 flex-shrink-0 flex-col gap-2 sm:w-32 md:w-full">
         <AspectRatio ratio={4 / 3} className="h-full overflow-hidden rounded-2xl bg-muted">
           <img
             src={displayImage}
@@ -164,22 +159,14 @@ export const ListingCard = ({
             <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-muted via-muted/60 to-muted/40" aria-hidden />
           )}
         </AspectRatio>
-        <div className="absolute left-3 top-3 flex items-center gap-2 md:left-5 md:top-5">
-          <span
-            aria-label={etaChipAria}
-            className="pill gap-1 bg-white/90 px-2 py-0.5 text-xs font-medium text-foreground/80 shadow-soft normal-case md:px-2.5 md:py-1 md:text-[13px]"
-          >
-            <Clock3 className="h-3.5 w-3.5 text-blue" />
-            {etaChipLabel}
-          </span>
-        </div>
+        <p className="text-sm font-semibold text-foreground sm:text-base">{formattedPrice}</p>
       </div>
 
       <div className="flex flex-1 flex-col justify-between gap-3 md:gap-4">
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground sm:text-base">
+              <h3 className="line-clamp-1 text-sm font-semibold leading-snug text-foreground sm:text-base">
                 {listing.title}
               </h3>
               <button
@@ -192,10 +179,6 @@ export const ListingCard = ({
                 </span>
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
-            </div>
-            <div className="flex flex-col items-end gap-1 text-right">
-              <p className="text-base font-semibold text-foreground sm:text-lg">{formattedPrice}</p>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:text-xs">{moqLabel}</p>
             </div>
           </div>
 
@@ -244,6 +227,15 @@ export const ListingCard = ({
       </div>
 
       <span className="sr-only">{cardPositionLabel}</span>
+      <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-1">
+        <span
+          aria-label={etaChipAria}
+          className="pill gap-1 bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground/80 shadow-soft normal-case"
+        >
+          <Clock3 className="h-3 w-3 text-blue" />
+          {etaChipLabel}
+        </span>
+      </div>
     </article>
   );
 };
