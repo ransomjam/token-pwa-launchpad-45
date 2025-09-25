@@ -138,7 +138,7 @@ export const SignInFlow = ({ onAuthenticated }: SignInFlowProps) => {
           )}
 
           <div className="flex flex-col items-center gap-4 text-center">
-            <Logo className="h-12 w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
+            <Logo wrapperClassName="h-12 w-12 drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.32em] text-primary/80">{t('app.tagline')}</p>
               <h1 className="text-3xl font-semibold tracking-tight">{t('auth.welcome')}</h1>
