@@ -204,19 +204,18 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
             variant="outline"
             onClick={handleQuickView}
             aria-label={t('auctions.viewAria', { title: auction.title })}
-            className="h-9 w-9 rounded-full border border-white/60 bg-white/80 p-0 text-muted-foreground shadow-soft transition-colors hover:border-primary/40 hover:text-primary"
+            className="h-9 w-9 rounded-full border border-white/60 bg-white/80 p-0 text-blue shadow-soft transition-colors hover:border-primary/40 hover:text-blue"
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={handleShare}
             aria-label={t('auctions.shareAria', { title: auction.title })}
-            className="h-9 rounded-full px-3 text-sm font-semibold shadow-soft"
+            className="h-9 w-9 rounded-full border border-blue/40 bg-blue/10 p-0 text-blue shadow-soft transition-colors hover:border-blue/60 hover:bg-blue/15 hover:text-blue"
           >
-            <Share2 className="mr-2 h-4 w-4" />
-            {t('auctions.shareAction')}
+            <Share2 className="h-4 w-4" />
           </Button>
           <Button
             onClick={handlePlaceBid}
