@@ -33,7 +33,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/context/I18nContext';
 import { ListingCard } from './ListingCard';
-import { AppNav } from '@/components/navigation/AppNav';
 import type { ListingSummary, Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
 import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
@@ -1005,25 +1004,22 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
               </button>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <AppNav className="justify-start" />
-              {filterPills.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {filterPills.map(pill => (
-                    <button
-                      key={pill.key}
-                      type="button"
-                      onClick={pill.onRemove}
-                      className="pill bg-white/70 text-muted-foreground hover:border-primary/40 hover:text-primary"
-                      aria-label={t('home.removeFilter', { label: pill.label })}
-                    >
-                      <span className="truncate">{pill.label}</span>
-                      <X className="h-3 w-3" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {filterPills.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {filterPills.map(pill => (
+                  <button
+                    key={pill.key}
+                    type="button"
+                    onClick={pill.onRemove}
+                    className="pill bg-white/70 text-muted-foreground hover:border-primary/40 hover:text-primary"
+                    aria-label={t('home.removeFilter', { label: pill.label })}
+                  >
+                    <span className="truncate">{pill.label}</span>
+                    <X className="h-3 w-3" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 

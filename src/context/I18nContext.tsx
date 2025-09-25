@@ -127,6 +127,8 @@ const translations = {
       laneOnTime: '{{percent}}% on-time',
       sellerByline: 'Seller: {{name}}',
       ended: 'Ended',
+      searchPlaceholder: 'Search auctions',
+      searchEmpty: 'Try refining your search or check back soon.',
     },
     share: {
       sheetTitleListing: 'Share listing',
@@ -1162,6 +1164,8 @@ const translations = {
       laneOnTime: '{{percent}} % à l’heure',
       sellerByline: 'Vendeur : {{name}}',
       ended: 'Terminé',
+      searchPlaceholder: 'Rechercher des enchères',
+      searchEmpty: 'Affinez votre recherche ou revenez plus tard.',
     },
     share: {
       sheetTitleListing: 'Partager l’annonce',
