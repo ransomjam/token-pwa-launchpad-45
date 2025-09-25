@@ -64,6 +64,7 @@ import type { OrderStatus } from '@/types';
 import {
   AlertCircle,
   ArrowRight,
+  ArrowUpRight,
   BadgeCheck,
   Banknote,
   BellRing,
@@ -190,6 +191,62 @@ const InfoRow = ({
   );
 };
 
+type SummaryAccent = 'primary' | 'teal' | 'ocean';
+
+const summaryAccentClasses: Record<SummaryAccent, string> = {
+  primary: 'from-primary/25 via-teal/15 to-blue/25',
+  teal: 'from-teal/25 via-blue/15 to-ocean/25',
+  ocean: 'from-blue/25 via-ocean/15 to-primary/25',
+};
+
+type SummaryTileProps = {
+  label: string;
+  hint: string;
+  count: string;
+  onClick?: () => void;
+  accent: SummaryAccent;
+  badge?: string | null;
+};
+
+type SummaryTileConfig = SummaryTileProps & { key: string };
+
+const SummaryTile = ({ label, hint, count, onClick, accent, badge }: SummaryTileProps) => {
+  const interactive = Boolean(onClick);
+  const Wrapper = interactive ? 'button' : 'div';
+
+  return (
+    <Wrapper
+      type={interactive ? 'button' : undefined}
+      onClick={onClick}
+      className={cn(
+        'group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border border-white/50 bg-card/95 p-[1px] text-left shadow-soft transition-all',
+        interactive
+          ? 'hover:-translate-y-0.5 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 active:translate-y-[1px]'
+          : 'cursor-default',
+      )}
+    >
+      <span
+        className={cn(
+          'pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br opacity-80 transition-opacity duration-300 group-hover:opacity-100',
+          summaryAccentClasses[accent],
+        )}
+      />
+      <div className="relative flex h-full flex-col gap-2 rounded-[18px] bg-card/95 px-4 py-3 backdrop-blur-sm">
+        <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/90">
+          <span className="truncate">{label}</span>
+          {badge ? (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm">
+              {badge}
+            </span>
+          ) : null}
+        </div>
+        <span className="text-xl font-semibold text-foreground">{count}</span>
+        <p className="text-[11px] leading-snug text-muted-foreground/90">{hint}</p>
+      </div>
+    </Wrapper>
+  );
+};
+
 const QuickActionButton = ({
   label,
   description,
@@ -204,35 +261,59 @@ const QuickActionButton = ({
   onClick?: () => void;
   muted?: boolean;
   badge?: string | null;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={cn(
-      'group flex h-full flex-col gap-2 rounded-2xl border border-border/70 bg-card px-4 py-3 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px]'
-    )}
-  >
-    <div className="flex items-center gap-2">
-      <div
-        className={cn(
-          'flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-soft transition-colors',
-          muted ? 'bg-muted text-muted-foreground' : 'group-hover:bg-primary group-hover:text-primary-foreground',
-        )}
-      >
-        <Icon className="h-5 w-5" />
+}) => {
+  const interactive = Boolean(onClick);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!interactive}
+      className={cn(
+        'group relative isolate flex h-full flex-col overflow-hidden rounded-[28px] border border-white/40 bg-gradient-to-br from-primary/12 via-teal/10 to-blue/12 p-[1px] text-left shadow-soft transition-all',
+        interactive
+          ? 'hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px]'
+          : 'cursor-default opacity-80',
+      )}
+    >
+      <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <span className="absolute -top-20 right-0 h-40 w-40 rounded-full bg-primary/25 blur-3xl" />
+        <span className="absolute -bottom-24 left-4 h-44 w-44 rounded-full bg-blue/20 blur-3xl" />
+      </span>
+      <div className="relative flex h-full flex-col justify-between gap-6 rounded-[26px] bg-card/95 px-5 py-5 backdrop-blur-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                'flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 via-teal/15 to-blue/20 text-primary shadow-soft transition-colors duration-300',
+                muted
+                  ? 'from-muted via-muted to-muted text-muted-foreground'
+                  : 'group-hover:from-primary group-hover:via-teal group-hover:to-blue group-hover:text-primary-foreground',
+              )}
+            >
+              <Icon className="h-5 w-5" />
+            </span>
+            {badge ? (
+              <Badge
+                variant="outline"
+                className="rounded-full border-primary/40 bg-primary/10 px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary"
+              >
+                {badge}
+              </Badge>
+            ) : null}
+          </div>
+          {interactive ? (
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors duration-200 group-hover:text-primary" />
+          ) : null}
+        </div>
+        <div className="space-y-1">
+          <p className="text-base font-semibold text-foreground">{label}</p>
+          <p className="text-sm text-muted-foreground/90">{description}</p>
+        </div>
       </div>
-      {badge ? (
-        <Badge variant="outline" className="rounded-full border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium">
-          {badge}
-        </Badge>
-      ) : null}
-    </div>
-    <div className="space-y-1">
-      <p className="text-sm font-semibold text-foreground">{label}</p>
-      <p className="text-xs text-muted-foreground">{description}</p>
-    </div>
-  </button>
-);
+    </button>
+  );
+};
 
 type OrderQuickStatus = 'in_transit' | 'arrived' | 'late' | 'refunded';
 
@@ -367,6 +448,8 @@ const Profile = () => {
   const watchlistCount = useMemo(() => loadWatchlist().length, []);
   const winsCount = useMemo(() => loadWins().length, []);
 
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+
   const openBids = useCallback(() => {
     trackEvent('profile_nav_bids');
     navigate('/profile/bids');
@@ -382,31 +465,42 @@ const Profile = () => {
     navigate('/profile/wins');
   }, [navigate]);
 
-  const auctionTiles = useMemo(
+  const auctionTiles = useMemo<SummaryTileConfig[]>(
     () => [
       {
         key: 'bids',
         label: t('profile.bids.title'),
         hint: t('profile.bids.subtitle'),
-        count: bidsCount,
+        count: numberFormatter.format(bidsCount),
         onClick: openBids,
+        accent: 'teal',
       },
       {
         key: 'watchlist',
         label: t('profile.watchlist.title'),
         hint: t('profile.watchlist.subtitle'),
-        count: watchlistCount,
+        count: numberFormatter.format(watchlistCount),
         onClick: openWatchlist,
+        accent: 'ocean',
       },
       {
         key: 'wins',
         label: t('profile.wins.title'),
         hint: t('profile.wins.subtitle'),
-        count: winsCount,
+        count: numberFormatter.format(winsCount),
         onClick: openWins,
+        accent: 'primary',
+      },
+      {
+        key: 'points',
+        label: t('profile.points.title'),
+        hint: t('profile.points.subtitle'),
+        count: t('profile.points.placeholder'),
+        accent: 'primary',
+        badge: t('profile.points.badge'),
       },
     ],
-    [bidsCount, openBids, openWatchlist, openWins, t, watchlistCount, winsCount],
+    [bidsCount, numberFormatter, openBids, openWatchlist, openWins, t, watchlistCount, winsCount],
   );
 
   const mapDemoOrderToSummary = useCallback(
@@ -1106,22 +1200,11 @@ const Profile = () => {
           </div>
 
           {mode === 'buyer' && (
-            <div className="grid w-full max-w-sm grid-cols-2 gap-2 sm:max-w-md">
-              {auctionTiles.map(tile => (
-                <button
-                  key={tile.key}
-                  type="button"
-                  onClick={tile.onClick}
-                  className="group flex flex-col gap-1.5 rounded-xl border border-border/70 bg-card/80 px-3 py-3 text-left text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                >
-                  <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    <span className="truncate">{tile.label}</span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground transition-colors group-hover:text-primary" />
-                  </div>
-                  <span className="text-lg font-semibold text-foreground">{tile.count}</span>
-                  <p className="text-[11px] leading-snug text-muted-foreground/90">{tile.hint}</p>
-                </button>
-              ))}
+            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
+              {auctionTiles.map(tile => {
+                const { key, ...tileProps } = tile;
+                return <SummaryTile key={key} {...tileProps} />;
+              })}
             </div>
           )}
 
@@ -1134,7 +1217,7 @@ const Profile = () => {
                 <LanguageToggle />
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
               {quickActions.map(action => (
                 <QuickActionButton key={action.label} {...action} />
               ))}
