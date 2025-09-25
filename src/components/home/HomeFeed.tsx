@@ -909,24 +909,25 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   const hasResults = filteredListings.length > 0;
 
   return (
-    <div className="relative min-h-dvh overflow-hidden" ref={containerRef}>
+    <div className="relative min-h-dvh overflow-x-hidden" ref={containerRef}>
       <div className="pointer-events-none absolute inset-0 bg-app-gradient" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-60 bg-gradient-to-b from-white/70 via-white/40 to-transparent" />
       <div className="relative z-10 flex min-h-dvh flex-col">
-        <header className="sticky top-0 z-40 px-4 pt-6 pb-4 backdrop-blur-sm">
-          <div className="flex flex-col gap-4">
+        <header className="sticky inset-x-0 top-0 z-50 border-b border-border/40 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="order-1 flex items-center gap-3">
-                <div className="glass-card inline-flex items-center justify-center rounded-2xl p-3 shadow-lux">
-                  <Logo className="h-10 w-auto drop-shadow-[0_18px_40px_-16px_rgba(15,191,109,0.45)]" />
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
+                  <Logo className="h-8 w-auto" />
                 </div>
+                <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
               </div>
               <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   className={cn(
-                    'inline-flex h-11 items-center gap-2 rounded-full border border-white/60 bg-white/90 px-4 text-sm font-semibold text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40',
+                    'inline-flex h-11 items-center gap-2 rounded-full border border-border/70 bg-white px-4 text-sm font-semibold text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40',
                     activeFilterCount > 0 ? 'border-primary bg-primary/15 text-primary' : '',
                   )}
                   onClick={() => handleFilterOpen(true)}
@@ -935,7 +936,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                   <Filter className="h-4 w-4" />
                   <span className="hidden sm:inline">{filterLabel}</span>
                 </Button>
-                <LanguageToggle className="h-11 rounded-full border border-white/60 bg-white/90 px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
+                <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
                 <AccountSheet session={session} />
               </div>
               <button
@@ -945,7 +946,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                   setSearchOpen(true);
                   trackEvent('search_open');
                 }}
-                className="group order-3 flex h-12 w-full flex-1 items-center gap-3 rounded-full border border-white/60 bg-white/90 px-4 text-left text-sm text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:order-2 sm:min-w-[260px]"
+                className="group order-3 flex h-12 w-full flex-1 items-center gap-3 rounded-full border border-border/70 bg-white px-4 text-left text-sm text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:order-2 sm:min-w-[260px]"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-teal/15 to-blue/20 text-primary shadow-inner">
                   <Search className="h-4 w-4" />
