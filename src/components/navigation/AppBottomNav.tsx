@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Gavel, ShoppingBag } from 'lucide-react';
+import { Bell, Gavel, PlusCircle, ShoppingBag } from 'lucide-react';
 import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
 
@@ -64,6 +64,7 @@ export const AppBottomNav = () => {
         label: t('navigation.preorder'),
         href: '/',
         icon: ShoppingBag,
+        color: 'text-primary',
         active: location.pathname === '/',
       },
       {
@@ -71,22 +72,44 @@ export const AppBottomNav = () => {
         label: t('navigation.auctions'),
         href: '/auctions',
         icon: Gavel,
-        active: location.pathname === '/auctions' || location.pathname.startsWith('/auction'),
+        color: 'text-sky-500',
+        active:
+          location.pathname === '/auctions' ||
+          location.pathname.startsWith('/auction'),
+      },
+      {
+        key: 'add',
+        label: t('navigation.add'),
+        href: '/importer/create',
+        icon: PlusCircle,
+        color: 'text-teal-500',
+        active: location.pathname.startsWith('/importer/create'),
+      },
+      {
+        key: 'notifications',
+        label: t('navigation.notifications'),
+        href: '/account#notifications',
+        icon: Bell,
+        color: 'text-blue-500',
+        active:
+          location.pathname.startsWith('/account') &&
+          (location.hash.includes('notifications') ||
+            location.pathname === '/account'),
       },
     ],
-    [location.pathname, t]
+    [location.hash, location.pathname, t]
   );
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50">
       <nav
         className={cn(
-          'pointer-events-auto w-full max-w-xl rounded-3xl border border-border/60 bg-background/95 shadow-[0_-12px_40px_-22px_rgba(15,23,42,0.55)] backdrop-blur transition-all duration-300',
-          visibility === 'visible' ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+          'pointer-events-auto border-t border-border/60 bg-background/95 shadow-[0_-12px_30px_-28px_rgba(15,23,42,0.45)] backdrop-blur transition-all duration-300',
+          visibility === 'visible' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
         )}
         aria-label={t('navigation.aria')}
       >
-        <div className="flex items-center justify-around px-3 py-2">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-around px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)]">
           {items.map(item => {
             const Icon = item.icon;
             return (
@@ -94,20 +117,28 @@ export const AppBottomNav = () => {
                 key={item.key}
                 to={item.href}
                 className={cn(
-                  'group flex flex-1 flex-col items-center gap-1 rounded-2xl px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors',
-                  item.active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  'group flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-semibold uppercase tracking-wide transition-colors',
+                  item.active
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
                 aria-current={item.active ? 'page' : undefined}
               >
                 <span
                   className={cn(
-                    'flex h-11 w-11 items-center justify-center rounded-2xl border border-transparent transition-all duration-200',
+                    'flex h-9 w-9 items-center justify-center rounded-2xl border border-transparent transition-all duration-200',
                     item.active
-                      ? 'bg-gradient-to-br from-primary via-teal-500 to-blue-500 text-white shadow-[0_8px_18px_rgba(15,191,109,0.35)]'
-                      : 'bg-muted/40 text-muted-foreground shadow-inner group-hover:border-primary/30 group-hover:text-primary'
+                      ? 'bg-gradient-to-br from-primary via-teal-500 to-blue-500 text-white shadow-[0_10px_20px_rgba(15,191,109,0.35)]'
+                      : 'bg-transparent'
                   )}
                 >
-                  <Icon className="h-5 w-5" strokeWidth={2.4} />
+                  <Icon
+                    className={cn(
+                      'h-5 w-5 transition-colors',
+                      item.active ? 'text-white' : item.color
+                    )}
+                    strokeWidth={2.4}
+                  />
                 </span>
                 <span className="font-medium normal-case tracking-normal">{item.label}</span>
               </Link>

@@ -8,7 +8,7 @@ import type { AuctionListing } from '@/types/auctions';
 import type { Session } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/context/I18nContext';
-import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
+import { AccountSheet } from '@/components/shell/AccountControls';
 import { Logo } from '@/components/Logo';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -123,7 +123,6 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
                     )}
                   </div>
                   <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
-                    <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
                     {session && <AccountSheet session={session} />}
                   </div>
                 </div>

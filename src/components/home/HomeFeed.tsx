@@ -35,7 +35,7 @@ import { useI18n } from '@/context/I18nContext';
 import { ListingCard } from './ListingCard';
 import type { ListingSummary, Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
-import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
+import { AccountSheet } from '@/components/shell/AccountControls';
 import { useIntersectionOnce } from '@/hooks/use-intersection-once';
 import { cn } from '@/lib/utils';
 import { activateDemoMode, DEMO_LISTINGS, isDemoActive } from '@/lib/demoMode';
@@ -955,20 +955,110 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                 )}
               </div>
               <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={cn(
-                    'inline-flex h-11 items-center gap-2 rounded-full border border-border/70 bg-white px-4 text-sm font-semibold text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40',
-                    activeFilterCount > 0 ? 'border-primary bg-primary/15 text-primary' : '',
-                  )}
-                  onClick={() => handleFilterOpen(true)}
-                  aria-label={filterLabel}
-                >
-                  <Filter className="h-4 w-4" />
-                  <span className="hidden sm:inline">{filterLabel}</span>
-                </Button>
-                <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      'inline-flex h-11 items-center gap-2 rounded-full border border-border/70 bg-white px-4 text-sm font-semibold text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40',
+                      activeFilterCount > 0 ? 'border-primary bg-primary/15 text-primary' : '',
+                    )}
+                    onClick={() => handleFilterOpen(true)}
+                    aria-label={filterLabel}
+                  >
+                    <Filter className="h-4 w-4" />
+                    <span className="hidden sm:inline">{filterLabel}</span>
+                  </Button>
+                  <Popover open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
+                        aria-label={t('home.sortMenu')}
+                        aria-expanded={sortMenuOpen}
+                      >
+                        <ListFilter className="h-5 w-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-56 rounded-3xl border border-border bg-card/95 p-3 shadow-soft backdrop-blur">
+                      <div className="space-y-2">
+                        <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {t('home.sortMenu')}
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          {(Object.keys(sortLabels) as SortOption[]).map(option => (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => {
+                                handleSortChange(option);
+                                setSortMenuOpen(false);
+                              }}
+                              className={cn(
+                                'flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm font-semibold transition-colors',
+                                option === sort
+                                  ? 'border-primary bg-primary text-primary-foreground shadow-soft'
+                                  : 'border-border bg-card text-muted-foreground hover:border-primary/40',
+                              )}
+                              aria-pressed={option === sort}
+                            >
+                              <span className="truncate">{sortLabels[option]}</span>
+                              {option === sort && <Check className="h-4 w-4" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <Popover open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
+                        aria-label={t('home.categoriesMenu')}
+                        aria-expanded={categoryMenuOpen}
+                      >
+                        <Grid2X2 className="h-5 w-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-64 rounded-3xl border border-border bg-card/95 p-3 shadow-soft backdrop-blur">
+                      <div className="space-y-2">
+                        <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {t('home.categoriesMenu')}
+                        </p>
+                        <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                          {categories.map(category => (
+                            <button
+                              key={category}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCategory(category);
+                                trackEvent('category_chip_click', { category });
+                                setCategoryMenuOpen(false);
+                              }}
+                              className={cn(
+                                'flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm font-semibold transition-colors',
+                                selectedCategory === category
+                                  ? 'border-primary bg-primary text-primary-foreground shadow-soft'
+                                  : 'border-border bg-card text-muted-foreground hover:border-primary/40',
+                              )}
+                              aria-pressed={selectedCategory === category}
+                            >
+                              <span className="truncate">
+                                {category === ALL_CATEGORY ? t('home.categoriesAll') : category}
+                              </span>
+                              {selectedCategory === category && <Check className="h-4 w-4" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <AccountSheet session={session} />
               </div>
               <button
@@ -1157,97 +1247,6 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
         </DrawerContent>
       </Drawer>
 
-      <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3 sm:flex-row">
-        <Popover open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
-              aria-label={t('home.sortMenu')}
-              aria-expanded={sortMenuOpen}
-            >
-              <ListFilter className="h-5 w-5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-56 rounded-3xl border border-border bg-card/95 p-3 shadow-soft backdrop-blur">
-            <div className="space-y-2">
-              <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t('home.sortMenu')}
-              </p>
-              <div className="flex flex-col gap-2">
-                {(Object.keys(sortLabels) as SortOption[]).map(option => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => {
-                      handleSortChange(option);
-                      setSortMenuOpen(false);
-                    }}
-                    className={cn(
-                      'flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm font-semibold transition-colors',
-                      option === sort
-                        ? 'border-primary bg-primary text-primary-foreground shadow-soft'
-                        : 'border-border bg-card text-muted-foreground hover:border-primary/40',
-                    )}
-                    aria-pressed={option === sort}
-                  >
-                    <span className="truncate">{sortLabels[option]}</span>
-                    {option === sort && <Check className="h-4 w-4" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-        <Popover open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
-              aria-label={t('home.categoriesMenu')}
-              aria-expanded={categoryMenuOpen}
-            >
-              <Grid2X2 className="h-5 w-5" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-64 rounded-3xl border border-border bg-card/95 p-3 shadow-soft backdrop-blur">
-            <div className="space-y-2">
-              <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {t('home.categoriesMenu')}
-              </p>
-              <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                {categories.map(category => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategory(category);
-                      trackEvent('category_chip_click', { category });
-                      setCategoryMenuOpen(false);
-                    }}
-                    className={cn(
-                      'flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm font-semibold transition-colors',
-                      selectedCategory === category
-                        ? 'border-primary bg-primary text-primary-foreground shadow-soft'
-                        : 'border-border bg-card text-muted-foreground hover:border-primary/40',
-                    )}
-                    aria-pressed={selectedCategory === category}
-                  >
-                    <span className="truncate">
-                      {category === ALL_CATEGORY ? t('home.categoriesAll') : category}
-                    </span>
-                    {selectedCategory === category && <Check className="h-4 w-4" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
 
       <main className="flex-1 space-y-6 px-6 pb-24 pt-6">
         {fallbackActive && (
