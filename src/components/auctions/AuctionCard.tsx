@@ -179,8 +179,8 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
                 {auction.seller.city}
               </p>
             )}
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2 -ml-1">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2">
                 <span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
                   {t('auctions.startedAt')}
                 </span>
@@ -188,8 +188,8 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
                   {currencyFormatter.format(startingBidXAF)}
                 </p>
               </div>
-              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2 text-right">
-                <span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+              <div className="space-y-1 rounded-full bg-white/70 px-3 py-2 sm:text-right">
+                <span className="block whitespace-nowrap text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80 sm:text-right">
                   {t('auctions.currentBid')}
                 </span>
                 <p className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
