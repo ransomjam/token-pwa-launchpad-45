@@ -143,6 +143,7 @@ const translations = {
       language: 'Language',
       cancel: 'Cancel',
       close: 'Close',
+      installApp: 'Install app',
     },
     auth: {
       welcome: 'Welcome to ProList Mini',
@@ -1101,6 +1102,7 @@ const translations = {
       language: 'Langue',
       cancel: 'Annuler',
       close: 'Fermer',
+      installApp: "Installer l'app",
     },
     auth: {
       welcome: 'Bienvenue sur ProList Mini',
