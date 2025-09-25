@@ -11,23 +11,14 @@ import { useI18n } from '@/context/I18nContext';
 import { AppNav } from '@/components/navigation/AppNav';
 import { AccountSheet, LanguageToggle } from '@/components/shell/AccountControls';
 
-type ExperienceMode = 'preorder' | 'auctions';
-
 type AuctionsFeedProps = {
   variant?: 'embedded' | 'page';
   session?: Session;
-  showAccountControls?: boolean;
-  experience?: ExperienceMode;
 };
 
 const PREVIEW_BADGE_VISIBLE = import.meta.env.MODE !== 'production' || import.meta.env.DEV;
 
-export const AuctionsFeed = ({
-  variant = 'embedded',
-  session,
-  showAccountControls = false,
-  experience = 'auctions',
-}: AuctionsFeedProps) => {
+export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProps) => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [selectedAuction, setSelectedAuction] = useState<AuctionListing | null>(null);
@@ -72,21 +63,12 @@ export const AuctionsFeed = ({
               </div>
               <div className="ml-auto flex items-center gap-2 sm:gap-3">
                 <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
-                {showAccountControls && session && (
-                  <AccountSheet session={session} experience={experience} />
-                )}
+                {session && <AccountSheet session={session} />}
               </div>
             </div>
             <AppNav className="justify-start" />
           </div>
         </header>
-      )}
-
-      {variant !== 'page' && showAccountControls && session && (
-        <div className="flex items-center justify-end gap-2 px-6 pt-4">
-          <LanguageToggle className="h-10 rounded-full border border-border/70 bg-white px-3 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
-          <AccountSheet session={session} experience={experience} />
-        </div>
       )}
 
       <div className={`mx-auto w-full ${variant === 'page' ? 'max-w-5xl px-6 pt-6' : 'px-6 py-6'}`}>

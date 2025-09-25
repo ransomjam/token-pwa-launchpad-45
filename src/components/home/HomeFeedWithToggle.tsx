@@ -33,17 +33,11 @@ export const HomeFeedWithToggle = ({ session }: HomeFeedWithToggleProps) => {
       </div>
 
       {currentMode === 'preorder' ? (
-        <HomeFeed
-          session={session}
-          showAccountControls={session.role === 'buyer'}
-          experience="preorder"
-        />
+        <HomeFeed session={session} />
       ) : (
         <AuctionsFeed
           session={session}
           variant={location.pathname === '/auctions' ? 'page' : 'embedded'}
-          showAccountControls={session.role === 'buyer'}
-          experience="auctions"
         />
       )}
     </div>

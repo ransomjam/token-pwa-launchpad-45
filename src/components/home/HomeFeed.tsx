@@ -62,12 +62,8 @@ type Bounds = {
   price: [number, number];
 };
 
-type ExperienceMode = 'preorder' | 'auctions';
-
 type HomeFeedProps = {
   session: Session;
-  showAccountControls?: boolean;
-  experience?: ExperienceMode;
 };
 
 const ALL_CATEGORY = '__all__';
@@ -374,7 +370,7 @@ const SearchOverlay = ({
   );
 };
 
-export const HomeFeed = ({ session, showAccountControls = true, experience = 'preorder' }: HomeFeedProps) => {
+export const HomeFeed = ({ session }: HomeFeedProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, locale } = useI18n();
@@ -974,9 +970,7 @@ export const HomeFeed = ({ session, showAccountControls = true, experience = 'pr
                   <span className="hidden sm:inline">{filterLabel}</span>
                 </Button>
                 <LanguageToggle className="h-11 rounded-full border border-border/70 bg-white px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary" />
-                {showAccountControls && (
-                  <AccountSheet session={session} experience={experience} />
-                )}
+                <AccountSheet session={session} />
               </div>
               <button
                 type="button"

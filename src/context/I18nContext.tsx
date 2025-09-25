@@ -188,7 +188,6 @@ const translations = {
       installApp: 'Install app',
       preview: 'Preview',
       back: 'Back',
-      quickLinks: 'Quick links',
     },
     navigation: {
       preorder: 'Preorder',
@@ -1200,7 +1199,6 @@ const translations = {
       installApp: "Installer l'app",
       preview: 'Préversion',
       back: 'Retour',
-      quickLinks: 'Raccourcis',
     },
     navigation: {
       preorder: 'Précommande',
