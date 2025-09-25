@@ -107,21 +107,7 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
               {currencyFormatter.format(startingBidXAF)}
             </p>
           </div>
-          <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
-              {t('auctions.currentBid')}
-            </span>
-            <p className="text-sm font-semibold text-foreground sm:text-base">
-              {currencyFormatter.format(auction.currentBidXAF)}
-            </p>
-          </div>
-          <div className="space-y-1.5 pt-1">
-            {timeBadge}
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white shadow-soft sm:text-xs">
-              <Eye className="h-3 w-3" />
-              {watchersLabel}
-            </div>
-          </div>
+          <div className="pt-1">{timeBadge}</div>
         </div>
       </div>
 
@@ -143,12 +129,26 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
             </div>
           </div>
 
-          {auction.seller.city && (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground/90 sm:text-sm">
-              <MapPin className="h-3.5 w-3.5" />
-              {auction.seller.city}
-            </p>
-          )}
+          <div className="space-y-2">
+            {auction.seller.city && (
+              <p className="flex items-center gap-1 text-xs text-muted-foreground/90 sm:text-sm">
+                <MapPin className="h-3.5 w-3.5" />
+                {auction.seller.city}
+              </p>
+            )}
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white shadow-soft sm:text-xs">
+              <Eye className="h-3 w-3" />
+              {watchersLabel}
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                {t('auctions.currentBid')}
+              </span>
+              <p className="text-sm font-semibold text-foreground sm:text-base">
+                {currencyFormatter.format(auction.currentBidXAF)}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
