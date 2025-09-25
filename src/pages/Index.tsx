@@ -4,7 +4,7 @@ import { useSession } from '@/context/SessionContext';
 import { useI18n } from '@/context/I18nContext';
 import type { Session } from '@/types';
 import { HomeFeedWithToggle } from '@/components/home/HomeFeedWithToggle';
-import { AccountSheet, LanguageToggle, languageNames } from '@/components/shell/AccountControls';
+import { AccountSheet, languageNames } from '@/components/shell/AccountControls';
 import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
 import { Logo } from '@/components/Logo';
 import { InstallPwaButton } from '@/components/pwa/InstallPwaButton';
@@ -46,7 +46,6 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
           <div className="flex flex-wrap items-center gap-3">
             <span className="pill bg-primary/20 text-primary normal-case">{modeLabel}</span>
             <span className="pill bg-white/75 text-muted-foreground/80 normal-case">{languageNames[locale]}</span>
-            <LanguageToggle className="hidden h-10 items-center rounded-full border border-white/50 bg-white/80 px-4 text-xs font-semibold uppercase text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary sm:inline-flex" />
           </div>
         </header>
 

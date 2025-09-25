@@ -178,6 +178,8 @@ const translations = {
     navigation: {
       preorder: 'Preorder',
       auctions: 'Auctions',
+      add: 'Add',
+      notifications: 'Notifications',
       profile: 'Profile',
       aria: 'Primary navigation',
     },
@@ -1215,6 +1217,8 @@ const translations = {
     navigation: {
       preorder: 'Précommande',
       auctions: 'Enchères',
+      add: 'Ajouter',
+      notifications: 'Notifications',
       profile: 'Profil',
       aria: 'Navigation principale',
     },
