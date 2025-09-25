@@ -303,15 +303,17 @@ export const formatTimeLeft = (seconds: number, locale: 'en' | 'fr' = 'en'): str
     `${formatter.format(value)}${suffixes[unit]}`;
 
   if (hours > 0) {
-    const parts = [formatPart(hours, 'hour')];
-    if (minutes > 0) {
-      parts.push(formatPart(minutes, 'minute'));
-    }
+    const parts = [
+      formatPart(hours, 'hour'),
+      formatPart(minutes, 'minute'),
+      formatPart(remainingSeconds, 'second'),
+    ];
+
     return parts.join(' ');
   }
 
   if (minutes > 0) {
-    return formatPart(minutes, 'minute');
+    return [formatPart(minutes, 'minute'), formatPart(remainingSeconds, 'second')].join(' ');
   }
 
   return formatPart(remainingSeconds, 'second');
