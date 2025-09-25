@@ -25,6 +25,7 @@ import ProfileWins from "./pages/ProfileWins";
 import PublicImporterProfile from "./pages/PublicImporterProfile";
 import ShareRedirect from "./pages/ShareRedirect";
 import RefundPolicy from "./pages/RefundPolicy";
+import AuctionFulfillmentFlow from "./pages/AuctionFulfillmentFlow";
 
 const queryClient = new QueryClient();
 const rawBaseUrl = import.meta.env.BASE_URL ?? "/";
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="/mock/psp" element={<MockPsp />} />
                 <Route path="/offline" element={<Offline />} />
                 <Route path="/policy/refunds" element={<RefundPolicy />} />
+                <Route path="/auction/winner-flow" element={<AuctionFulfillmentFlow />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
