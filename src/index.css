@@ -16,16 +16,16 @@
     /* Base Colors */
     --color-fg: 210 27% 12%;               /* #132235 */
     --color-muted: 210 15% 46%;            /* #6E7C8B */
-    --color-bg: 197 72% 96%;               /* #EFF7FB */
+    --color-bg: 210 20% 98%;               /* #F6F8FB */
     --color-card: 0 0% 100%;               /* #FFFFFF */
     --color-border: 196 56% 86%;           /* #CFE8F4 */
     --color-glass: 0 0% 100% / 0.78;
 
     /* Decorative tokens */
     --gradient-aurora:
-      radial-gradient(circle at 15% 15%, hsl(var(--color-blue) / 0.32), transparent 60%),
-      radial-gradient(circle at 85% 10%, hsl(var(--color-teal) / 0.28), transparent 60%),
-      radial-gradient(120% 120% at 80% 85%, hsl(var(--color-primary) / 0.25), transparent 55%);
+      radial-gradient(circle at 15% 15%, hsl(var(--color-blue) / 0.08), transparent 60%),
+      radial-gradient(circle at 85% 10%, hsl(var(--color-teal) / 0.06), transparent 60%),
+      radial-gradient(120% 120% at 80% 85%, hsl(var(--color-primary) / 0.05), transparent 55%);
     --shadow-lux: 0 28px 60px -28px rgba(4, 154, 191, 0.55);
     --shadow-glow: 0 18px 40px -16px rgba(15, 191, 109, 0.45);
     --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -128,7 +128,7 @@ html, body {
 
   .bg-app-gradient {
     background-color: hsl(var(--color-bg));
-    background-image: var(--gradient-aurora);
+    background-image: none;
   }
 }
 
@@ -140,9 +140,7 @@ html, body {
   body {
     font-family: var(--font-primary);
     background-color: hsl(var(--color-bg));
-    background-image: var(--gradient-aurora);
-    background-attachment: fixed;
-    background-size: cover;
+    background-image: none;
     color: hsl(var(--color-fg));
   }
 }
