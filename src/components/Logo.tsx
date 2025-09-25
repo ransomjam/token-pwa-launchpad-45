@@ -4,14 +4,15 @@ import { cn } from '@/lib/utils';
 
 export type LogoProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'>;
 
-export const Logo = ({ className, alt, ...props }: LogoProps) => {
+export const Logo = ({ className, alt, style, ...props }: LogoProps) => {
   const { t } = useI18n();
 
   return (
     <img
       src="/images/logo.png"
-      alt={alt ?? t('app.name')}
-      className={cn('h-10 w-auto', className)}
+      alt={alt ?? t('app.name')} 
+      className={cn('h-12 w-auto', className)}
+      style={{ clipPath: 'inset(6%)', ...style }}
       {...props}
     />
   );
