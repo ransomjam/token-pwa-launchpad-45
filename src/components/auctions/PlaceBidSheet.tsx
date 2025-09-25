@@ -128,9 +128,6 @@ export const PlaceBidSheet = ({ auction, open, onClose }: PlaceBidSheetProps) =>
               className="text-lg font-semibold"
               placeholder={currencyFormatter.format(minBid)}
             />
-            <p className="text-xs text-muted-foreground">
-              {t('auctions.minimumIncrement')}: {currencyFormatter.format(auction.minIncrementXAF)}
-            </p>
           </div>
 
           {/* Trust line */}

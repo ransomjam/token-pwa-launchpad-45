@@ -1,5 +1,5 @@
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { ArrowUpRight, Clock, Eye, Share2 } from 'lucide-react';
+import { ArrowUpRight, Clock, Eye, MapPin } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +63,6 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
   const hasEnded = timeLeft <= 0;
   const timeRemainingLabel = hasEnded ? t('auctions.ended') : formatTimeLeft(timeLeft, locale);
   const watchersLabel = t('auctions.watchersLabel', { count: auction.watchers });
-  const laneLabel = auction.lane ? t('auctions.laneOnTime', { percent: Math.round(auction.lane.onTimePct * 100) }) : null;
   const startingBidXAF = Math.max(0, auction.currentBidXAF - auction.minIncrementXAF);
 
   const timeBadge = (
@@ -116,7 +115,13 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
               {currencyFormatter.format(auction.currentBidXAF)}
             </p>
           </div>
-          <div className="pt-1">{timeBadge}</div>
+          <div className="space-y-1.5 pt-1">
+            {timeBadge}
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white shadow-soft sm:text-xs">
+              <Eye className="h-3 w-3" />
+              {watchersLabel}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -139,19 +144,11 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
           </div>
 
           {auction.seller.city && (
-            <p className="text-xs text-muted-foreground/90 sm:text-sm">{auction.seller.city}</p>
+            <p className="flex items-center gap-1 text-xs text-muted-foreground/90 sm:text-sm">
+              <MapPin className="h-3.5 w-3.5" />
+              {auction.seller.city}
+            </p>
           )}
-
-          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground/90 sm:gap-3 sm:text-xs">
-            <span className="pill gap-1.5 border-white/60 bg-white/70 text-muted-foreground">
-              <Eye className="h-3.5 w-3.5" />
-              {watchersLabel}
-            </span>
-            <span className="pill gap-1.5 border-primary/30 bg-primary/15 text-primary">
-              {t('auctions.minimumIncrement')}: {currencyFormatter.format(auction.minIncrementXAF)}
-            </span>
-            {laneLabel && <span className="pill gap-1.5 border-emerald-200 bg-emerald-50 text-emerald-600">{laneLabel}</span>}
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -160,7 +157,6 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
             disabled={hasEnded}
             className="h-9 flex-1 rounded-full text-sm font-semibold shadow-lux"
           >
-            <Share2 className="mr-2 h-4 w-4" aria-hidden />
             {hasEnded ? t('auctions.ended') : t('auctions.placeBid')}
           </Button>
         </div>
