@@ -3,7 +3,7 @@ import { RoleChooser } from '@/components/auth/RoleChooser';
 import { useSession } from '@/context/SessionContext';
 import { useI18n } from '@/context/I18nContext';
 import type { Session } from '@/types';
-import { HomeFeed } from '@/components/home/HomeFeed';
+import { HomeFeedWithToggle } from '@/components/home/HomeFeedWithToggle';
 import { AccountSheet, LanguageToggle, languageNames } from '@/components/shell/AccountControls';
 import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
 import { Logo } from '@/components/Logo';
@@ -13,7 +13,7 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
   const { t, locale } = useI18n();
 
   if (session.role === 'buyer') {
-    return <HomeFeed session={session} />;
+    return <HomeFeedWithToggle session={session} />;
   }
 
   const modeLabel = t('roles.importerBadge');

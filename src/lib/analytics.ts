@@ -72,7 +72,26 @@ export type AppEvent =
   | 'imp_public_profile_listing_click'
   | 'imp_public_profile_report_click'
   | 'kyc_step_view'
-  | 'kyc_step_complete';
+  | 'kyc_step_complete'
+  | 'profile_quick_action_open'
+  | 'profile_order_open'
+  | 'pickup_added'
+  | 'profile_payment_preference_save'
+  | 'profile_payment_notify_subscribe'
+  | 'profile_support_request'
+  | 'profile_support_dispute_shortcut'
+  | 'profile_support_contact'
+  | 'auction_view'
+  | 'auction_bid_place'
+  | 'auction_watch_toggle'
+  | 'auction_share'
+  | 'auction_feed_view'
+  | 'home_mode_toggle'
+  | 'vendor_profile_view'
+  | 'profile_bids_view'
+  | 'profile_watchlist_view'
+  | 'profile_wins_view'
+  | 'auction_pay_now';
 
 export function trackEvent<T extends AppEvent>(name: T, payload?: Record<string, unknown>) {
   if (import.meta.env.DEV) {

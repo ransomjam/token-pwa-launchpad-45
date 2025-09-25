@@ -7,7 +7,8 @@ import MockProvider from "./components/MockProvider";
 import Index from "./pages/Index";
 import Offline from "./pages/Offline";
 import NotFound from "./pages/NotFound";
-import ListingDetails from "./pages/ListingDetails";
+import AuctionDetail from "./pages/AuctionDetail";
+import VendorProfile from "./pages/VendorProfile";
 import { SessionProvider } from "./context/SessionContext";
 import { I18nProvider } from "./context/I18nContext";
 import Checkout from "./pages/Checkout";
@@ -36,7 +37,8 @@ const App = () => (
             <BrowserRouter basename={routerBasename || undefined}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/listings/:id" element={<ListingDetails />} />
+                <Route path="/auctions/:id" element={<AuctionDetail />} />
+                <Route path="/vendors/:id" element={<VendorProfile />} />
                 <Route path="/checkout/:listingId" element={<Checkout />} />
                 <Route path="/checkout/return" element={<CheckoutReturn />} />
                 <Route path="/order/:id" element={<OrderTracker />} />
