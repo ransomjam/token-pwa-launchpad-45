@@ -181,26 +181,6 @@ const AuctionDetail = () => {
             alt={auction.title}
             className="h-full w-full object-cover"
           />
-          
-          {/* Time left overlay */}
-          <div className="absolute left-4 top-4 flex flex-col gap-2">
-            <Badge
-              variant={hasEnded ? "secondary" : isEnding ? "destructive" : "default"}
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold",
-                hasEnded && "bg-muted/80 text-muted-foreground",
-                isEnding && "bg-destructive/90 text-destructive-foreground animate-pulse",
-                !hasEnded && !isEnding && "bg-primary/90 text-primary-foreground"
-              )}
-            >
-              <Clock className="h-4 w-4" />
-              {timeDisplay}
-            </Badge>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-sm font-medium text-white">
-              <Eye className="h-4 w-4" />
-              {watchersLabel}
-            </div>
-          </div>
 
           {/* Image indicators */}
           {auction.images.length > 1 && (
@@ -219,6 +199,22 @@ const AuctionDetail = () => {
           )}
         </div>
 
+        {/* Time left */}
+        <div className="px-6 pt-4 flex justify-center">
+          <Badge
+            variant={hasEnded ? "secondary" : isEnding ? "destructive" : "default"}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold",
+              hasEnded && "bg-muted/80 text-muted-foreground",
+              isEnding && "bg-destructive/90 text-destructive-foreground animate-pulse",
+              !hasEnded && !isEnding && "bg-primary/90 text-primary-foreground"
+            )}
+          >
+            <Clock className="h-4 w-4" />
+            {timeDisplay}
+          </Badge>
+        </div>
+
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Title and bid info */}
@@ -230,18 +226,18 @@ const AuctionDetail = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">
-                  {t('auctions.currentBid')}
-                </p>
-                <p className="text-2xl font-bold text-primary">
-                  {currencyFormatter.format(auction.currentBidXAF)}
-                </p>
-              </div>
-              <div className="space-y-1 text-right">
-                <p className="text-sm text-muted-foreground">
                   {t('auctions.minimumBid')}
                 </p>
                 <p className="text-lg font-semibold text-foreground">
                   {currencyFormatter.format(minBid)}
+                </p>
+              </div>
+              <div className="space-y-1 text-right">
+                <p className="text-sm text-muted-foreground">
+                  {t('auctions.currentBid')}
+                </p>
+                <p className="text-2xl font-bold text-primary">
+                  {currencyFormatter.format(auction.currentBidXAF)}
                 </p>
               </div>
             </div>
@@ -253,8 +249,8 @@ const AuctionDetail = () => {
             className="flex items-center justify-between w-full rounded-2xl border border-border/70 bg-card p-4 text-left transition-colors hover:border-primary/40"
           >
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">
+              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-sm font-semibold text-blue-600">
                   {auction.seller.name.charAt(0)}
                 </span>
               </div>
@@ -269,12 +265,18 @@ const AuctionDetail = () => {
                     </Badge>
                   )}
                 </div>
-                {auction.seller.city && (
-                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    {auction.seller.city}
-                  </p>
-                )}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+                  {auction.seller.city && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {auction.seller.city}
+                    </span>
+                  )}
+                  <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    <Eye className="h-4 w-4" />
+                    {watchersLabel}
+                  </span>
+                </div>
               </div>
             </div>
             <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
