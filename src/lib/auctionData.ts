@@ -28,8 +28,183 @@ const FALLBACK_WINS: AuctionWin[] = [
     auctionId: 'auct_004',
     finalBidXAF: 415000,
     status: 'pending_payment',
-    wonAt: '2025-09-20T10:45:00Z'
-  }
+    wonAt: '2025-09-20T10:45:00Z',
+    payment: {
+      statusLabel: 'AWAITING_PAYMENT → escrow funding',
+      dueByLabel: 'Pay within 24h • due Sep 21, 2025 10:45',
+      hammerPriceXAF: 415000,
+      buyerPremiumPct: 10,
+      buyerPremiumXAF: 41500,
+      serviceFeeXAF: 12500,
+      centreHandlingFeeXAF: 7500,
+      totalDueXAF: 476000,
+      momoInstructions: 'Dial *126*14*653151930*476000# to fund escrow via MoMo.',
+      reminderLabel: 'Escrow auto-cancels if unpaid in 24h (NO_PAY state).',
+    },
+    journey: [
+      {
+        id: 'confirm_bid',
+        title: 'Confirm bid & close auction',
+        status: 'complete',
+        stateLabel: 'WON → Awaiting payment',
+        occurredAtLabel: 'Sep 20, 2025 • 10:45',
+        description:
+          'Server validated the minimum increment and anti-snipe logic before locking in the winning bid with reserve met.',
+        highlights: [
+          'Bid increment respected: +25 000 XAF over previous high bid.',
+          'Anti-snipe: timer extended +60s (final close at 10:45).',
+          'Bidder identity verified (not seller).',
+        ],
+        meta: [
+          { label: 'Min increment', value: '2 000 XAF' },
+          { label: 'Anti-snipe', value: '+60s under last 60s' },
+        ],
+      },
+      {
+        id: 'payment',
+        title: 'Buyer funds escrow',
+        status: 'current',
+        stateLabel: 'AWAITING_PAYMENT',
+        occurredAtLabel: 'Due Sep 21, 2025 • 10:45',
+        description:
+          'Checkout totals hammer + buyer premium + service + centre handling fee before releasing the next workflow.',
+        highlights: [
+          'MoMo USSD: *126*14*653151930*476000#',
+          'Payment hold releases logistics assignment.',
+        ],
+        meta: [
+          { label: 'Escrow status', value: 'Awaiting payment', tone: 'warning' },
+          { label: 'Penalty', value: 'NO_PAY if unpaid in 24h', tone: 'warning' },
+        ],
+      },
+      {
+        id: 'assign_centre',
+        title: 'Assign logistics centre',
+        status: 'upcoming',
+        stateLabel: 'ESCROW_FUNDED → AWAITING_DROPOFF',
+        description:
+          'System selects the nearest centre and generates QR codes for seller drop-off and buyer pickup once escrow is funded.',
+        highlights: [
+          'Drop-off code for seller with QR + alphanumeric.',
+          'Pickup QR + 6-digit OTP for buyer.',
+          'Centre address, hours, and deadlines shared instantly.',
+        ],
+        meta: [{ label: 'SLA', value: 'Seller drop-off within 48h' }],
+      },
+      {
+        id: 'seller_dropoff',
+        title: 'Seller drop-off & intake',
+        status: 'upcoming',
+        stateLabel: 'AT_CENTRE_INTAKE',
+        description:
+          'Centre staff scans the drop-off code, captures condition photos/video, and shelves the item with a printed label.',
+        highlights: [
+          'Condition documented for dispute protection.',
+          'Auto reminders fire if seller is late.',
+        ],
+        meta: [{ label: 'Reminder', value: 'Auto nudges if late', tone: 'warning' }],
+      },
+      {
+        id: 'buyer_pickup',
+        title: 'Buyer pickup & inspection',
+        status: 'upcoming',
+        stateLabel: 'READY_FOR_PICKUP',
+        description:
+          'Buyer presents pickup QR/OTP plus ID, inspects on-site for 10–15 minutes before accepting or opening a dispute.',
+        highlights: [
+          'Accept → immediate payout to seller.',
+          'Reject → dispute opened at centre with photos.',
+        ],
+        meta: [{ label: 'Free pickup window', value: '5 days' }],
+      },
+      {
+        id: 'release',
+        title: 'Release or dispute resolution',
+        status: 'upcoming',
+        stateLabel: 'RELEASED / DISPUTE_AT_CENTRE',
+        description:
+          'Centre staff logs the handover. Escrow pays out on handover confirmation or routes to admin for dispute handling.',
+        highlights: [
+          'Admin dashboard handles disputes & overdue items.',
+          'Auto-return on day 12 if unclaimed (refund minus fees).',
+        ],
+        meta: [{ label: 'Payout trigger', value: 'centre_pickup_verified', tone: 'success' }],
+      },
+    ],
+    logistics: {
+      centreName: 'Bonapriso Urban Centre',
+      centreAddress: 'Avenue de Gaulle, Douala',
+      centreHours: 'Mon – Sat • 08:00 – 20:00',
+      centreContact: '+237 680 000 111',
+      dropoffDeadlineLabel: 'Drop-off within 48h • due Sep 23, 2025 10:45',
+      pickupDeadlineLabel: 'Pickup within 5 days • due Sep 28, 2025 10:45',
+      dropoffCode: 'DROP-7KD4-Q982',
+      pickupCode: 'PICK-91XA-204',
+      pickupOtp: '736419',
+      notes: [
+        'Staff scans QR, captures intake photos/video, notes bin location.',
+        'Storage fee applies after day 5; auto-return to seller on day 12.',
+      ],
+    },
+    notifications: [
+      {
+        id: 'notif_win_buyer',
+        audience: 'buyer',
+        channel: 'push',
+        message: 'You won—pay within 24h to keep it.',
+        sentAtLabel: 'Sent Sep 20, 2025 • 10:46',
+      },
+      {
+        id: 'notif_win_seller',
+        audience: 'seller',
+        channel: 'sms',
+        message: 'You have a winner. Deliver to centre after payment.',
+        sentAtLabel: 'Scheduled for ESCROW_FUNDED',
+      },
+      {
+        id: 'notif_win_centre',
+        audience: 'centre',
+        channel: 'email',
+        message: 'Heads-up: Samsung 65" QLED arriving once escrow funded.',
+        sentAtLabel: 'Auto-send on ESCROW_FUNDED',
+      },
+    ],
+    slas: [
+      {
+        id: 'sla_payment',
+        label: 'Escrow payment window',
+        dueLabel: '24h from win • due Sep 21, 2025 10:45',
+        status: 'on_track',
+        state: 'AWAITING_PAYMENT',
+      },
+      {
+        id: 'sla_dropoff',
+        label: 'Seller drop-off',
+        dueLabel: '48h after escrow funded',
+        status: 'warning',
+        state: 'AWAITING_DROPOFF',
+      },
+      {
+        id: 'sla_pickup',
+        label: 'Buyer pickup window',
+        dueLabel: '5 days after ready notification',
+        status: 'on_track',
+        state: 'READY_FOR_PICKUP',
+      },
+      {
+        id: 'sla_return',
+        label: 'Auto-return threshold',
+        dueLabel: 'Day 12 → return to seller, refund minus fees',
+        status: 'on_track',
+        state: 'UNCLAIMED_RETURN',
+      },
+    ],
+    policyNotes: [
+      'Anti-snipe rule added +60s because the confirm bid landed with 45s remaining.',
+      'Escrow payout fires only when centre staff marks Pickup Verified.',
+      'Disputes at centre require photos and staff notes before admin decision.',
+    ],
+  },
 ];
 
 // Demo auction listings
