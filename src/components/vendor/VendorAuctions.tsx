@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Eye, Share2, Edit, StopCircle, Users } from 'lucide-react';
 import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, type AppEvent } from '@/lib/analytics';
 
 type VendorAuction = {
   id: string;
@@ -47,19 +47,21 @@ const DEMO_AUCTIONS: VendorAuction[] = [
 ];
 
 export const VendorAuctions = () => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [auctions] = useState<VendorAuction[]>(DEMO_AUCTIONS);
+
+  const localeTag = locale === 'fr' ? 'fr-FR' : 'en-US';
 
   const formatTimeLeft = (seconds: number): string => {
     if (seconds <= 0) return t('vendor.auctionStatusEnded');
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return t('vendor.timeLeftHoursMinutes', { hours, minutes });
     }
-    return `${minutes}m`;
+    return t('vendor.timeLeftMinutes', { minutes });
   };
 
   const getStatusBadge = (status: VendorAuction['status']) => {
@@ -74,16 +76,27 @@ export const VendorAuctions = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const handleAction = (action: string, auctionId: string) => {
-    trackEvent(`vendor_auction_${action}` as any, { auctionId });
+  type AuctionAction = 'share' | 'edit' | 'end';
+  const actionEvents: Record<AuctionAction, AppEvent> = {
+    share: 'vendor_auction_share',
+    edit: 'vendor_auction_edit',
+    end: 'vendor_auction_end',
+  };
+
+  const handleAction = (action: AuctionAction, auctionId: string) => {
+    trackEvent(actionEvents[action], { auctionId });
     // Implementation for each action would go here
   };
 
-  const currencyFormatter = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'XAF',
-    minimumFractionDigits: 0,
-  });
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(localeTag, {
+        style: 'currency',
+        currency: 'XAF',
+        minimumFractionDigits: 0,
+      }),
+    [localeTag],
+  );
 
   if (auctions.length === 0) {
     return (
@@ -166,6 +179,7 @@ export const VendorAuctions = () => {
                     onClick={() => handleAction('end', auction.id)}
                   >
                     <StopCircle className="h-3 w-3" />
+                    <span className="sr-only">{t('vendor.actionEnd')}</span>
                   </Button>
                 )}
               </div>
