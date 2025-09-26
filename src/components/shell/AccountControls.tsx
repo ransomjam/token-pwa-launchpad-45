@@ -157,6 +157,12 @@ export const AccountSheet = ({ session }: { session: Session }) => {
               description={t('roles.importerSummary')}
               onClick={() => handleRoleChange('importer')}
             />
+            <AccountRoleOption
+              active={session.role === 'vendor'}
+              label={t('roles.vendorBadge')}
+              description={t('roles.vendorSummary')}
+              onClick={() => handleRoleChange('vendor')}
+            />
           </div>
         </section>
 
