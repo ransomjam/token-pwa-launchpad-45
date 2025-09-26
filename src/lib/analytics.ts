@@ -91,7 +91,30 @@ export type AppEvent =
   | 'profile_bids_view'
   | 'profile_watchlist_view'
   | 'profile_wins_view'
-  | 'auction_pay_now';
+  | 'auction_pay_now'
+  | 'vendor_workspace_view'
+  | 'vendor_auction_create'
+  | 'vendor_listing_create'
+  | 'vendor_auction_publish'
+  | 'vendor_listing_publish'
+  | 'vendor_auction_share'
+  | 'vendor_listing_share'
+  | 'vendor_auction_edit'
+  | 'vendor_listing_edit'
+  | 'vendor_auction_end'
+  | 'vendor_listing_pause'
+  | 'vendor_evidence_upload'
+  | 'vendor_mark_arrived'
+  | 'vendor_mark_shipped'
+  | 'profile_nav_bids'
+  | 'profile_nav_watchlist'
+  | 'profile_nav_wins'
+  | 'profile_bid_view'
+  | 'profile_bid_seller_view'
+  | 'profile_watchlist_auction_open'
+  | 'profile_watchlist_seller_open'
+  | 'profile_wins_auction_open'
+  | 'profile_wins_seller_open';
 
 export function trackEvent<T extends AppEvent>(name: T, payload?: Record<string, unknown>) {
   if (import.meta.env.DEV) {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShoppingBag, Boxes, Check } from 'lucide-react';
+import { ShoppingBag, Boxes, Store, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthStepIndicator } from './AuthStepIndicator';
 import { useI18n } from '@/context/I18nContext';
@@ -27,6 +27,13 @@ const options: { role: Role; titleKey: string; descriptionKey: string; summaryKe
     descriptionKey: 'roles.importerSubtitle',
     summaryKey: 'roles.importerSummary',
     icon: Boxes,
+  },
+  {
+    role: 'vendor',
+    titleKey: 'roles.vendorTitle',
+    descriptionKey: 'roles.vendorSubtitle',
+    summaryKey: 'roles.vendorSummary',
+    icon: Store,
   },
 ];
 

@@ -95,7 +95,7 @@ import { loadBids, loadWatchlist, loadWins } from '@/lib/auctionData';
 
 type EditState =
   | {
-      mode: 'buyer' | 'importer';
+      mode: 'buyer' | 'importer' | 'vendor';
       field:
         | 'name'
         | 'phone'
@@ -112,7 +112,7 @@ type EditState =
       type: 'text' | 'textarea';
     }
   | {
-      mode: 'buyer' | 'importer';
+      mode: 'buyer' | 'importer' | 'vendor';
       field: 'defaultPickup';
       label: string;
       type: 'pickup';
@@ -422,7 +422,7 @@ const Profile = () => {
   const { session } = useSession();
   const { t, locale } = useI18n();
 
-  const mode: 'buyer' | 'importer' = session?.role ?? 'buyer';
+  const mode: 'buyer' | 'importer' | 'vendor' = session?.role ?? 'buyer';
   const isOnline = useNetworkStatus();
 
   const [buyerProfile, setBuyerProfile] = useState<BuyerProfile | null>(null);

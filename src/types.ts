@@ -78,7 +78,7 @@ export type Session = {
   userId: string;
   displayName: string;
   contact: string;
-  role: 'buyer' | 'importer';
+  role: 'buyer' | 'importer' | 'vendor';
   hasSelectedRole: boolean;
   verifiedImporter: boolean;
 };

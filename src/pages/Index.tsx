@@ -8,6 +8,7 @@ import type { Session } from '@/types';
 import { HomeFeedWithToggle } from '@/components/home/HomeFeedWithToggle';
 import { AccountSheet, languageNames } from '@/components/shell/AccountControls';
 import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
+import { VendorWorkspace } from '@/components/vendor/VendorWorkspace';
 import { Logo } from '@/components/Logo';
 import { InstallPwaButton } from '@/components/pwa/InstallPwaButton';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,10 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
 
   if (session.role === 'buyer') {
     return <HomeFeedWithToggle session={session} />;
+  }
+
+  if (session.role === 'vendor') {
+    return <VendorWorkspace session={session} />;
   }
 
   const modeLabel = t('roles.importerBadge');
