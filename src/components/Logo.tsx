@@ -20,7 +20,7 @@ export const Logo = ({
   return (
     <div
       className={cn(
-        'inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-teal to-blue',
+        'inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-teal to-blue',
         wrapperClassName,
       )}
       style={wrapperStyle}
