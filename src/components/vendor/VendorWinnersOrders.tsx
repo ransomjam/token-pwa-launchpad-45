@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Users, MessageCircle, Eye, AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, type AppEvent } from '@/lib/analytics';
 
 type WinnerOrder = {
   id: string;
@@ -51,45 +51,59 @@ const DEMO_WINNERS_ORDERS: WinnerOrder[] = [
 ];
 
 export const VendorWinnersOrders = () => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [orders] = useState<WinnerOrder[]>(DEMO_WINNERS_ORDERS);
+
+  const localeTag = locale === 'fr' ? 'fr-FR' : 'en-US';
 
   const getStatusBadge = (status: WinnerOrder['status']) => {
     const variants = {
-      payment_pending: { label: 'Payment pending', variant: 'outline' as const },
-      escrow_held: { label: 'Escrow held', variant: 'secondary' as const },
-      arrived: { label: 'Arrived', variant: 'default' as const },
-      collected: { label: 'Collected', variant: 'default' as const },
-      refunded: { label: 'Refunded', variant: 'destructive' as const },
+      payment_pending: { label: t('vendor.orderStatusPaymentPending'), variant: 'outline' as const },
+      escrow_held: { label: t('vendor.orderStatusEscrowHeld'), variant: 'secondary' as const },
+      arrived: { label: t('vendor.orderStatusArrived'), variant: 'default' as const },
+      collected: { label: t('vendor.orderStatusCollected'), variant: 'default' as const },
+      refunded: { label: t('vendor.orderStatusRefunded'), variant: 'destructive' as const },
     };
-    
+
     const config = variants[status];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getTypeLabel = (type: WinnerOrder['type']) => {
-    return type === 'auction_winner' ? 'Auction Win' : 'Direct Order';
+  const getTypeLabel = (type: WinnerOrder['type']) =>
+    type === 'auction_winner' ? t('vendor.orderTypeAuction') : t('vendor.orderTypeDirect');
+
+  type OrderAction = 'remind' | 'view_order' | 'dispute';
+  const actionEvents: Record<OrderAction, AppEvent> = {
+    remind: 'vendor_order_remind',
+    view_order: 'vendor_order_view',
+    dispute: 'vendor_order_dispute',
   };
 
-  const handleAction = (action: string, orderId: string) => {
-    trackEvent(`vendor_${action}` as any, { orderId });
+  const handleAction = (action: OrderAction, orderId: string) => {
+    trackEvent(actionEvents[action], { orderId });
     // Implementation for each action would go here
   };
 
-  const currencyFormatter = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'XAF',
-    minimumFractionDigits: 0,
-  });
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(localeTag, {
+        style: 'currency',
+        currency: 'XAF',
+        minimumFractionDigits: 0,
+      }),
+    [localeTag],
+  );
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(localeTag, {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    [localeTag],
+  );
 
   if (orders.length === 0) {
     return (
@@ -119,7 +133,7 @@ export const VendorWinnersOrders = () => {
                   </span>
                   <span className="text-xs text-muted-foreground">•</span>
                   <span className="text-xs text-muted-foreground">
-                    {formatDate(order.createdAt)}
+                    {dateFormatter.format(new Date(order.createdAt))}
                   </span>
                   {getStatusBadge(order.status)}
                 </div>
@@ -131,10 +145,10 @@ export const VendorWinnersOrders = () => {
                 <div className="flex items-center justify-between text-sm">
                   <div className="space-y-1">
                     <p className="text-muted-foreground">
-                      Buyer: <span className="font-medium">{order.buyerName}</span>
+                      {t('vendor.buyerLabel')}: <span className="font-medium">{order.buyerName}</span>
                     </p>
                     <p className="text-muted-foreground">
-                      Pickup: <span className="font-medium">{order.pickupHub}</span>
+                      {t('vendor.pickupLabel')}: <span className="font-medium">{order.pickupHub}</span>
                     </p>
                   </div>
                   <div className="text-right">
@@ -154,7 +168,7 @@ export const VendorWinnersOrders = () => {
                 className="flex-1"
               >
                 <MessageCircle className="mr-1 h-3 w-3" />
-                Remind
+                {t('vendor.actionRemind')}
               </Button>
               <Button
                 variant="outline"
@@ -163,7 +177,7 @@ export const VendorWinnersOrders = () => {
                 className="flex-1"
               >
                 <Eye className="mr-1 h-3 w-3" />
-                View order
+                {t('vendor.actionViewOrder')}
               </Button>
               {(order.status === 'payment_pending' || order.status === 'escrow_held') && (
                 <Button
@@ -172,6 +186,7 @@ export const VendorWinnersOrders = () => {
                   onClick={() => handleAction('dispute', order.id)}
                 >
                   <AlertTriangle className="h-3 w-3" />
+                  <span className="sr-only">{t('vendor.actionDispute')}</span>
                 </Button>
               )}
             </div>

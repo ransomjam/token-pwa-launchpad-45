@@ -44,10 +44,10 @@ export const CreateActionSheet = ({ open, onOpenChange }: CreateActionSheetProps
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-foreground">{t('vendor.createAuction')}</h3>
-              <p className="text-sm text-muted-foreground">Start competitive bidding</p>
+              <p className="text-sm text-muted-foreground">{t('vendor.createAuctionSubtitle')}</p>
             </div>
           </Button>
-          
+
           <Button
             onClick={handleCreateListing}
             className="flex h-16 w-full items-center justify-start gap-4 rounded-2xl bg-white text-left shadow-soft hover:shadow-card"
@@ -58,7 +58,7 @@ export const CreateActionSheet = ({ open, onOpenChange }: CreateActionSheetProps
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-foreground">{t('vendor.createListing')}</h3>
-              <p className="text-sm text-muted-foreground">Fixed price listing</p>
+              <p className="text-sm text-muted-foreground">{t('vendor.createListingSubtitle')}</p>
             </div>
           </Button>
         </div>

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Package, Share2, Edit, Pause, Eye } from 'lucide-react';
 import { useI18n } from '@/context/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, type AppEvent } from '@/lib/analytics';
 
 type VendorListing = {
   id: string;
@@ -51,8 +51,10 @@ const DEMO_LISTINGS: VendorListing[] = [
 ];
 
 export const VendorListings = () => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [listings] = useState<VendorListing[]>(DEMO_LISTINGS);
+
+  const localeTag = locale === 'fr' ? 'fr-FR' : 'en-US';
 
   const getStatusBadge = (status: VendorListing['status']) => {
     const variants = {
@@ -73,16 +75,28 @@ export const VendorListings = () => {
     return { label: t('vendor.inStock'), className: 'text-primary' };
   };
 
-  const handleAction = (action: string, listingId: string) => {
-    trackEvent(`vendor_listing_${action}` as any, { listingId });
+  type ListingAction = 'share' | 'edit' | 'pause' | 'view_orders';
+  const actionEvents: Record<ListingAction, AppEvent> = {
+    share: 'vendor_listing_share',
+    edit: 'vendor_listing_edit',
+    pause: 'vendor_listing_pause',
+    view_orders: 'vendor_listing_view_orders',
+  };
+
+  const handleAction = (action: ListingAction, listingId: string) => {
+    trackEvent(actionEvents[action], { listingId });
     // Implementation for each action would go here
   };
 
-  const currencyFormatter = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'XAF',
-    minimumFractionDigits: 0,
-  });
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(localeTag, {
+        style: 'currency',
+        currency: 'XAF',
+        minimumFractionDigits: 0,
+      }),
+    [localeTag],
+  );
 
   if (listings.length === 0) {
     return (
@@ -99,82 +113,88 @@ export const VendorListings = () => {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        {listings.map((listing) => (
-          <div
-            key={listing.id}
-            className="group overflow-hidden rounded-2xl border border-border/60 bg-white shadow-soft transition-all hover:shadow-card"
-          >
-            <div className="aspect-[4/3] overflow-hidden bg-muted">
-              <img
-                src={listing.image}
-                alt={listing.title}
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-              />
-            </div>
-            
-            <div className="space-y-3 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="line-clamp-2 font-medium text-foreground">{listing.title}</h3>
-                {getStatusBadge(listing.status)}
+        {listings.map(listing => {
+          const stockStatus = getStockStatus(listing.stock);
+
+          return (
+            <div
+              key={listing.id}
+              className="group overflow-hidden rounded-2xl border border-border/60 bg-white shadow-soft transition-all hover:shadow-card"
+            >
+              <div className="aspect-[4/3] overflow-hidden bg-muted">
+                <img
+                  src={listing.image}
+                  alt={listing.title}
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                />
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Price</span>
-                  <span className="font-semibold text-foreground">
-                    {currencyFormatter.format(listing.priceXAF)}
-                  </span>
+
+              <div className="space-y-3 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="line-clamp-2 font-medium text-foreground">{listing.title}</h3>
+                  {getStatusBadge(listing.status)}
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{t('vendor.stock')}</span>
-                  <span className={`text-sm font-medium ${getStockStatus(listing.stock).className}`}>
-                    {listing.stock > 0 ? `${listing.stock} ${getStockStatus(listing.stock).label}` : getStockStatus(listing.stock).label}
-                  </span>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">{t('vendor.priceLabel')}</span>
+                    <span className="font-semibold text-foreground">
+                      {currencyFormatter.format(listing.priceXAF)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">{t('vendor.stock')}</span>
+                    <span className={`text-sm font-medium ${stockStatus.className}`}>
+                      {listing.stock > 0 ? `${listing.stock} ${stockStatus.label}` : stockStatus.label}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAction('share', listing.id)}
-                  className="flex-1"
-                >
-                  <Share2 className="mr-1 h-3 w-3" />
-                  {t('vendor.actionShare')}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAction('edit', listing.id)}
-                  className="flex-1"
-                >
-                  <Edit className="mr-1 h-3 w-3" />
-                  {t('vendor.actionEdit')}
-                </Button>
-                {listing.status === 'live' && (
+
+                <div className="flex items-center gap-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAction('pause', listing.id)}
+                    onClick={() => handleAction('share', listing.id)}
+                    className="flex-1"
                   >
-                    <Pause className="h-3 w-3" />
+                    <Share2 className="mr-1 h-3 w-3" />
+                    {t('vendor.actionShare')}
                   </Button>
-                )}
-                {(listing.status === 'live' || listing.status === 'sold_out') && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAction('view_orders', listing.id)}
+                    onClick={() => handleAction('edit', listing.id)}
+                    className="flex-1"
                   >
-                    <Eye className="h-3 w-3" />
+                    <Edit className="mr-1 h-3 w-3" />
+                    {t('vendor.actionEdit')}
                   </Button>
-                )}
+                  {listing.status === 'live' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAction('pause', listing.id)}
+                    >
+                      <Pause className="h-3 w-3" />
+                      <span className="sr-only">{t('vendor.actionPause')}</span>
+                    </Button>
+                  )}
+                  {(listing.status === 'live' || listing.status === 'sold_out') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAction('view_orders', listing.id)}
+                    >
+                      <Eye className="h-3 w-3" />
+                      <span className="sr-only">{t('vendor.actionViewOrders')}</span>
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       
       {/* Demo data indicator */}
