@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Languages, UserRound, ChevronRight, Check, Sparkles } from 'lucide-react';
+import { Languages, UserRound, ChevronRight, Check, Sparkles, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
@@ -122,7 +122,7 @@ const AccountRoleOption = ({ active, label, description, onClick }: AccountRoleO
 
 export const AccountSheet = ({ session }: { session: Session }) => {
   const { t, locale } = useI18n();
-  const { updateSession } = useSession();
+  const { updateSession, clearSession } = useSession();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -188,18 +188,33 @@ export const AccountSheet = ({ session }: { session: Session }) => {
                 </span>
                 <p className="text-[0.6875rem] leading-snug text-white/70 sm:text-xs sm:leading-relaxed">{activeRoleSummary}</p>
               </div>
-              <Button
-                className="group mt-4 inline-flex w-full items-center justify-between rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-primary shadow-card transition hover:bg-white/90 focus-visible:ring-primary/30"
-                onClick={() => {
-                  setOpen(false);
-                  navigate('/account');
-                }}
-              >
-                <span>{t('profile.viewProfile')}</span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:translate-x-1">
-                  <ChevronRight className="h-4 w-4" />
-                </div>
-              </Button>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Button
+                  variant="secondary"
+                  className="group flex-1 basis-[calc(50%-0.375rem)] items-center justify-between rounded-2xl px-4 py-2 text-sm font-bold text-white shadow-card transition hover:brightness-110 focus-visible:ring-white/40 sm:min-w-[12rem]"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate('/account');
+                  }}
+                >
+                  <span className="whitespace-nowrap">{t('profile.viewProfile')}</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white transition group-hover:translate-x-1">
+                    <ChevronRight className="h-4 w-4" />
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 basis-[calc(50%-0.375rem)] items-center justify-center rounded-2xl border-white/40 bg-white/15 px-4 py-2 text-sm font-semibold text-white shadow-card backdrop-blur transition hover:border-white/60 hover:bg-white/25 hover:text-white focus-visible:ring-white/40 sm:min-w-[12rem]"
+                  onClick={() => {
+                    clearSession();
+                    setOpen(false);
+                    navigate('/');
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{t('common.signOut')}</span>
+                </Button>
+              </div>
             </div>
           </div>
         </SheetHeader>
