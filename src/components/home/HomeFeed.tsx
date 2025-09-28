@@ -618,7 +618,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     [numberFormatter],
   );
 
-  const filteredListings = useMemo(() => {
+  const baseFilteredListings = useMemo(() => {
     let items = allListings;
     if (selectedCategory !== ALL_CATEGORY) {
       items = items.filter(item => item.category === selectedCategory);
@@ -634,27 +634,31 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     if (filters.verifiedOnly) {
       items = items.filter(item => item.importer.verified);
     }
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      items = items.filter(item =>
-        item.title.toLowerCase().includes(term) ||
-        item.specs.some(spec => spec.toLowerCase().includes(term))
-      );
-    }
     return items;
-  }, [allListings, filters, searchTerm, selectedCategory]);
+  }, [allListings, filters, selectedCategory]);
 
-  const sortedListings = useMemo(() => {
-    const items = [...filteredListings];
+  const filteredListings = useMemo(() => {
+    if (!searchTerm) {
+      return baseFilteredListings;
+    }
+    const term = searchTerm.toLowerCase();
+    return baseFilteredListings.filter(item =>
+      item.title.toLowerCase().includes(term) ||
+      item.specs.some(spec => spec.toLowerCase().includes(term))
+    );
+  }, [baseFilteredListings, searchTerm]);
+
+  const sortListings = useCallback((items: ListingSummary[]) => {
+    const list = [...items];
     switch (sort) {
       case 'endingSoon':
-        return items.sort((a, b) => new Date(a.moq.lockAt).getTime() - new Date(b.moq.lockAt).getTime());
+        return list.sort((a, b) => new Date(a.moq.lockAt).getTime() - new Date(b.moq.lockAt).getTime());
       case 'priceLowHigh':
-        return items.sort((a, b) => a.priceXAF - b.priceXAF);
+        return list.sort((a, b) => a.priceXAF - b.priceXAF);
       case 'priceHighLow':
-        return items.sort((a, b) => b.priceXAF - a.priceXAF);
+        return list.sort((a, b) => b.priceXAF - a.priceXAF);
       default:
-        return items.sort((a, b) => {
+        return list.sort((a, b) => {
           const engagementA = a.moq.committed / a.moq.target;
           const engagementB = b.moq.committed / b.moq.target;
           if (engagementA === engagementB) {
@@ -663,7 +667,10 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
           return engagementB - engagementA;
         });
     }
-  }, [filteredListings, sort]);
+  }, [sort]);
+
+  const sortedListings = useMemo(() => sortListings(filteredListings), [filteredListings, sortListings]);
+  const sortedSearchSource = useMemo(() => sortListings(baseFilteredListings), [baseFilteredListings, sortListings]);
 
   useEffect(() => {
     setVisibleTrending(fallbackActive ? 14 : 4);
@@ -795,19 +802,19 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
 
   const searchSuggestions = useMemo(() => {
     const term = searchDraft.trim().toLowerCase();
-    if (!term) return sortedListings.slice(0, 6);
-    return sortedListings
+    if (!term) return sortedSearchSource.slice(0, 6);
+    return sortedSearchSource
       .filter(item =>
         item.title.toLowerCase().includes(term) ||
         item.specs.some(spec => spec.toLowerCase().includes(term))
       )
       .slice(0, 6);
-  }, [searchDraft, sortedListings]);
+  }, [searchDraft, sortedSearchSource]);
 
   const popularTerms = useMemo(() => {
     const seen = new Set<string>();
     const unique: string[] = [];
-    for (const item of sortedListings) {
+    for (const item of sortedSearchSource) {
       const title = item.title;
       const normalized = title.toLowerCase();
       if (!seen.has(normalized)) {
@@ -817,7 +824,7 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
       if (unique.length >= 6) break;
     }
     return unique;
-  }, [sortedListings]);
+  }, [sortedSearchSource]);
 
   const filterPills = useMemo(() => {
     const pills: { key: string; label: string; onRemove: () => void }[] = [];
