@@ -84,20 +84,27 @@ const AccountRoleOption = ({ active, label, description, onClick }: AccountRoleO
     type="button"
     onClick={onClick}
     className={cn(
-      'group relative overflow-hidden rounded-2xl border p-5 text-left transition-all',
+      'group relative overflow-hidden rounded-2xl border p-4 text-left transition-all sm:p-5',
       active
         ? 'border-transparent bg-gradient-to-br from-primary/90 via-blue/80 to-ocean/80 text-white shadow-card'
         : 'border-border/70 bg-card/70 backdrop-blur hover:-translate-y-[1px] hover:border-primary/50 hover:shadow-soft',
     )}
   >
-    <div className="flex items-start justify-between gap-4">
+    <div className="flex items-start justify-between gap-3 sm:gap-4">
       <div className="space-y-2">
         <p className={cn('text-sm font-semibold', active ? 'text-white' : 'text-foreground')}>{label}</p>
-        <p className={cn('text-xs leading-relaxed', active ? 'text-white/80' : 'text-muted-foreground')}>{description}</p>
+        <p
+          className={cn(
+            'text-xs leading-snug sm:leading-relaxed',
+            active ? 'text-white/80' : 'text-muted-foreground',
+          )}
+        >
+          {description}
+        </p>
       </div>
       <span
         className={cn(
-          'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold transition-all',
+          'flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold transition-all sm:h-9 sm:w-9',
           active ? 'border-white/40 bg-white/20 text-white' : 'border-primary/30 bg-primary/10 text-primary',
         )}
       >
@@ -158,45 +165,44 @@ export const AccountSheet = ({ session }: { session: Session }) => {
       >
         <SheetHeader className="text-left">
           <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-primary via-blue to-ocean p-[1px] shadow-card">
-            <div className="rounded-[calc(theme(borderRadius.3xl)-1px)] bg-black/10 p-6">
-              <div className="flex items-start justify-between gap-4 text-white">
+            <div className="rounded-[calc(theme(borderRadius.3xl)-1px)] bg-black/10 p-4 sm:p-6">
+              <div className="flex items-start justify-between gap-3 text-white sm:gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur sm:h-12 sm:w-12">
                     <UserRound className="h-6 w-6" />
                   </div>
                   <div className="space-y-1">
                     <SheetTitle className="text-lg font-semibold tracking-tight text-white">
                       {t('common.account')}
                     </SheetTitle>
-                    <SheetDescription className="text-sm text-white/70">
+                    <SheetDescription className="text-xs text-white/70 sm:text-sm">
                       {session.contact}
                     </SheetDescription>
                   </div>
                 </div>
                 <Sparkles className="h-5 w-5 text-white/70" aria-hidden />
               </div>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/90">
+              <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-white/90 sm:text-xs">
                   {activeRoleLabel}
                 </span>
-                <p className="text-xs text-white/70">{activeRoleSummary}</p>
+                <p className="text-[0.6875rem] leading-snug text-white/70 sm:text-xs sm:leading-relaxed">{activeRoleSummary}</p>
               </div>
+              <Button
+                className="group mt-4 inline-flex w-full items-center justify-between rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-primary shadow-card transition hover:bg-white/90 focus-visible:ring-primary/30"
+                onClick={() => {
+                  setOpen(false);
+                  navigate('/account');
+                }}
+              >
+                <span>{t('profile.viewProfile')}</span>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:translate-x-1">
+                  <ChevronRight className="h-4 w-4" />
+                </div>
+              </Button>
             </div>
           </div>
         </SheetHeader>
-
-        <Button
-          className="group relative flex w-full items-center justify-between overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-r from-primary via-blue to-ocean px-6 py-3 text-sm font-semibold text-primary-foreground shadow-soft transition hover:shadow-card focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-primary/30"
-          onClick={() => {
-            setOpen(false);
-            navigate('/account');
-          }}
-        >
-          <span>{t('profile.viewProfile')}</span>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition group-hover:translate-x-1">
-            <ChevronRight className="h-4 w-4" />
-          </div>
-        </Button>
 
         <section className="space-y-4 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
           <div className="flex items-center justify-between gap-3">
