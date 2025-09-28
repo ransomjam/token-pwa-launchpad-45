@@ -22,6 +22,14 @@ type AccountCreationProps = {
 
 const OTP_CODE = '123456';
 
+const demoProfile = {
+  name: 'Demo Importer',
+  city: 'Douala',
+  pickupHub: 'akwa' as const,
+  preferredWallet: 'mtn-momo' as const,
+  acceptTerms: true,
+};
+
 const demoPickupHubs = [
   { id: 'akwa', name: 'Akwa Pickup Hub', address: 'Boulevard de la Liberté, Douala', city: 'Douala' },
   { id: 'biyem', name: 'Biyem-Assi Hub', address: 'Carrefour Belibi, Yaoundé', city: 'Yaoundé' },
@@ -56,6 +64,15 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
     if (!formData.phone.trim()) return;
     
     trackEvent('onboarding_phone_submit', { role: selectedRole });
+    setFormData(prev => ({
+      ...prev,
+      otp: OTP_CODE,
+      name: demoProfile.name,
+      city: demoProfile.city,
+      pickupHub: demoProfile.pickupHub,
+      preferredWallet: demoProfile.preferredWallet,
+      acceptTerms: demoProfile.acceptTerms,
+    }));
     setStep('otp');
     setTimeLeft(30);
   };
@@ -195,6 +212,9 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
                 <h2 className="text-2xl font-semibold">{t('onboarding.otp.title')}</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {t('onboarding.otp.subtitle', { phone: formData.phone })}
+                </p>
+                <p className="mt-2 text-sm font-medium text-primary">
+                  Use demo code <span className="font-semibold">{OTP_CODE}</span> to continue.
                 </p>
               </div>
 
