@@ -118,7 +118,25 @@ export type AppEvent =
   | 'profile_watchlist_auction_open'
   | 'profile_watchlist_seller_open'
   | 'profile_wins_auction_open'
-  | 'profile_wins_seller_open';
+  | 'profile_wins_seller_open'
+  | 'onboarding_mode_select'
+  | 'onboarding_demo_vendor_start'
+  | 'onboarding_phone_submit'
+  | 'onboarding_phone_verified'
+  | 'onboarding_basics_complete'
+  | 'onboarding_pickup_selected'
+  | 'onboarding_complete'
+  | 'buyer_onboarding_complete'
+  | 'vendor_activation_profile_complete'
+  | 'vendor_activation_verification_complete'
+  | 'vendor_activation_complete'
+  | 'vendor_activation_finished'
+  | 'vendor_activation_skipped_to_demo'
+  | 'importer_activation_business_complete'
+  | 'importer_activation_verification_complete'
+  | 'importer_activation_complete'
+  | 'importer_activation_finished'
+  | 'importer_activation_skipped_to_demo';
 
 export function trackEvent<T extends AppEvent>(name: T, payload?: Record<string, unknown>) {
   if (import.meta.env.DEV) {
