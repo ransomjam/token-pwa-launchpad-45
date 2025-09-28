@@ -5,7 +5,7 @@
     <rect x="150" y="200" width="100" height="50" rx="20" fill="#1E1E1E"/>
     <rect x="170" y="90" width="40" height="50" rx="12" fill="#87E1FF"/>
     <rect x="210" y="90" width="20" height="90" rx="10" fill="#C9F2FF"/>
-    <circle cx="200" cy="225" r="16" fill="#0FBF6D"/>
+    <circle cx="200" cy="225" r="16" fill="#0DB771"/>
     <circle cx="200" cy="225" r="8" fill="white"/>
   </g>
   <defs>
@@ -19,8 +19,8 @@
       <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
     </filter>
     <linearGradient id="paint0_linear" x1="80" y1="40" x2="340" y2="260" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#88D3FF"/>
-      <stop offset="1" stop-color="#1C5E9E"/>
+      <stop stop-color="#0EB4A3"/>
+      <stop offset="1" stop-color="#0087C5"/>
     </linearGradient>
   </defs>
 </svg>

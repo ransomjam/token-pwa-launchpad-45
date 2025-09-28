@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
           name: 'ProList_Mini Importation',
           short_name: 'ProList Mini',
           description: 'Trust-first preorder app with escrow, countdown and pickup QR.',
-          theme_color: '#0FBF6D',
+          theme_color: '#0087C5',
           background_color: '#ffffff',
           display: 'standalone',
           start_url: base,
