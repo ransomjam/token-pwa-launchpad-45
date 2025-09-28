@@ -2,7 +2,7 @@
   <rect width="400" height="300" rx="28" fill="url(#paint0_linear)"/>
   <g filter="url(#filter0_d)">
     <rect x="140" y="70" width="120" height="160" rx="24" fill="white"/>
-    <rect x="160" y="90" width="80" height="40" rx="12" fill="#0FBF6D" opacity="0.85"/>
+    <rect x="160" y="90" width="80" height="40" rx="12" fill="#0DB771" opacity="0.85"/>
     <rect x="180" y="150" width="40" height="40" rx="8" fill="#E8F8EE"/>
     <rect x="185" y="200" width="30" height="10" rx="4" fill="#D1EEDF"/>
   </g>
@@ -19,8 +19,8 @@
       <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
     </filter>
     <linearGradient id="paint0_linear" x1="40" y1="20" x2="360" y2="280" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#0FBF6D"/>
-      <stop offset="1" stop-color="#0A8F77"/>
+      <stop stop-color="#0DB771"/>
+      <stop offset="1" stop-color="#0087C5"/>
     </linearGradient>
   </defs>
 </svg>
