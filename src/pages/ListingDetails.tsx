@@ -58,6 +58,7 @@ import { useToast } from '@/components/ui/use-toast';
 import ShareSheet from '@/components/share/ShareSheet';
 import { activateDemoMode, DEMO_PICKUPS, getDemoListingById, isDemoActive, primaryDemoListing } from '@/lib/demoMode';
 import { useI18n } from '@/context/I18nContext';
+import { useSession } from '@/context/SessionContext';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
@@ -146,6 +147,7 @@ const ListingDetails = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { locale } = useI18n();
+  const { clearSession } = useSession();
   const id = params.id;
 
   const [qty, setQty] = useState(1);
@@ -160,6 +162,12 @@ const ListingDetails = () => {
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
   const viewTrackedRef = useRef(false);
+
+  const handleLogout = useCallback(() => {
+    clearSession();
+    toast({ title: 'Logged out', description: 'You can sign in again anytime.' });
+    navigate('/');
+  }, [clearSession, navigate, toast]);
 
   const {
     data: listingData,
@@ -642,20 +650,36 @@ const ListingDetails = () => {
                   <p className="text-sm text-muted-foreground">92% on-time · 120 orders</p>
                 </div>
               </div>
-              <Dialog open={importerModalOpen} onOpenChange={setImporterModalOpen}>
-                <Button variant="ghost" className="rounded-full border px-4" onClick={() => setImporterModalOpen(true)}>
-                  View profile
+              <div className="flex items-center gap-2">
+                <Dialog open={importerModalOpen} onOpenChange={setImporterModalOpen}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="rounded-full bg-primary px-2 font-bold text-white hover:bg-primary/90 hover:text-white"
+                    onClick={() => setImporterModalOpen(true)}
+                  >
+                    View profile
+                  </Button>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{listing.importer.displayName}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3 text-sm text-muted-foreground">
+                      <p>Trusted importer with 120 fulfilled group buys across electronics and accessories.</p>
+                      <p>Average response under 2 hours. Escrow verified for every pool.</p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full px-3 font-semibold"
+                  onClick={handleLogout}
+                >
+                  Log out
                 </Button>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{listing.importer.displayName}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-3 text-sm text-muted-foreground">
-                    <p>Trusted importer with 120 fulfilled group buys across electronics and accessories.</p>
-                    <p>Average response under 2 hours. Escrow verified for every pool.</p>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              </div>
             </div>
           </section>
         </div>
