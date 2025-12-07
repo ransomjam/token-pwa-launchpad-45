@@ -39,6 +39,9 @@ import {
 import ShareSheet from '@/components/share/ShareSheet';
 import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
 import type { ListingSummary, Session } from '@/types';
+import { cn } from '@/lib/utils';
+import { VerificationDialog, type VerificationPayload } from '@/components/verification/VerificationDialog';
+import { useSession } from '@/context/SessionContext';
 
 const fetchImporterListings = async (): Promise<ListingSummary[]> => {
   const response = await fetch('/api/listings');
@@ -132,6 +135,9 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
   const [buyersOpen, setBuyersOpen] = useState(false);
   const [buyersListing, setBuyersListing] = useState<ImporterListing | null>(null);
   const [evidenceMap, setEvidenceMap] = useState<EvidenceMap>({});
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'create-listing' | null>(null);
+  const { updateSession } = useSession();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['importer', 'listings'],
@@ -217,6 +223,32 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
     setShareOpen(true);
   };
 
+  const handleVerificationComplete = (payload: VerificationPayload) => {
+    updateSession(current => ({
+      ...current,
+      businessName: payload.businessName,
+      isVerified: true,
+      verification: {
+        status: 'verified',
+        ...payload,
+      },
+    }));
+    const action = pendingAction;
+    setPendingAction(null);
+    if (action === 'create-listing') {
+      navigate('/importer/create');
+    }
+  };
+
+  const handleCreateListingClick = () => {
+    if (!session.isVerified) {
+      setPendingAction('create-listing');
+      setVerificationOpen(true);
+      return;
+    }
+    navigate('/importer/create');
+  };
+
   const openEvidence = (listing: ImporterListing) => {
     setEvidenceListing(listing);
     setEvidenceOpen(true);
@@ -271,33 +303,37 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
   const explanation = kpis.find(item => item.id === selectedKpi);
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-5 rounded-3xl border border-white/80 bg-gradient-to-br from-white/95 via-primary/5 to-blue/10 p-6 shadow-[0_20px_45px_rgba(14,116,144,0.12)] backdrop-blur">
+    <>
+      <div className="flex flex-col gap-8">
+      <header className="relative flex flex-col gap-5 overflow-hidden rounded-3xl border border-white/70 bg-white/95 p-6 shadow-[0_24px_65px_rgba(13,183,113,0.16)] backdrop-blur before:absolute before:inset-0 before:-z-10 before:bg-[radial-gradient(circle_at_top_left,rgba(13,183,113,0.18),transparent_60%),radial-gradient(circle_at_bottom_right,rgba(0,135,197,0.16),transparent_55%)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <Badge className="rounded-full border-primary/20 bg-primary/15 px-3 py-1 text-primary" variant="outline">
+              <Badge className="rounded-full border border-primary/25 bg-primary/12 px-3 py-1 text-primary" variant="outline">
                 {t('roles.importerBadge')}
               </Badge>
-              <span className="text-sm font-medium text-muted-foreground">{session.displayName}</span>
+              <div className="space-y-0.5">
+                <span className="block text-sm font-semibold text-muted-foreground">{session.businessName}</span>
+                <span className="block text-xs text-muted-foreground/70">Managed by {session.personalName}</span>
+              </div>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('importerDashboard.heading')}</h1>
             <p className="text-sm text-muted-foreground">{t('importerDashboard.tagline')}</p>
             <Badge
-              variant={session.verifiedImporter ? 'default' : 'outline'}
-              className={`rounded-full px-3 py-1 text-xs ${
-                session.verifiedImporter
+              variant={session.isVerified ? 'default' : 'outline'}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                session.isVerified
                   ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-700'
                   : 'border-amber-500/40 bg-amber-500/15 text-amber-700'
               }`}
             >
-              {session.verifiedImporter ? t('dashboard.importerStatusVerified') : t('dashboard.importerStatusPending')}
+              {session.isVerified ? t('dashboard.importerStatusVerified') : t('dashboard.importerStatusPending')}
             </Badge>
           </div>
           <Button
             size="lg"
             className="rounded-full bg-primary px-6 text-primary-foreground shadow-soft transition-transform hover:-translate-y-0.5"
-            onClick={() => navigate('/importer/create')}
+            onClick={handleCreateListingClick}
           >
             {t('importerDashboard.createListing')}
           </Button>
@@ -346,12 +382,12 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
         </div>
 
         {listings.length === 0 && !isLoading ? (
-          <Card className="rounded-3xl border border-dashed border-primary/20 bg-white/90 p-8 text-center shadow-soft">
+          <Card className="rounded-3xl border border-dashed border-primary/25 bg-white/90 p-8 text-center shadow-soft">
             <h3 className="text-lg font-semibold">{t('importerDashboard.emptyTitle')}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{t('importerDashboard.emptyBody')}</p>
             <Button
               className="mt-6 rounded-full bg-primary px-5 text-primary-foreground shadow-soft"
-              onClick={() => navigate('/importer/create')}
+              onClick={handleCreateListingClick}
             >
               {t('importerDashboard.createListing')}
             </Button>
@@ -382,22 +418,33 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
               return (
                 <Card
                   key={listing.id}
-                  className="group relative overflow-hidden rounded-3xl border border-white/70 bg-white/95 p-4 shadow-[0_18px_45px_rgba(15,118,180,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_26px_60px_rgba(15,118,180,0.12)]"
+                  className="group relative overflow-hidden rounded-3xl border border-primary/15 bg-white/95 p-4 shadow-[0_20px_55px_rgba(13,183,113,0.12)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_65px_rgba(0,135,197,0.14)]"
                 >
                   <CardContent className="flex gap-4 p-0">
-                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/70 bg-muted shadow-inner">
-                      <img src={listing.image} alt={listing.title} className="h-full w-full object-cover" />
+                    <div className="flex w-24 shrink-0 flex-col items-center gap-2 text-center sm:w-28">
+                      <div className="h-24 w-24 overflow-hidden rounded-2xl border border-primary/15 bg-muted shadow-inner">
+                        <img src={listing.image} alt={listing.title} className="h-full w-full object-cover" />
+                      </div>
+                      <p className="text-sm font-semibold text-foreground sm:text-base">
+                        {formatPrice(listing.priceXAF, locale)}
+                      </p>
+                      <Badge
+                        className={cn(
+                          'flex items-center justify-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold shadow-soft',
+                          statusToneClass(listing.status),
+                        )}
+                      >
+                        {statusLabel(listing.status, locale)}
+                      </Badge>
                     </div>
                     <div className="flex flex-1 flex-col gap-4">
                       <div className="flex flex-col gap-2">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <h3 className="text-base font-semibold tracking-tight text-foreground">{listing.title}</h3>
-                              <p className="text-sm text-muted-foreground">{formatPrice(listing.priceXAF, locale)}</p>
-                            </div>
-                          <Badge className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${statusToneClass(listing.status)}`}>
-                            {statusLabel(listing.status, locale)}
-                          </Badge>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="pr-2">
+                            <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-foreground sm:text-base">
+                              {listing.title}
+                            </h3>
+                          </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                           <span className={`rounded-full border px-3 py-1 font-medium ${getLaneTone(listing.lane.signal)}`}>
@@ -409,7 +456,7 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
                           <span className="text-muted-foreground">{locksInCopy(listing.moq.lockAt, locale)}</span>
                         </div>
                         <div className="space-y-2">
-                          <Progress value={progressValue} className="h-2 overflow-hidden rounded-full bg-blue/10" />
+                          <Progress value={progressValue} className="h-2 overflow-hidden rounded-full bg-primary/10" />
                           <div className="flex justify-between text-xs text-muted-foreground">
                             <span>{t('importerDashboard.progressLabel', { committed: listing.moq.committed, target: listing.moq.target })}</span>
                             <span>{formatPct(listing.moq.committed / Math.max(1, listing.moq.target))}</span>
@@ -417,41 +464,40 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-2">
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
-                          className="h-11 flex-1 rounded-full bg-primary/10 text-primary shadow-soft transition-colors hover:bg-primary/20"
+                          className="h-9 rounded-full border border-ocean/30 bg-ocean/10 px-3 text-[11px] font-semibold text-ocean shadow-soft transition-colors hover:bg-ocean/15"
                           onClick={() => openShare(listing)}
                         >
-                          <Share2 className="mr-2 h-4 w-4" />
-                          {t('importerDashboard.actions.share')}
+                          <Share2 className="h-4 w-4" />
+                          <span className="ml-1">{t('importerDashboard.actions.share')}</span>
                         </Button>
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
-                          className="h-11 flex-1 rounded-full bg-blue/10 text-blue-700 shadow-soft transition-colors hover:bg-blue/20"
+                          className="h-9 rounded-full border border-blue/25 bg-blue/10 px-3 text-[11px] font-semibold text-ocean shadow-soft transition-colors hover:bg-blue/15"
                           onClick={() => openEvidence(listing)}
                         >
-                          <UploadCloud className="mr-2 h-4 w-4" />
-                          {t('importerDashboard.actions.evidence')}
-                          {Object.keys(evidence).length > 0 && <span className="ml-2 text-xs text-emerald-600">•</span>}
+                          <UploadCloud className="h-4 w-4" />
+                          <span className="ml-1">{t('importerDashboard.actions.evidence')}</span>
+                          {Object.keys(evidence).length > 0 && <span className="ml-1 text-[10px] text-emerald-600">•</span>}
                         </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
                         <AlertDialogTriggerButton
                           label={t('importerDashboard.actions.arrived')}
                           onConfirm={() => markArrived(listing)}
                           disabled={listing.status === 'arrived'}
+                          className="border-emerald-500/35 bg-emerald-500/12 text-emerald-700 hover:bg-emerald-500/18"
                         />
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-11 flex-1 rounded-full border-primary/30 text-primary shadow-soft hover:bg-primary/10"
+                          className="h-9 rounded-full border border-ocean/30 bg-ocean/10 px-3 text-[11px] font-semibold text-ocean shadow-soft transition-colors hover:bg-ocean/15"
                           onClick={() => openBuyers(listing)}
                         >
-                          <Users className="mr-2 h-4 w-4" />
-                          {t('importerDashboard.actions.buyers')}
+                          <Users className="h-4 w-4" />
+                          <span className="ml-1">{t('importerDashboard.actions.buyers')}</span>
                         </Button>
                       </div>
                     </div>
@@ -559,7 +605,19 @@ export const ImporterDashboard = ({ session }: ImporterDashboardProps) => {
           </div>
         </SheetContent>
       </Sheet>
-    </div>
+      </div>
+      <VerificationDialog
+        open={verificationOpen}
+        onOpenChange={open => {
+          setVerificationOpen(open);
+          if (!open) {
+            setPendingAction(null);
+          }
+        }}
+        initialBusinessName={session.businessName}
+        onComplete={handleVerificationComplete}
+      />
+    </>
   );
 };
 
@@ -567,9 +625,10 @@ type AlertDialogTriggerButtonProps = {
   label: string;
   onConfirm: () => void;
   disabled?: boolean;
+  className?: string;
 };
 
-const AlertDialogTriggerButton = ({ label, onConfirm, disabled }: AlertDialogTriggerButtonProps) => {
+const AlertDialogTriggerButton = ({ label, onConfirm, disabled, className }: AlertDialogTriggerButtonProps) => {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
   return (
@@ -578,7 +637,10 @@ const AlertDialogTriggerButton = ({ label, onConfirm, disabled }: AlertDialogTri
         <Button
           variant="outline"
           size="sm"
-          className="h-11 flex-1 rounded-full border-emerald-500/40 bg-emerald-500/10 text-emerald-700 shadow-soft transition-colors hover:bg-emerald-500/20"
+          className={cn(
+            'h-9 rounded-full border border-emerald-500/35 bg-emerald-500/12 px-4 text-xs font-semibold text-emerald-700 shadow-soft transition-colors hover:bg-emerald-500/18 disabled:cursor-not-allowed disabled:opacity-80',
+            className,
+          )}
           disabled={disabled}
         >
           <PackageCheck className="mr-2 h-4 w-4" />

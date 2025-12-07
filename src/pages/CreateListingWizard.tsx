@@ -16,6 +16,7 @@ import { useSession } from '@/context/SessionContext';
 import { DEMO_LISTINGS, DEMO_PICKUPS } from '@/lib/demoMode';
 import ShareSheet from '@/components/share/ShareSheet';
 import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
+import { DistributionCard, type DistributionOptionValue } from '@/components/distribution/DistributionCard';
 
 const STORAGE_KEY = 'importer_listing_draft_v1';
 
@@ -157,6 +158,8 @@ const CreateListingWizard = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [published, setPublished] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [distributionChoice, setDistributionChoice] = useState<DistributionOptionValue>('publish');
+  const [distributionSuccess, setDistributionSuccess] = useState(false);
 
   const shareContent = useMemo<ListingShareContent>(() => {
     const lane = LANE_OPTIONS.find(item => item.code === draft.laneCode) ?? LANE_OPTIONS[0];
@@ -391,6 +394,12 @@ const CreateListingWizard = () => {
       window.localStorage.removeItem(STORAGE_KEY);
     }
     toast.success(t('listingWizard.publishSuccess'));
+    if (distributionChoice !== 'publish') {
+      setDistributionSuccess(true);
+      toast.success(t('distribution.successAdded'));
+    } else {
+      setDistributionSuccess(false);
+    }
   };
 
   const missingPickup = currentStep.id === 'pickup' && draft.pickupPoints.length === 0;
@@ -645,7 +654,9 @@ const CreateListingWizard = () => {
             </div>
           </div>
         );
-      case 'review':
+      case 'review': {
+        const commissionAmount = Math.round(draft.priceXAF * 0.12);
+        const formattedCommission = `₣${commissionAmount.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US')}`;
         return (
           <div className="space-y-6">
             <Card className="rounded-3xl border bg-background/80">
@@ -670,11 +681,44 @@ const CreateListingWizard = () => {
                 </div>
               </CardContent>
             </Card>
+            <DistributionCard
+              title={t('distribution.title')}
+              subtitle={t('distribution.importerSubtitle')}
+              options={[
+                {
+                  value: 'publish',
+                  label: t('distribution.publishOnly'),
+                  description: t('distribution.publishOnlyDesc'),
+                },
+                {
+                  value: 'offer',
+                  label: t('distribution.offerMerchants'),
+                  description: t('distribution.offerMerchantsDesc'),
+                },
+                {
+                  value: 'publish_offer',
+                  label: t('distribution.publishOffer'),
+                  description: t('distribution.publishOfferDesc'),
+                },
+              ]}
+              value={distributionChoice}
+              onChange={value => {
+                setDistributionChoice(value);
+                setDistributionSuccess(false);
+              }}
+              commissionLabel={t('distribution.importerCommissionLabel')}
+              commissionValue={t('distribution.importerCommissionValue', {
+                amount: formattedCommission,
+              })}
+              successMessage={t('distribution.successAdded')}
+              showSuccess={distributionSuccess}
+            />
             <div className="rounded-2xl border border-dashed bg-emerald-500/10 p-4 text-sm text-emerald-700">
               {t('listingWizard.review.shareNudge')}
             </div>
           </div>
         );
+      }
       default:
         return null;
     }

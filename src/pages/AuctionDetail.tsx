@@ -124,7 +124,7 @@ const AuctionDetail = () => {
   const handleViewSeller = () => {
     if (!auction) return;
     trackEvent('vendor_profile_view', { vendorId: auction.seller.id });
-    navigate(`/seller/${auction.seller.id}`);
+    navigate(`/creator/${auction.seller.id}`);
   };
 
   if (!auction) {

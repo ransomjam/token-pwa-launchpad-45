@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Check, Phone, User, MapPin, Shield, Wallet } from 'lucide-react';
+import { useState, useEffect, type ChangeEvent } from 'react';
+import { Check, Phone, User, MapPin, Shield, Wallet, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,14 +10,30 @@ import { useI18n } from '@/context/I18nContext';
 import { Logo } from '@/components/Logo';
 import type { Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AccountCreationStep = 'phone' | 'otp' | 'basics' | 'pickup' | 'protection';
 
 type AccountCreationProps = {
   selectedRole: Session['role'];
   isDemoVendor?: boolean;
-  onAccountCreated: (session: Session) => void;
+  onAccountCreated: (session: Session, password: string) => void;
   onBack: () => void;
+};
+
+type AccountFormData = {
+  phone: string;
+  otp: string;
+  name: string;
+  language: 'en' | 'fr';
+  city: string;
+  pickupHub: 'akwa' | 'biyem';
+  preferredWallet: 'mtn-momo' | 'orange-money' | '';
+  acceptTerms: boolean;
+  password: string;
+  confirmPassword: string;
+  profileImageDataUrl: string | null;
+  profileImageName: string;
 };
 
 const OTP_CODE = '123456';
@@ -28,6 +44,7 @@ const demoProfile = {
   pickupHub: 'akwa' as const,
   preferredWallet: 'mtn-momo' as const,
   acceptTerms: true,
+  password: 'demo-pass',
 };
 
 const demoPickupHubs = [
@@ -38,15 +55,19 @@ const demoPickupHubs = [
 export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, onBack }: AccountCreationProps) => {
   const { t, locale, setLocale } = useI18n();
   const [step, setStep] = useState<AccountCreationStep>('phone');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AccountFormData>({
     phone: '',
     otp: '',
     name: '',
-    language: locale,
+    language: locale as 'en' | 'fr',
     city: '',
     pickupHub: 'akwa',
-    preferredWallet: '' as 'mtn-momo' | 'orange-money' | '',
+    preferredWallet: '',
     acceptTerms: false,
+    password: '',
+    confirmPassword: '',
+    profileImageDataUrl: null,
+    profileImageName: '',
   });
   const [timeLeft, setTimeLeft] = useState(30);
 
@@ -72,6 +93,10 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
       pickupHub: demoProfile.pickupHub,
       preferredWallet: demoProfile.preferredWallet,
       acceptTerms: demoProfile.acceptTerms,
+      password: demoProfile.password,
+      confirmPassword: demoProfile.password,
+      profileImageDataUrl: null,
+      profileImageName: '',
     }));
     setStep('otp');
     setTimeLeft(30);
@@ -88,7 +113,9 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
   const handleBasicsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.city.trim()) return;
-    
+    if (formData.password.trim().length < 6) return;
+    if (formData.password !== formData.confirmPassword) return;
+
     trackEvent('onboarding_basics_complete', { role: selectedRole, language: formData.language });
     setStep('pickup');
   };
@@ -105,27 +132,55 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
 
     // Update language if changed
     if (formData.language !== locale) {
-      setLocale(formData.language as 'en' | 'fr');
+      setLocale(formData.language);
     }
 
     const session: Session = {
       userId: isDemoVendor ? 'demo-vendor' : `user-${selectedRole}`,
+      personalName: formData.name,
+      businessName: formData.name,
+      email: `${formData.name.replace(/\s+/g, '.').toLowerCase()}@demo.prolist`,
+      phone: formData.phone,
       displayName: formData.name,
       contact: formData.phone,
       role: selectedRole,
       hasSelectedRole: true,
-      verifiedImporter: false,
+      isVerified: false,
+      verification: {
+        status: 'unverified',
+        businessName: formData.name,
+        location: formData.city,
+      },
+      avatarUrl: formData.profileImageDataUrl,
     };
 
-    trackEvent('onboarding_complete', { 
-      role: selectedRole, 
+    trackEvent('onboarding_complete', {
+      role: selectedRole,
       isDemoVendor,
       language: formData.language,
       city: formData.city,
-      hub: formData.pickupHub 
+      hub: formData.pickupHub
     });
-    
-    onAccountCreated(session);
+
+    onAccountCreated(session, formData.password);
+  };
+
+  const handleProfileImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setFormData(prev => ({ ...prev, profileImageDataUrl: null, profileImageName: '' }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData(prev => ({
+        ...prev,
+        profileImageDataUrl: typeof reader.result === 'string' ? reader.result : prev.profileImageDataUrl,
+        profileImageName: file.name,
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const selectedHub = demoPickupHubs.find(hub => hub.id === formData.pickupHub);
@@ -289,8 +344,8 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
 
                 <div className="space-y-2">
                   <Label htmlFor="language">{t('onboarding.basics.languageLabel')}</Label>
-                  <Select 
-                    value={formData.language} 
+                  <Select
+                    value={formData.language}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, language: value as 'en' | 'fr' }))}
                   >
                     <SelectTrigger className="h-12 rounded-2xl">
@@ -313,11 +368,87 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
                     className="h-12 rounded-2xl"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="profileImage">
+                    {t('onboarding.basics.profileImageLabel', { defaultValue: 'Profile image' })}
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      {formData.profileImageDataUrl ? (
+                        <AvatarImage src={formData.profileImageDataUrl} alt={formData.name || 'Profile preview'} />
+                      ) : (
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {(formData.name || 'You')
+                            .split(' ')
+                            .map(part => part[0] ?? '')
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div className="flex-1">
+                      <Input
+                        id="profileImage"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfileImageChange}
+                        className="h-12 rounded-2xl"
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formData.profileImageName
+                          ? formData.profileImageName
+                          : t('onboarding.basics.profileImageHint', {
+                            defaultValue: 'Optional. Upload to personalise your account.',
+                          })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">{t('onboarding.basics.passwordLabel')}</Label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      placeholder={t('onboarding.basics.passwordPlaceholder')}
+                      className="h-12 rounded-2xl pl-11"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t('onboarding.basics.passwordHint')}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">{t('onboarding.basics.confirmPasswordLabel')}</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    placeholder={t('onboarding.basics.confirmPasswordPlaceholder')}
+                    className="h-12 rounded-2xl"
+                    autoComplete="new-password"
+                  />
+                  {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                    <p className="text-xs text-destructive">{t('onboarding.basics.passwordMismatch')}</p>
+                  )}
+                </div>
               </div>
 
-              <Button 
-                type="submit" 
-                disabled={!formData.name.trim() || !formData.city.trim()}
+              <Button
+                type="submit"
+                disabled={
+                  !formData.name.trim() ||
+                  !formData.city.trim() ||
+                  formData.password.trim().length < 6 ||
+                  formData.password !== formData.confirmPassword
+                }
                 className="h-12 w-full rounded-full"
               >
                 {t('common.continue')}
@@ -338,7 +469,7 @@ export const AccountCreation = ({ selectedRole, isDemoVendor, onAccountCreated, 
                   <button
                     key={hub.id}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, pickupHub: hub.id }))}
+                    onClick={() => setFormData(prev => ({ ...prev, pickupHub: hub.id as 'akwa' | 'biyem' }))}
                     className={`w-full rounded-2xl border p-4 text-left transition-all ${
                       formData.pickupHub === hub.id 
                         ? 'border-primary bg-primary/5' 

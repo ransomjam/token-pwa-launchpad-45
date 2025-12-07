@@ -97,13 +97,43 @@ export type AuctionWinLogistics = {
   notes?: string[];
 };
 
+export type AuctionWinHub = {
+  id: string;
+  label: string;
+  address: string;
+  city?: string;
+  hours?: string;
+  etaLabel: string;
+};
+
+export type AuctionWinCheckout = {
+  sellerName: string;
+  buyerName: string;
+  buyerContactMasked: string;
+  buyerEmailMasked?: string;
+  pickupWindowLabel: string;
+  totalDueXAF: number;
+  hubs: AuctionWinHub[];
+  orderId?: string;
+  invoiceNo?: string;
+  chosenHubId?: string;
+  lastHubId?: string;
+  qrCodeValue?: string;
+  invoiceGeneratedAt?: string;
+  paidAt?: string;
+  pickupSelectedAt?: string;
+  pickupCode?: string;
+  sellerContactMasked?: string;
+};
+
 export type AuctionWin = {
   id: string;
   auctionId: string;
   finalBidXAF: number;
-  status: 'pending_payment' | 'paid' | 'completed';
+  status: 'pending_payment' | 'paid_pickup_pending' | 'paid_pickup_selected' | 'completed';
   wonAt: string;
   payment?: AuctionWinPayment;
+  checkout?: AuctionWinCheckout;
   journey?: AuctionWinJourneyStage[];
   logistics?: AuctionWinLogistics;
   notifications?: AuctionWinNotification[];

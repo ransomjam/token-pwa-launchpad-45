@@ -15,6 +15,7 @@ import {
   QrCode,
   ShieldCheck,
   Phone,
+  FileText,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,8 @@ import { cn } from '@/lib/utils';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { trackEvent } from '@/lib/analytics';
 import { activateDemoMode, primaryDemoListing, primaryDemoListingId } from '@/lib/demoMode';
+import { findWinByOrderId, WINS_UPDATED_EVENT } from '@/lib/auctionData';
+import { DEMO_INVOICE, findStoredInvoiceByOrderId, INVOICE_UPDATED_EVENT } from '@/invoices/demoInvoice';
 import { getDemoOrder } from '@/lib/demoOrderStorage';
 import type { MilestoneCode, OrderDetailResponse, OrderStatus } from '@/types';
 
@@ -137,9 +140,11 @@ const OrderTracker = () => {
   const isOnline = useNetworkStatus();
 
   const [now, setNow] = useState(() => Date.now());
+  const [invoiceVersion, setInvoiceVersion] = useState(0);
   const [actionLoading, setActionLoading] = useState<'refund' | null>(null);
   const [lightbox, setLightbox] = useState<{ type: EvidenceKind; url: string; label: string } | null>(null);
   const [refundedAt, setRefundedAt] = useState<Date | null>(null);
+  const [winsVersion, setWinsVersion] = useState(0);
 
   const viewTrackedRef = useRef(false);
   const eligibleTrackedRef = useRef(false);
@@ -210,6 +215,26 @@ const OrderTracker = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [id, isOnline, orderQuery]);
 
+  useEffect(() => {
+    const handleWinsUpdate = () => setWinsVersion(prev => prev + 1);
+    window.addEventListener(WINS_UPDATED_EVENT, handleWinsUpdate);
+    window.addEventListener('storage', handleWinsUpdate);
+    return () => {
+      window.removeEventListener(WINS_UPDATED_EVENT, handleWinsUpdate);
+      window.removeEventListener('storage', handleWinsUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleInvoiceUpdate = () => setInvoiceVersion(prev => prev + 1);
+    window.addEventListener(INVOICE_UPDATED_EVENT, handleInvoiceUpdate);
+    window.addEventListener('storage', handleInvoiceUpdate);
+    return () => {
+      window.removeEventListener(INVOICE_UPDATED_EVENT, handleInvoiceUpdate);
+      window.removeEventListener('storage', handleInvoiceUpdate);
+    };
+  }, []);
+
   const deadlineDate = useMemo(() => {
     if (!order) return null;
     return new Date(order.countdown.deadline);
@@ -219,6 +244,28 @@ const OrderTracker = () => {
     if (!deadlineDate) return null;
     return Math.max(0, Math.floor((deadlineDate.getTime() - now) / 1000));
   }, [deadlineDate, now]);
+
+  const relatedWin = useMemo(() => {
+    if (!id) return undefined;
+    return findWinByOrderId(id);
+  }, [id, winsVersion]);
+
+  const storedInvoice = useMemo(() => {
+    if (!id) return null;
+    return findStoredInvoiceByOrderId(id);
+  }, [id, invoiceVersion]);
+
+  const relatedInvoiceNo = storedInvoice?.invoiceNo ?? relatedWin?.checkout?.invoiceNo ?? DEMO_INVOICE.invoiceNo;
+  const canViewInvoice = Boolean(
+    (relatedWin && (relatedWin.status === 'paid_pickup_selected' || relatedWin.status === 'completed')) ||
+      storedInvoice?.paymentStatus === 'PAID'
+  );
+
+  const handleInvoiceShortcut = () => {
+    if (!id) return;
+    trackEvent('order_view_invoice', { orderId: id, winId: relatedWin?.id ?? 'preorder' });
+    navigate(`/invoice/${relatedInvoiceNo}`);
+  };
 
   const derivedStatus = useMemo<OrderStatus | null>(() => {
     if (!order) return null;
@@ -396,6 +443,17 @@ const OrderTracker = () => {
                     <span className="inline-flex h-2 w-2 rounded-full bg-current" />
                     {statusLabel}
                   </div>
+                  {canViewInvoice && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full px-3 text-xs font-medium"
+                      onClick={handleInvoiceShortcut}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      {t('winnerCheckout.actions.viewInvoice')}
+                    </Button>
+                  )}
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <Badge
                       variant="outline"

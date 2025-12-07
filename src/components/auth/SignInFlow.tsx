@@ -1,141 +1,67 @@
-import { useCallback, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { ModeChooser } from '@/components/onboarding/ModeChooser';
-import { AccountCreation } from '@/components/onboarding/AccountCreation';
-import { VendorActivation } from '@/components/onboarding/VendorActivation';
-import { ImporterActivation } from '@/components/onboarding/ImporterActivation';
-import { BuyerSuccess } from '@/components/onboarding/BuyerSuccess';
+import { SignInForm } from '@/components/auth/SignInForm';
+import { UnifiedAccountLanding } from '@/components/auth/UnifiedAccountLanding';
 import type { Session } from '@/types';
-import { activateDemoMode } from '@/lib/demoMode';
+import { listDemoAccounts, saveAccount, type StoredAccount } from '@/lib/authStorage';
 
 type SignInFlowProps = {
   onAuthenticated: (session: Session) => void;
 };
 
-type FlowStep = 'mode' | 'account' | 'vendorActivation' | 'importerActivation' | 'buyerSuccess';
+type FlowStep = 'landing' | 'signIn';
 
 export const SignInFlow = ({ onAuthenticated }: SignInFlowProps) => {
-  const [step, setStep] = useState<FlowStep>('mode');
-  const [selectedRole, setSelectedRole] = useState<Session['role'] | null>(null);
-  const [isDemoVendor, setIsDemoVendor] = useState(false);
-  const [pendingSession, setPendingSession] = useState<Session | null>(null);
+  const [step, setStep] = useState<FlowStep>('landing');
+  const demoAccounts = useMemo(() => listDemoAccounts(), []);
 
-  const resetFlow = useCallback(() => {
-    setSelectedRole(null);
-    setIsDemoVendor(false);
-    setPendingSession(null);
-  }, []);
+  const persistAndAuthenticate = (session: Session, password: string) => {
+    const normalizedSession: Session = session.isVerified
+      ? { ...session, hasSelectedRole: true }
+      : { ...session, role: 'buyer', hasSelectedRole: true };
 
-  const goToModeChooser = useCallback(() => {
-    resetFlow();
-    setStep('mode');
-  }, [resetFlow]);
+    saveAccount({ ...normalizedSession, password });
+    onAuthenticated(normalizedSession);
+  };
 
-  const handleModeSelected = useCallback((role: Session['role'], demoVendor?: boolean) => {
-    setSelectedRole(role);
-    setIsDemoVendor(Boolean(demoVendor));
-    setPendingSession(null);
-    setStep('account');
-  }, []);
+  const handleAccountCreated = (session: Session, password: string) => {
+    persistAndAuthenticate(session, password);
+  };
 
-  const handleAccountCreated = useCallback((session: Session) => {
-    setPendingSession(session);
-
-    if (session.role === 'buyer') {
-      setStep('buyerSuccess');
-      return;
-    }
-
-    if (session.role === 'vendor') {
-      setStep('vendorActivation');
-      return;
-    }
-
-    setStep('importerActivation');
-  }, []);
-
-  const finalizeSession = useCallback(
-    (overrides?: Partial<Session>) => {
-      if (!pendingSession) return;
-      const nextSession: Session = { ...pendingSession, ...overrides };
-      onAuthenticated(nextSession);
-    },
-    [onAuthenticated, pendingSession],
-  );
-
-  const handleVendorActivationComplete = useCallback(
-    (_isVerified: boolean) => {
-      finalizeSession();
-    },
-    [finalizeSession],
-  );
-
-  const handleVendorSkipToDemo = useCallback(() => {
-    activateDemoMode();
-    finalizeSession();
-  }, [finalizeSession]);
-
-  const handleImporterActivationComplete = useCallback(
-    (isVerified: boolean) => {
-      if (!isVerified) {
-        activateDemoMode();
-      }
-      finalizeSession({ verifiedImporter: isVerified });
-    },
-    [finalizeSession],
-  );
-
-  const handleImporterSkipToDemo = useCallback(() => {
-    activateDemoMode();
-    finalizeSession({ verifiedImporter: true });
-  }, [finalizeSession]);
-
-  const handleBuyerContinue = useCallback(() => {
-    finalizeSession();
-  }, [finalizeSession]);
-
-  if (step === 'mode') {
-    return <ModeChooser onModeSelected={handleModeSelected} />;
-  }
-
-  if (step === 'account' && selectedRole) {
-    return (
-      <AccountCreation
-        selectedRole={selectedRole}
-        isDemoVendor={isDemoVendor}
-        onAccountCreated={handleAccountCreated}
-        onBack={goToModeChooser}
-      />
+  const handleGoogleAccountCreated = (session: Session, password: string) => {
+    persistAndAuthenticate(
+      {
+        ...session,
+        verification: session.verification ?? {
+          status: 'unverified',
+          businessName: session.businessName,
+          location: '',
+        },
+      },
+      password,
     );
+  };
+
+  const handleDemoLogin = (account: StoredAccount) => {
+    const { password: _password, ...session } = account;
+    const normalizedSession: Session = session.isVerified
+      ? { ...session, hasSelectedRole: true }
+      : { ...session, role: 'buyer', hasSelectedRole: true };
+    onAuthenticated(normalizedSession);
+  };
+
+  if (step === 'signIn') {
+    return <SignInForm onBack={() => setStep('landing')} onAuthenticated={onAuthenticated} />;
   }
 
-  if (!pendingSession) {
-    return <ModeChooser onModeSelected={handleModeSelected} />;
-  }
-
-  if (step === 'vendorActivation') {
-    return (
-      <VendorActivation
-        session={pendingSession}
-        onActivationComplete={handleVendorActivationComplete}
-        onSkipToDemo={handleVendorSkipToDemo}
-      />
-    );
-  }
-
-  if (step === 'importerActivation') {
-    return (
-      <ImporterActivation
-        session={pendingSession}
-        onActivationComplete={handleImporterActivationComplete}
-        onSkipToDemo={handleImporterSkipToDemo}
-      />
-    );
-  }
-
-  if (step === 'buyerSuccess') {
-    return <BuyerSuccess session={pendingSession} onContinue={handleBuyerContinue} />;
-  }
-
-  return <ModeChooser onModeSelected={handleModeSelected} />;
+  return (
+    <UnifiedAccountLanding
+      demoAccounts={demoAccounts}
+      onAccountCreated={handleAccountCreated}
+      onGoogleAccountCreated={handleGoogleAccountCreated}
+      onShowSignIn={() => setStep('signIn')}
+      onDemoLogin={handleDemoLogin}
+    />
+  );
 };
+

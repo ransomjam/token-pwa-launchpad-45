@@ -1,4 +1,4 @@
-import type { AuctionListing, BidRecord, WatchlistItem, AuctionWin } from '@/types/auctions';
+import type { AuctionListing, BidRecord, WatchlistItem, AuctionWin, AuctionWinCheckout } from '@/types/auctions';
 
 const FALLBACK_BIDS: BidRecord[] = [
   {
@@ -22,6 +22,33 @@ const FALLBACK_WATCHLIST: WatchlistItem[] = [
   }
 ];
 
+const SHARED_WIN_HUBS: AuctionWinCheckout['hubs'] = [
+  {
+    id: 'hub_bonapriso',
+    label: 'Bonapriso Urban Hub',
+    address: 'Avenue de Gaulle',
+    city: 'Douala',
+    hours: '08:00 – 20:00',
+    etaLabel: 'Ready in 2–3 days',
+  },
+  {
+    id: 'hub_akwa',
+    label: 'Akwa City Locker',
+    address: 'Rue du Prince Bell',
+    city: 'Douala',
+    hours: '09:00 – 19:00',
+    etaLabel: 'Ready in 3–4 days',
+  },
+  {
+    id: 'hub_bastos',
+    label: 'Bastos Pickup Lounge',
+    address: 'Rue 1792 Bastos',
+    city: 'Yaoundé',
+    hours: '09:00 – 18:00',
+    etaLabel: 'Ready in 4–5 days',
+  },
+];
+
 const FALLBACK_WINS: AuctionWin[] = [
   {
     id: 'win_demo_001',
@@ -41,169 +68,52 @@ const FALLBACK_WINS: AuctionWin[] = [
       momoInstructions: 'Dial *126*14*653151930*476000# to fund escrow via MoMo.',
       reminderLabel: 'Escrow auto-cancels if unpaid in 24h (NO_PAY state).',
     },
-    journey: [
-      {
-        id: 'confirm_bid',
-        title: 'Confirm bid & close auction',
-        status: 'complete',
-        stateLabel: 'WON → Awaiting payment',
-        occurredAtLabel: 'Sep 20, 2025 • 10:45',
-        description:
-          'Server validated the minimum increment and anti-snipe logic before locking in the winning bid with reserve met.',
-        highlights: [
-          'Bid increment respected: +25 000 XAF over previous high bid.',
-          'Anti-snipe: timer extended +60s (final close at 10:45).',
-          'Bidder identity verified (not seller).',
-        ],
-        meta: [
-          { label: 'Min increment', value: '2 000 XAF' },
-          { label: 'Anti-snipe', value: '+60s under last 60s' },
-        ],
-      },
-      {
-        id: 'payment',
-        title: 'Buyer funds escrow',
-        status: 'current',
-        stateLabel: 'AWAITING_PAYMENT',
-        occurredAtLabel: 'Due Sep 21, 2025 • 10:45',
-        description:
-          'Checkout totals hammer + buyer premium + service + centre handling fee before releasing the next workflow.',
-        highlights: [
-          'MoMo USSD: *126*14*653151930*476000#',
-          'Payment hold releases logistics assignment.',
-        ],
-        meta: [
-          { label: 'Escrow status', value: 'Awaiting payment', tone: 'warning' },
-          { label: 'Penalty', value: 'NO_PAY if unpaid in 24h', tone: 'warning' },
-        ],
-      },
-      {
-        id: 'assign_centre',
-        title: 'Assign logistics centre',
-        status: 'upcoming',
-        stateLabel: 'ESCROW_FUNDED → AWAITING_DROPOFF',
-        description:
-          'System selects the nearest centre and generates QR codes for seller drop-off and buyer pickup once escrow is funded.',
-        highlights: [
-          'Drop-off code for seller with QR + alphanumeric.',
-          'Pickup QR + 6-digit OTP for buyer.',
-          'Centre address, hours, and deadlines shared instantly.',
-        ],
-        meta: [{ label: 'SLA', value: 'Seller drop-off within 48h' }],
-      },
-      {
-        id: 'seller_dropoff',
-        title: 'Seller drop-off & intake',
-        status: 'upcoming',
-        stateLabel: 'AT_CENTRE_INTAKE',
-        description:
-          'Centre staff scans the drop-off code, captures condition photos/video, and shelves the item with a printed label.',
-        highlights: [
-          'Condition documented for dispute protection.',
-          'Auto reminders fire if seller is late.',
-        ],
-        meta: [{ label: 'Reminder', value: 'Auto nudges if late', tone: 'warning' }],
-      },
-      {
-        id: 'buyer_pickup',
-        title: 'Buyer pickup & inspection',
-        status: 'upcoming',
-        stateLabel: 'READY_FOR_PICKUP',
-        description:
-          'Buyer presents pickup QR/OTP plus ID, inspects on-site for 10–15 minutes before accepting or opening a dispute.',
-        highlights: [
-          'Accept → immediate payout to seller.',
-          'Reject → dispute opened at centre with photos.',
-        ],
-        meta: [{ label: 'Free pickup window', value: '5 days' }],
-      },
-      {
-        id: 'release',
-        title: 'Release or dispute resolution',
-        status: 'upcoming',
-        stateLabel: 'RELEASED / DISPUTE_AT_CENTRE',
-        description:
-          'Centre staff logs the handover. Escrow pays out on handover confirmation or routes to admin for dispute handling.',
-        highlights: [
-          'Admin dashboard handles disputes & overdue items.',
-          'Auto-return on day 12 if unclaimed (refund minus fees).',
-        ],
-        meta: [{ label: 'Payout trigger', value: 'centre_pickup_verified', tone: 'success' }],
-      },
-    ],
-    logistics: {
-      centreName: 'Bonapriso Urban Centre',
-      centreAddress: 'Avenue de Gaulle, Douala',
-      centreHours: 'Mon – Sat • 08:00 – 20:00',
-      centreContact: '+237 680 000 111',
-      dropoffDeadlineLabel: 'Drop-off within 48h • due Sep 23, 2025 10:45',
-      pickupDeadlineLabel: 'Pickup within 5 days • due Sep 28, 2025 10:45',
-      dropoffCode: 'DROP-7KD4-Q982',
-      pickupCode: 'PICK-91XA-204',
-      pickupOtp: '736419',
-      notes: [
-        'Staff scans QR, captures intake photos/video, notes bin location.',
-        'Storage fee applies after day 5; auto-return to seller on day 12.',
-      ],
+    checkout: {
+      sellerName: 'Beauty Hub CM',
+      buyerName: 'A. Kamga',
+      buyerContactMasked: '+237 6••• ••45',
+      pickupWindowLabel: 'Ready 24–48h after drop-off',
+      totalDueXAF: 476000,
+      hubs: SHARED_WIN_HUBS,
+      lastHubId: 'hub_bonapriso',
     },
-    notifications: [
-      {
-        id: 'notif_win_buyer',
-        audience: 'buyer',
-        channel: 'push',
-        message: 'You won—pay within 24h to keep it.',
-        sentAtLabel: 'Sent Sep 20, 2025 • 10:46',
-      },
-      {
-        id: 'notif_win_seller',
-        audience: 'seller',
-        channel: 'sms',
-        message: 'You have a winner. Deliver to centre after payment.',
-        sentAtLabel: 'Scheduled for ESCROW_FUNDED',
-      },
-      {
-        id: 'notif_win_centre',
-        audience: 'centre',
-        channel: 'email',
-        message: 'Heads-up: Samsung 65" QLED arriving once escrow funded.',
-        sentAtLabel: 'Auto-send on ESCROW_FUNDED',
-      },
-    ],
-    slas: [
-      {
-        id: 'sla_payment',
-        label: 'Escrow payment window',
-        dueLabel: '24h from win • due Sep 21, 2025 10:45',
-        status: 'on_track',
-        state: 'AWAITING_PAYMENT',
-      },
-      {
-        id: 'sla_dropoff',
-        label: 'Seller drop-off',
-        dueLabel: '48h after escrow funded',
-        status: 'warning',
-        state: 'AWAITING_DROPOFF',
-      },
-      {
-        id: 'sla_pickup',
-        label: 'Buyer pickup window',
-        dueLabel: '5 days after ready notification',
-        status: 'on_track',
-        state: 'READY_FOR_PICKUP',
-      },
-      {
-        id: 'sla_return',
-        label: 'Auto-return threshold',
-        dueLabel: 'Day 12 → return to seller, refund minus fees',
-        status: 'on_track',
-        state: 'UNCLAIMED_RETURN',
-      },
-    ],
-    policyNotes: [
-      'Anti-snipe rule added +60s because the confirm bid landed with 45s remaining.',
-      'Escrow payout fires only when centre staff marks Pickup Verified.',
-      'Disputes at centre require photos and staff notes before admin decision.',
-    ],
+  },
+  {
+    id: 'win_demo_002',
+    auctionId: 'auct_003',
+    finalBidXAF: 205000,
+    status: 'paid_pickup_pending',
+    wonAt: '2025-09-18T18:20:00Z',
+    payment: {
+      statusLabel: 'ESCROW_FUNDED → pickup pending',
+      dueByLabel: 'Paid Sep 18, 2025 18:29',
+      hammerPriceXAF: 205000,
+      buyerPremiumPct: 8,
+      buyerPremiumXAF: 16400,
+      serviceFeeXAF: 9500,
+      centreHandlingFeeXAF: 4000,
+      totalDueXAF: 234900,
+      momoInstructions: 'Dial *126*14*653151930*234900# to fund escrow via MoMo.',
+      reminderLabel: 'Pickup hub assignment pending selection.',
+    },
+    checkout: {
+      sellerName: 'Home Essentials',
+      buyerName: 'A. Kamga',
+      buyerContactMasked: '+237 6••• ••45',
+      buyerEmailMasked: 'akamga•••@mail.com',
+      sellerContactMasked: '+237 6••• ••21',
+      pickupWindowLabel: 'Collection ready 1–2 days after drop-off',
+      totalDueXAF: 234900,
+      hubs: SHARED_WIN_HUBS,
+      orderId: 'ORD-20250918-7XKQ',
+      invoiceNo: 'INV-20250918-7XKQ',
+      qrCodeValue: 'ORD-20250918-7XKQ',
+      lastHubId: 'hub_akwa',
+      invoiceGeneratedAt: '2025-09-18T18:35:00Z',
+      paidAt: '2025-09-18T18:29:00Z',
+      pickupSelectedAt: '2025-09-18T18:44:00Z',
+      pickupCode: '7421',
+    },
   },
 ];
 
@@ -218,10 +128,10 @@ export const AUCTION_LISTINGS: AuctionListing[] = [
     timeLeftSec: 3600 * 8, // 8 hours
     watchers: 24,
     seller: {
-      id: 'usr_imp_1',
-      name: 'TechHub Pro Imports',
+      id: 'creator-techplus',
+      name: 'TechPlus Import',
       verified: true,
-      city: 'Douala'
+      city: 'Yaoundé'
     },
     lane: {
       code: 'GZ-DLA-AIR',
@@ -239,10 +149,10 @@ export const AUCTION_LISTINGS: AuctionListing[] = [
     timeLeftSec: 3600 * 16, // 16 hours
     watchers: 18,
     seller: {
-      id: 'usr_imp_2',
-      name: 'Digital Imports CM',
+      id: 'creator-nelly',
+      name: 'Nelly Stores',
       verified: true,
-      city: 'Yaoundé'
+      city: 'Douala'
     },
     lane: {
       code: 'HKG-DLA-AIR',
@@ -260,8 +170,8 @@ export const AUCTION_LISTINGS: AuctionListing[] = [
     timeLeftSec: 3600 * 4, // 4 hours
     watchers: 12,
     seller: {
-      id: 'usr_imp_3',
-      name: 'AudioMax Traders',
+      id: 'creator-home',
+      name: 'Home Essentials',
       verified: false,
       city: 'Douala'
     },
@@ -281,8 +191,8 @@ export const AUCTION_LISTINGS: AuctionListing[] = [
     timeLeftSec: 3600 * 24, // 24 hours
     watchers: 31,
     seller: {
-      id: 'usr_imp_1',
-      name: 'TechHub Pro Imports',
+      id: 'creator-beauty',
+      name: 'Beauty Hub CM',
       verified: true,
       city: 'Douala'
     },
@@ -299,6 +209,13 @@ export const AUCTION_LISTINGS: AuctionListing[] = [
 const BIDS_KEY = 'pl.auctionBids';
 const WATCHLIST_KEY = 'pl.auctionWatchlist';
 const WINS_KEY = 'pl.auctionWins';
+
+export const WINS_UPDATED_EVENT = 'pl:winsUpdated';
+
+const dispatchWinsUpdated = () => {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(WINS_UPDATED_EVENT));
+};
 
 // Demo data getters with localStorage fallback
 const parseStored = <T,>(key: string): { data: T | null; hasValue: boolean } => {
@@ -358,6 +275,7 @@ export const saveWatchlist = (watchlist: WatchlistItem[]): void => {
 export const saveWins = (wins: AuctionWin[]): void => {
   try {
     localStorage.setItem(WINS_KEY, JSON.stringify(wins));
+    dispatchWinsUpdated();
   } catch (error) {
     console.warn('Failed to save wins to localStorage:', error);
   }
@@ -451,11 +369,67 @@ export const addWin = (auctionId: string, finalBid: number): void => {
 export const updateWinStatus = (winId: string, status: AuctionWin['status']): void => {
   const wins = loadWins();
   const winIndex = wins.findIndex(win => win.id === winId);
-  
+
   if (winIndex >= 0) {
     wins[winIndex].status = status;
     saveWins(wins);
   }
+};
+
+const cloneWin = (win: AuctionWin): AuctionWin => ({
+  ...win,
+  payment: win.payment ? { ...win.payment } : undefined,
+  checkout: win.checkout
+    ? { ...win.checkout, hubs: [...win.checkout.hubs] }
+    : undefined,
+  journey: win.journey
+    ? win.journey.map(stage => ({
+        ...stage,
+        highlights: stage.highlights ? [...stage.highlights] : undefined,
+        meta: stage.meta ? stage.meta.map(item => ({ ...item })) : undefined,
+      }))
+    : undefined,
+  logistics: win.logistics
+    ? {
+        ...win.logistics,
+        notes: win.logistics.notes ? [...win.logistics.notes] : undefined,
+      }
+    : undefined,
+  notifications: win.notifications
+    ? win.notifications.map(notification => ({ ...notification }))
+    : undefined,
+  slas: win.slas ? win.slas.map(sla => ({ ...sla })) : undefined,
+  policyNotes: win.policyNotes ? [...win.policyNotes] : undefined,
+});
+
+export const updateWinRecord = (
+  winId: string,
+  updater: (win: AuctionWin) => AuctionWin | void,
+): AuctionWin | null => {
+  const wins = loadWins();
+  const index = wins.findIndex(win => win.id === winId);
+  if (index < 0) return null;
+
+  const draft = cloneWin(wins[index]);
+  const result = updater(draft);
+  const nextWin = (result ?? draft) as AuctionWin;
+  wins[index] = nextWin;
+  saveWins(wins);
+  return nextWin;
+};
+
+export const getWinById = (winId: string): AuctionWin | undefined => {
+  return loadWins().find(win => win.id === winId);
+};
+
+export const findWinByOrderId = (orderId: string): AuctionWin | undefined => {
+  if (!orderId) return undefined;
+  return loadWins().find(win => win.checkout?.orderId === orderId);
+};
+
+export const findWinByInvoiceNo = (invoiceNo: string): AuctionWin | undefined => {
+  if (!invoiceNo) return undefined;
+  return loadWins().find(win => win.checkout?.invoiceNo === invoiceNo);
 };
 
 export const formatTimeLeft = (seconds: number, locale: 'en' | 'fr' = 'en'): string => {

@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { Loader2 } from 'lucide-react';
 
 import { SignInFlow } from '@/components/auth/SignInFlow';
-import { RoleChooser } from '@/components/auth/RoleChooser';
 import { useSession } from '@/context/SessionContext';
 import { useI18n } from '@/context/I18nContext';
 import type { Session } from '@/types';
 import { HomeFeedWithToggle } from '@/components/home/HomeFeedWithToggle';
 import { AccountSheet, languageNames } from '@/components/shell/AccountControls';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ImporterDashboard } from '@/components/importer/ImporterDashboard';
 import { VendorWorkspace } from '@/components/vendor/VendorWorkspace';
 import { Logo } from '@/components/Logo';
@@ -52,6 +55,15 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
     return <VendorWorkspace session={session} />;
   }
 
+  if (session.role === 'merchant') {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-slate-50 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <p className="text-sm font-medium text-foreground/80">{t('merchant.redirecting')}</p>
+      </div>
+    );
+  }
+
   const modeLabel = t('roles.importerBadge');
 
   return (
@@ -66,7 +78,7 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="order-1 flex items-center gap-3">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-border/80 bg-white/80 shadow-soft">
                   <Logo wrapperClassName="h-8 w-8" />
                 </div>
                 <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
@@ -78,6 +90,7 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
               </div>
               <div className="order-3 ml-auto flex items-center gap-2 sm:order-4 sm:ml-0 sm:gap-3">
                 <InstallPwaButton className="hidden rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft sm:inline-flex" />
+                <NotificationBell />
                 <AccountSheet session={session} />
               </div>
             </div>
@@ -105,19 +118,19 @@ const AuthenticatedShell = ({ session }: { session: Session }) => {
 };
 
 const Index = () => {
-  const { session, setSession, updateSession } = useSession();
+  const { session, setSession } = useSession();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!session) return;
+    if (session.role === 'merchant' && !location.pathname.startsWith('/merchant')) {
+      navigate('/merchant', { replace: location.pathname !== '/' });
+    }
+  }, [session, location.pathname, navigate]);
 
   if (!session) {
     return <SignInFlow onAuthenticated={setSession} />;
-  }
-
-  if (!session.hasSelectedRole) {
-    return (
-      <RoleChooser
-        initialRole={session.role}
-        onRoleChosen={role => updateSession(current => ({ ...current, role, hasSelectedRole: true }))}
-      />
-    );
   }
 
   return <AuthenticatedShell session={session} />;

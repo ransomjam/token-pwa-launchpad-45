@@ -144,3 +144,28 @@ html, body {
     color: hsl(var(--color-fg));
   }
 }
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .invoice-print-page {
+    background: #ffffff !important;
+  }
+
+  .invoice-print-container {
+    padding: 0 !important;
+    max-width: 840px !important;
+  }
+
+  #invoice-print-root {
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+  }
+
+  .invoice-hide-print {
+    display: none !important;
+  }
+}

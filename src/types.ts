@@ -74,13 +74,31 @@ export type PickupPoint = {
   phone?: string;
 };
 
+export type VerificationSnapshot = {
+  status: 'unverified' | 'verified';
+  businessName: string;
+  location: string;
+  fullName?: string;
+  dateOfBirth?: string;
+  profession?: string;
+  idCardFrontUrl?: string | null;
+  idCardBackUrl?: string | null;
+  selfieUrl?: string | null;
+};
+
 export type Session = {
   userId: string;
+  personalName: string;
+  businessName: string;
+  email: string;
+  phone: string;
   displayName: string;
   contact: string;
-  role: 'buyer' | 'importer' | 'vendor';
+  role: 'buyer' | 'importer' | 'vendor' | 'merchant';
   hasSelectedRole: boolean;
-  verifiedImporter: boolean;
+  isVerified: boolean;
+  verification?: VerificationSnapshot;
+  avatarUrl?: string | null;
 };
 
 export type OrderDetailResponse = {

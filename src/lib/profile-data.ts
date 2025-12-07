@@ -1,5 +1,6 @@
 import type { PickupPoint } from '@/types';
 import { DEMO_LISTINGS } from './demoMode';
+import { getDemoProfileImage } from './demoProfileImages';
 
 const normaliseSlug = (value: string) =>
   value
@@ -48,6 +49,7 @@ export type BuyerProfile = {
   email: string;
   maskedPhone: string;
   maskedEmail: string;
+  avatarUrl?: string | null;
   defaultPickupId: string;
   pickups: Array<PickupPoint & { note?: string }>;
   deliveryNote?: string;
@@ -88,6 +90,7 @@ export type ImporterProfile = {
   email: string;
   maskedPhone: string;
   maskedEmail: string;
+  avatarUrl?: string | null;
   city: string;
   bio: string;
   verified: boolean;
@@ -161,6 +164,7 @@ export type PublicImporterProfile = {
   storeName: string;
   city: string;
   verified: boolean;
+  avatarUrl?: string | null;
   avatarInitials: string;
   lanes: PublicImporterLane[];
   metrics: PublicImporterMetrics;
@@ -183,6 +187,7 @@ export const demoBuyerProfile: BuyerProfile = {
   email: 'nadege@prolist.africa',
   maskedPhone: '+237 •••• •• ••',
   maskedEmail: 'nadege••@mail.com',
+  avatarUrl: getDemoProfileImage(1),
   defaultPickupId: 'pickup-akwa',
   pickups: [
     {
@@ -245,6 +250,7 @@ export const demoImporterProfile: ImporterProfile = {
   email: 'logistics@nellystores.africa',
   maskedPhone: '+237 •••• •• ••',
   maskedEmail: 'logistics••@nellystores.africa',
+  avatarUrl: getDemoProfileImage(2),
   city: 'Douala',
   bio: 'Premium importer specialising in fast-moving electronics and smart accessories.',
   verified: true,
@@ -326,6 +332,7 @@ export const demoImporterPublicProfile: PublicImporterProfile = {
   storeName: demoImporterProfile.storeName,
   city: demoImporterProfile.city,
   verified: demoImporterProfile.verified,
+  avatarUrl: demoImporterProfile.avatarUrl,
   avatarInitials: 'NS',
   lanes: [
     { id: normaliseSlug('GZ→DLA Air'), label: 'GZ→DLA Air', onTimePct: 93 },
@@ -412,7 +419,7 @@ export const demoImporterPublicProfile: PublicImporterProfile = {
       moqTarget: 25,
     },
   ],
-  shareUrl: 'https://prolist.africa/importers/nelly-stores',
+  shareUrl: 'https://prolist.africa/creator/nelly-stores',
 };
 
 const fallbackMetrics: PublicImporterMetrics = {
@@ -484,6 +491,7 @@ export const loadBuyerProfile = (): BuyerProfile => {
   return {
     ...demoBuyerProfile,
     ...stored,
+    avatarUrl: stored.avatarUrl ?? demoBuyerProfile.avatarUrl,
     pickups: stored.pickups?.length ? stored.pickups : demoBuyerProfile.pickups,
     notifications: {
       ...demoBuyerProfile.notifications,
@@ -512,6 +520,7 @@ export const loadImporterProfile = (): ImporterProfile => {
   return {
     ...demoImporterProfile,
     ...stored,
+    avatarUrl: stored.avatarUrl ?? demoImporterProfile.avatarUrl,
     pickups: stored.pickups?.length ? stored.pickups : demoImporterProfile.pickups,
     notifications: {
       ...demoImporterProfile.notifications,
@@ -608,6 +617,7 @@ export const loadImporterPublicProfile = (importerId?: string): PublicImporterPr
 
   return {
     ...baseProfile,
+    avatarUrl: baseProfile.avatarUrl ?? demoImporterPublicProfile.avatarUrl,
     metrics,
     lanes: Array.from(laneMap.values()),
     categories,

@@ -9,6 +9,8 @@ import { trackEvent } from '@/lib/analytics';
 import { formatTimeLeft } from '@/lib/auctionData';
 import type { AuctionListing } from '@/types/auctions';
 import { useToast } from '@/components/ui/use-toast';
+import { normalizeAuction, shareContent } from '@/lib/unifiedShare';
+import ShareFallbackDialog from '@/components/posts/ShareFallbackDialog';
 
 type AuctionCardProps = {
   auction: AuctionListing;
@@ -21,6 +23,10 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
   const { t, locale } = useI18n();
   const { toast } = useToast();
   const [timeLeft, setTimeLeft] = useState(auction.timeLeftSec);
+  const [fallbackOpen, setFallbackOpen] = useState(false);
+  const [fallbackImageUrl, setFallbackImageUrl] = useState<string | null>(null);
+  const [fallbackCaption, setFallbackCaption] = useState('');
+  const [sharing, setSharing] = useState(false);
 
   const currencyFormatter = new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
     style: 'currency',
@@ -51,39 +57,29 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
   const handleShare = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     trackEvent('auction_share', { auctionId: auction.id });
+    setSharing(true);
 
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
+    const content = normalizeAuction(auction);
 
-    const shareUrl = `${window.location.origin}/auction/${auction.id}`;
-    const message = t('auctions.shareMessage', {
-      title: auction.title,
-      price: currencyFormatter.format(auction.currentBidXAF),
-      url: shareUrl,
-    });
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: auction.title,
-          text: message,
-          url: shareUrl,
-        });
-        return;
-      } catch (error) {
-        // ignore cancellation and attempt clipboard fallback
-      }
-    }
-
-    if (navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(message);
+    await shareContent(content, {
+      onSuccess: () => {
         toast({ description: t('auctions.shareCopied') });
-      } catch (error) {
-        toast({ description: t('auctions.shareFailed'), variant: 'destructive' });
-      }
-    } else {
-      toast({ description: `${t('auctions.shareFallback')} ${shareUrl}` });
-    }
+        setSharing(false);
+      },
+      onError: (error) => {
+        toast({ description: error, variant: 'destructive' });
+        setSharing(false);
+      },
+      onFallback: (blobUrl, caption) => {
+        if (fallbackImageUrl) {
+          URL.revokeObjectURL(fallbackImageUrl);
+        }
+        setFallbackImageUrl(blobUrl);
+        setFallbackCaption(caption);
+        setFallbackOpen(true);
+        setSharing(false);
+      },
+    });
   };
 
   const handleViewDetails = () => {
@@ -224,6 +220,19 @@ export const AuctionCard = ({ auction, onViewDetails, onViewSeller, onPlaceBid }
           </Button>
         </div>
       </div>
+
+      <ShareFallbackDialog
+        open={fallbackOpen}
+        onOpenChange={(open) => {
+          setFallbackOpen(open);
+          if (!open && fallbackImageUrl) {
+            URL.revokeObjectURL(fallbackImageUrl);
+            setFallbackImageUrl(null);
+          }
+        }}
+        imageUrl={fallbackImageUrl}
+        caption={fallbackCaption}
+      />
     </article>
   );
 };

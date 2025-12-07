@@ -17,7 +17,7 @@ const ShareRedirect = ({ context }: ShareRedirectProps) => {
       navigate('/', { replace: true });
       return;
     }
-    const target = context === 'listing' ? `/listings/${id}` : `/importers/${id}/profile`;
+    const target = context === 'listing' ? `/listings/${id}` : `/creator/${id}`;
     navigate({ pathname: target, search: location.search }, { replace: true });
   }, [context, id, location.search, navigate]);
 

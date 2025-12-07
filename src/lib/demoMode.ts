@@ -10,7 +10,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 12, max: 16 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.94, medianDays: 13 },
     moq: { target: 36, committed: 21, lockAt: '2025-10-02T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-fashion', displayName: 'Fashion Forward', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -21,7 +21,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 18, max: 26 },
     lane: { code: 'GZ-DLA-SEA', onTimePct: 0.81, medianDays: 24 },
     moq: { target: 20, committed: 9, lockAt: '2025-10-04T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-home', displayName: 'Home Essentials', verified: false },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -32,7 +32,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 15, max: 21 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.9, medianDays: 17 },
     moq: { target: 28, committed: 14, lockAt: '2025-10-06T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-home', displayName: 'Home Essentials', verified: false },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -43,7 +43,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 20, max: 28 },
     lane: { code: 'GZ-DLA-SEA', onTimePct: 0.79, medianDays: 25 },
     moq: { target: 48, committed: 32, lockAt: '2025-10-08T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-beauty', displayName: 'Beauty Hub CM', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -54,7 +54,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 14, max: 18 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.92, medianDays: 15 },
     moq: { target: 18, committed: 11, lockAt: '2025-10-10T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-techplus', displayName: 'TechPlus Import', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -65,7 +65,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 13, max: 19 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.9, medianDays: 16 },
     moq: { target: 24, committed: 10, lockAt: '2025-10-12T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-techplus', displayName: 'TechPlus Import', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -76,7 +76,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 22, max: 32 },
     lane: { code: 'GZ-DLA-SEA', onTimePct: 0.83, medianDays: 27 },
     moq: { target: 16, committed: 7, lockAt: '2025-10-14T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-home', displayName: 'Home Essentials', verified: false },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -87,7 +87,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 24, max: 34 },
     lane: { code: 'GZ-DLA-SEA', onTimePct: 0.8, medianDays: 29 },
     moq: { target: 22, committed: 15, lockAt: '2025-10-16T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-techplus', displayName: 'TechPlus Import', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -98,7 +98,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 30, max: 42 },
     lane: { code: 'GZ-DLA-SEA', onTimePct: 0.77, medianDays: 36 },
     moq: { target: 12, committed: 5, lockAt: '2025-10-18T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-home', displayName: 'Home Essentials', verified: false },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -109,7 +109,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 11, max: 16 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.91, medianDays: 13 },
     moq: { target: 40, committed: 19, lockAt: '2025-10-20T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-beauty', displayName: 'Beauty Hub CM', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -120,7 +120,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 23, max: 31 },
     lane: { code: 'GZ-DLA-SEA', onTimePct: 0.82, medianDays: 26 },
     moq: { target: 18, committed: 8, lockAt: '2025-10-22T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-home', displayName: 'Home Essentials', verified: false },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -131,7 +131,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 17, max: 24 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.89, medianDays: 18 },
     moq: { target: 26, committed: 12, lockAt: '2025-10-24T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-home', displayName: 'Home Essentials', verified: false },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -142,7 +142,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 21, max: 29 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.9, medianDays: 22 },
     moq: { target: 30, committed: 16, lockAt: '2025-10-26T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-techplus', displayName: 'TechPlus Import', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
   {
@@ -153,7 +153,7 @@ const RAW_DEMO_LISTINGS = [
     etaDays: { min: 16, max: 22 },
     lane: { code: 'GZ-DLA-AIR', onTimePct: 0.93, medianDays: 18 },
     moq: { target: 34, committed: 20, lockAt: '2025-10-28T18:00:00Z' },
-    importer: { id: 'usr_imp_seed', displayName: 'Nelly Stores', verified: true },
+    importer: { id: 'creator-techplus', displayName: 'TechPlus Import', verified: true },
     buyerProtection: { escrow: true, autoRefundOnLate: true },
   },
 ] as const satisfies readonly Omit<ListingSummary, 'category' | 'specs' | 'createdAt'>[];

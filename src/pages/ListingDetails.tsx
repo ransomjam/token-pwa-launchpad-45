@@ -6,7 +6,7 @@ import {
   useState,
   type SyntheticEvent,
 } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -17,9 +17,9 @@ import {
   Clock3,
   Info,
   MapPin,
-  MessageCircle,
   Minus,
   Plus,
+  Share2,
   ShieldCheck,
   Star,
   XCircle,
@@ -33,10 +33,10 @@ import {
   CarouselItem,
   type CarouselApi,
 } from '@/components/ui/carousel';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
 } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -58,11 +58,11 @@ import { useToast } from '@/components/ui/use-toast';
 import ShareSheet from '@/components/share/ShareSheet';
 import { activateDemoMode, DEMO_PICKUPS, getDemoListingById, isDemoActive, primaryDemoListing } from '@/lib/demoMode';
 import { useI18n } from '@/context/I18nContext';
-import { useSession } from '@/context/SessionContext';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { ensureAbsoluteUrl, type ListingShareContent } from '@/lib/share';
 import type { ListingSummary, PickupPoint } from '@/types';
+import { loadImporterPublicProfile } from '@/lib/profile-data';
 
 const laneTone = (pct: number) => {
   if (pct >= 0.9) return 'green' as const;
@@ -147,7 +147,6 @@ const ListingDetails = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { locale } = useI18n();
-  const { clearSession } = useSession();
   const id = params.id;
 
   const [qty, setQty] = useState(1);
@@ -158,16 +157,9 @@ const ListingDetails = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showStickyCta, setShowStickyCta] = useState(false);
-  const [importerModalOpen, setImporterModalOpen] = useState(false);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
   const viewTrackedRef = useRef(false);
-
-  const handleLogout = useCallback(() => {
-    clearSession();
-    toast({ title: 'Logged out', description: 'You can sign in again anytime.' });
-    navigate('/');
-  }, [clearSession, navigate, toast]);
 
   const {
     data: listingData,
@@ -210,6 +202,7 @@ const ListingDetails = () => {
   const listing = shouldUseDemoListing ? fallbackListing : listingData ?? fallbackListing;
   const pickupOptions = shouldUseDemoPickups ? DEMO_PICKUPS : pickupData ?? [];
   const isListingLoading = isLoading && !shouldUseDemoListing;
+  const importerProfile = useMemo(() => loadImporterPublicProfile(listing.importer.id), [listing.importer.id]);
 
   const shareContent = useMemo<ListingShareContent | null>(() => {
     if (!listing) return null;
@@ -371,6 +364,7 @@ const ListingDetails = () => {
   const progressLabel = `${listing.moq.committed}/${listing.moq.target} locked`;
   const lockCaption = `${lockMeta.label} • ${listing.moq.committed}/${listing.moq.target} committed`;
   const subtotalLabel = priceFormatter.format(subtotal);
+  const qtySummaryLabel = qty === 1 ? '1 unit' : `${qty} units`;
   const unitPriceLabel = priceFormatter.format(listing.priceXAF);
   const [origin = '', destination = '', modeRaw = ''] = listing.lane.code.split('-');
   const laneMode = modeRaw.toLowerCase() === 'air' ? 'Air' : 'Sea';
@@ -509,64 +503,67 @@ const ListingDetails = () => {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center rounded-full border border-border bg-muted px-3 py-1">
-                    <button
-                      type="button"
-                      className="rounded-full p-1 disabled:opacity-40"
-                      onClick={() => handleQtyChange(-1)}
-                      disabled={qty <= 1}
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="mx-3 min-w-[2ch] text-center text-base font-semibold">{qty}</span>
-                    <button
-                      type="button"
-                      className="rounded-full p-1 disabled:opacity-40"
-                      onClick={() => handleQtyChange(1)}
-                      disabled={qty >= 5}
-                      aria-label="Increase quantity"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <p className="font-medium text-foreground">Subtotal</p>
-                    <p className="text-muted-foreground">{subtotalLabel}</p>
-                  </div>
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center rounded-full border border-border bg-muted px-3 py-1 shadow-sm">
+                  <button
+                    type="button"
+                    className="rounded-full p-1 disabled:opacity-40"
+                    onClick={() => handleQtyChange(-1)}
+                    disabled={qty <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="mx-3 min-w-[2ch] text-center text-base font-semibold">{qty}</span>
+                  <button
+                    type="button"
+                    className="rounded-full p-1 disabled:opacity-40"
+                    onClick={() => handleQtyChange(1)}
+                    disabled={qty >= 5}
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
+                <div className="min-w-[150px] space-y-1 text-sm">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Subtotal</p>
+                  <p className="text-base font-semibold text-foreground">{subtotalLabel}</p>
+                  <p className="text-xs text-muted-foreground">For {qtySummaryLabel}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-start gap-2 sm:justify-end">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       type="button"
-                      variant="ghost"
-                      className="h-12 w-12 rounded-full border"
-                      aria-label="Share"
+                      variant="outline"
+                      className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-dashed border-border text-sm font-semibold sm:w-12 sm:rounded-full sm:border-solid sm:px-0"
+                      aria-label="Share listing"
                       onClick={() => setShareSheetOpen(true)}
                     >
-                      <MessageCircle className="h-5 w-5" />
+                      <Share2 className="h-5 w-5" />
+                      <span className="sm:hidden">Share</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Share</TooltipContent>
+                  <TooltipContent className="hidden sm:block">Share</TooltipContent>
                 </Tooltip>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 text-primary underline-offset-4 hover:underline"
-                  onClick={handlePickupOpen}
-                >
-                  <MapPin className="h-4 w-4" />
-                  {selectedPickup ? selectedPickup.name : 'Select pickup hub'}
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                <Button className="flex-1 rounded-2xl py-3 text-base font-semibold" onClick={handlePreorder}>
-                  Pre-order
-                </Button>
-              </div>
+            </div>
+            <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex w-full items-center justify-start gap-2 rounded-2xl border-dashed border-border px-4 py-3 font-semibold sm:w-auto sm:border-solid"
+                onClick={handlePickupOpen}
+              >
+                <MapPin className="h-4 w-4 text-primary" />
+                <span>{selectedPickup ? selectedPickup.name : 'Select pickup hub'}</span>
+                <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground sm:ml-2" />
+              </Button>
+              <Button className="w-full rounded-2xl py-3 text-base font-semibold sm:w-auto sm:px-8" onClick={handlePreorder}>
+                Pre-order
+              </Button>
             </div>
           </section>
 
@@ -633,9 +630,12 @@ const ListingDetails = () => {
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-soft">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12 rounded-2xl border">
+                  {importerProfile?.avatarUrl && (
+                    <AvatarImage src={importerProfile.avatarUrl} alt={listing.importer.displayName} />
+                  )}
                   <AvatarFallback className="text-base font-semibold">{listing.importer.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
@@ -647,39 +647,14 @@ const ListingDetails = () => {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">92% on-time · 120 orders</p>
+                  <p className="text-sm text-muted-foreground">
+                    {`${Math.round(importerProfile.metrics.onTimePct)}% on-time · ${importerProfile.metrics.ordersFulfilledLabel} orders`}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Dialog open={importerModalOpen} onOpenChange={setImporterModalOpen}>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="rounded-full bg-primary px-2 font-bold text-white hover:bg-primary/90 hover:text-white"
-                    onClick={() => setImporterModalOpen(true)}
-                  >
-                    View profile
-                  </Button>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>{listing.importer.displayName}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3 text-sm text-muted-foreground">
-                      <p>Trusted importer with 120 fulfilled group buys across electronics and accessories.</p>
-                      <p>Average response under 2 hours. Escrow verified for every pool.</p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full px-3 font-semibold"
-                  onClick={handleLogout}
-                >
-                  Log out
-                </Button>
-              </div>
+              <Button size="sm" variant="secondary" className="rounded-full px-4 font-semibold" asChild>
+                <Link to={`/creator/${listing.importer.id}`}>View profile</Link>
+              </Button>
             </div>
           </section>
         </div>

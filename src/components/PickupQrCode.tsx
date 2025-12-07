@@ -13,7 +13,33 @@ export type PickupQrCodeProps = {
 const quietZone = 4;
 
 export const PickupQrCode = ({ value, size = 240, className, ariaLabel }: PickupQrCodeProps) => {
-  const matrix = useMemo(() => generateQrMatrix(value), [value]);
+  const matrix = useMemo(() => {
+    try {
+      return generateQrMatrix(value);
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.error('Failed to generate QR code for pickup payload', error);
+      }
+      return null;
+    }
+  }, [value]);
+
+  if (!matrix) {
+    return (
+      <div
+        role="img"
+        aria-label={ariaLabel}
+        className={cn(
+          'text-slate-900 dark:text-slate-100 rounded border border-dashed border-slate-300 p-4 text-sm text-center',
+          className,
+        )}
+      >
+        Pickup QR unavailable
+      </div>
+    );
+  }
+
   const dimension = matrix.length + quietZone * 2;
 
   return (

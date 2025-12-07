@@ -123,7 +123,7 @@ export const ListingCard = ({
 
   const handleImporterProfile = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    navigate(`/importers/${listing.importer.id}/profile`);
+    navigate(`/creator/${listing.importer.id}`);
   };
 
   return (

@@ -4,6 +4,9 @@ export type DemoOrderRecord = OrderDetailResponse & {
   listingId: string;
   pickupPointId?: string | null;
   createdAt: string;
+  invoiceNo?: string;
+  paymentStatus?: 'PAID' | 'PENDING';
+  invoiceTotalXAF?: number;
 };
 
 type DemoOrderState = { orders: Record<string, DemoOrderRecord>; activeOrderId?: string };

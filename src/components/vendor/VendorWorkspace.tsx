@@ -5,6 +5,7 @@ import { Logo } from '@/components/Logo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { InstallPwaButton } from '@/components/pwa/InstallPwaButton';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { AccountSheet, languageNames } from '@/components/shell/AccountControls';
 import { trackEvent } from '@/lib/analytics';
 import type { Session } from '@/types';
@@ -83,7 +84,7 @@ export const VendorWorkspace = ({ session }: VendorWorkspaceProps) => {
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="order-1 flex items-center gap-3">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-border/80 bg-white/80 shadow-soft">
                   <Logo wrapperClassName="h-8 w-8" />
                 </div>
                 <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
@@ -107,6 +108,7 @@ export const VendorWorkspace = ({ session }: VendorWorkspaceProps) => {
 
               <div className="order-3 ml-auto flex items-center gap-2 sm:order-4 sm:ml-0 sm:gap-3">
                 <InstallPwaButton className="hidden rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft sm:inline-flex" />
+                <NotificationBell />
                 <AccountSheet session={session} />
               </div>
             </div>

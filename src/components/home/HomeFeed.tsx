@@ -2,12 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
-  Check,
   Clock3,
   Filter,
-  Grid2X2,
   Leaf,
-  ListFilter,
   Loader2,
   Plane,
   RefreshCw,
@@ -36,11 +33,13 @@ import { ListingCard } from './ListingCard';
 import type { ListingSummary, Session } from '@/types';
 import { trackEvent } from '@/lib/analytics';
 import { AccountSheet } from '@/components/shell/AccountControls';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { Logo } from '@/components/Logo';
 import { useIntersectionOnce } from '@/hooks/use-intersection-once';
 import { cn } from '@/lib/utils';
 import { activateDemoMode, DEMO_LISTINGS, isDemoActive } from '@/lib/demoMode';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Logo } from '@/components/Logo';
+import { normalizeListing, shareContent } from '@/lib/unifiedShare';
+import ShareFallbackDialog from '@/components/posts/ShareFallbackDialog';
 
 const RECENT_KEY = 'pl.recentListings';
 const RECENT_SEARCH_KEY = 'pl.recentSearches';
@@ -372,12 +371,12 @@ const SearchOverlay = ({
 export const HomeFeed = ({ session }: HomeFeedProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchDraft, setSearchDraft] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORY);
-  const [sort, setSort] = useState<SortOption>('relevance');
+  const [sort] = useState<SortOption>('relevance');
   const [filters, setFilters] = useState<FilterState>({
     laneMode: null,
     etaRange: [0, 0],
@@ -387,8 +386,6 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   });
   const [filterDraft, setFilterDraft] = useState<FilterState | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sortMenuOpen, setSortMenuOpen] = useState(false);
-  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [bounds, setBounds] = useState<Bounds>({ eta: [0, 0], price: [0, 0] });
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -398,22 +395,15 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [demoActive, setDemoActive] = useState(() => isDemoActive);
+  const [fallbackOpen, setFallbackOpen] = useState(false);
+  const [fallbackImageUrl, setFallbackImageUrl] = useState<string | null>(null);
+  const [fallbackCaption, setFallbackCaption] = useState('');
 
   const hasInitializedFilters = useRef(false);
   const pullDistanceRef = useRef(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
   const infiniteRef = useRef<HTMLDivElement | null>(null);
-
-  const sortLabels = useMemo<Record<SortOption, string>>(
-    () => ({
-      relevance: t('home.sort.relevance'),
-      endingSoon: t('home.sort.endingSoon'),
-      priceLowHigh: t('home.sort.priceLowHigh'),
-      priceHighLow: t('home.sort.priceHighLow'),
-    }),
-    [t, locale],
-  );
 
   const formatLockCountdown = useCallback(
     (iso: string) => {
@@ -576,11 +566,6 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     };
   }, [isRefreshing, refetch]);
 
-  const categories = useMemo(() => {
-    const unique = new Set(allListings.map(item => item.category));
-    return [ALL_CATEGORY, ...Array.from(unique)];
-  }, [allListings]);
-
   const updateRecent = useCallback((id: string) => {
     setRecentIds(prev => {
       const next = [id, ...prev.filter(item => item !== id)].slice(0, 6);
@@ -722,30 +707,27 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
   }, [navigate, updateRecent]);
 
   const handleShare = useCallback(async (listing: ListingSummary) => {
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
-    const shareUrl = `${window.location.origin}/listings/${listing.id}`;
     trackEvent('share_click', { id: listing.id, channel: 'whatsapp' });
-    const message = `Check this preorder: ${listing.title} – ${formatPrice(listing.priceXAF)}\n${shareUrl}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: listing.title, text: message, url: shareUrl });
-        toast({ description: t('home.shareOpened') });
-        return;
-      } catch (error) {
-        // ignore cancellation and fallback to clipboard
-      }
-    }
-    if (navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(message);
+
+    const content = normalizeListing(listing);
+
+    await shareContent(content, {
+      onSuccess: () => {
         toast({ description: t('home.shareCopied') });
-      } catch (error) {
-        toast({ description: t('home.shareFailed'), variant: 'destructive' });
-      }
-    } else {
-      toast({ description: `${t('home.shareFallback')} ${shareUrl}` });
-    }
-  }, [formatPrice, t, toast]);
+      },
+      onError: (error) => {
+        toast({ description: error, variant: 'destructive' });
+      },
+      onFallback: (blobUrl, caption) => {
+        if (fallbackImageUrl) {
+          URL.revokeObjectURL(fallbackImageUrl);
+        }
+        setFallbackImageUrl(blobUrl);
+        setFallbackCaption(caption);
+        setFallbackOpen(true);
+      },
+    });
+  }, [t, toast, fallbackImageUrl]);
 
   const handleCardView = useCallback((id: string) => {
     trackEvent('listing_card_view', { id });
@@ -878,27 +860,6 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     return pills;
   }, [bounds.eta, bounds.price, filters, formatPrice, selectedCategory, t]);
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filters.laneMode) count += 1;
-    if (filters.greenLanesOnly) count += 1;
-    if (filters.verifiedOnly) count += 1;
-    if (hasInitializedFilters.current) {
-      if (filters.etaRange[0] !== bounds.eta[0] || filters.etaRange[1] !== bounds.eta[1]) {
-        count += 1;
-      }
-      if (filters.priceRange[0] !== bounds.price[0] || filters.priceRange[1] !== bounds.price[1]) {
-        count += 1;
-      }
-    }
-    return count;
-  }, [bounds.eta, bounds.price, filters]);
-
-  const filterLabel = useMemo(
-    () => (activeFilterCount > 0 ? `${t('home.filterCta')} · ${activeFilterCount}` : t('home.filterCta')),
-    [activeFilterCount, t],
-  );
-
   const getEtaLabel = useCallback(
     (listing: ListingSummary) => t('home.etaChip', { min: listing.etaDays.min, max: listing.etaDays.max }),
     [t],
@@ -932,11 +893,6 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
     handleCardOpen(listing, normalizedPosition);
   };
 
-  const handleSortChange = (next: SortOption) => {
-    setSort(next);
-    trackEvent('sort_change', { sort: next });
-  };
-
   const hasResults = filteredListings.length > 0;
 
   return (
@@ -950,123 +906,18 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
         >
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-              <div className="order-1 flex items-center gap-3">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-border/80 bg-white/80 shadow-soft">
                   <Logo wrapperClassName="h-8 w-8" />
                 </div>
-                <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
-                {PREVIEW_BADGE_VISIBLE && (
-                  <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                    {t('common.preview')}
-                  </Badge>
-                )}
-              </div>
-              <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
                 <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      'inline-flex h-11 items-center gap-2 rounded-full border border-border/70 bg-white px-4 text-sm font-semibold text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40',
-                      activeFilterCount > 0 ? 'border-primary bg-primary/15 text-primary' : '',
-                    )}
-                    onClick={() => handleFilterOpen(true)}
-                    aria-label={filterLabel}
-                  >
-                    <Filter className="h-4 w-4" />
-                    <span className="hidden sm:inline">{filterLabel}</span>
-                  </Button>
-                  <Popover open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
-                        aria-label={t('home.sortMenu')}
-                        aria-expanded={sortMenuOpen}
-                      >
-                        <ListFilter className="h-5 w-5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-56 rounded-3xl border border-border bg-card/95 p-3 shadow-soft backdrop-blur">
-                      <div className="space-y-2">
-                        <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {t('home.sortMenu')}
-                        </p>
-                        <div className="flex flex-col gap-2">
-                          {(Object.keys(sortLabels) as SortOption[]).map(option => (
-                            <button
-                              key={option}
-                              type="button"
-                              onClick={() => {
-                                handleSortChange(option);
-                                setSortMenuOpen(false);
-                              }}
-                              className={cn(
-                                'flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm font-semibold transition-colors',
-                                option === sort
-                                  ? 'border-primary bg-primary text-primary-foreground shadow-soft'
-                                  : 'border-border bg-card text-muted-foreground hover:border-primary/40',
-                              )}
-                              aria-pressed={option === sort}
-                            >
-                              <span className="truncate">{sortLabels[option]}</span>
-                              {option === sort && <Check className="h-4 w-4" />}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  <Popover open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/90 text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary"
-                        aria-label={t('home.categoriesMenu')}
-                        aria-expanded={categoryMenuOpen}
-                      >
-                        <Grid2X2 className="h-5 w-5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-64 rounded-3xl border border-border bg-card/95 p-3 shadow-soft backdrop-blur">
-                      <div className="space-y-2">
-                        <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {t('home.categoriesMenu')}
-                        </p>
-                        <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                          {categories.map(category => (
-                            <button
-                              key={category}
-                              type="button"
-                              onClick={() => {
-                                setSelectedCategory(category);
-                                trackEvent('category_chip_click', { category });
-                                setCategoryMenuOpen(false);
-                              }}
-                              className={cn(
-                                'flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm font-semibold transition-colors',
-                                selectedCategory === category
-                                  ? 'border-primary bg-primary text-primary-foreground shadow-soft'
-                                  : 'border-border bg-card text-muted-foreground hover:border-primary/40',
-                              )}
-                              aria-pressed={selectedCategory === category}
-                            >
-                              <span className="truncate">
-                                {category === ALL_CATEGORY ? t('home.categoriesAll') : category}
-                              </span>
-                              {selectedCategory === category && <Check className="h-4 w-4" />}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
+                  {PREVIEW_BADGE_VISIBLE && (
+                    <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                      {t('common.preview')}
+                    </Badge>
+                  )}
                 </div>
-                <AccountSheet session={session} />
               </div>
               <button
                 type="button"
@@ -1075,30 +926,25 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
                   setSearchOpen(true);
                   trackEvent('search_open');
                 }}
-                className="group order-3 flex h-12 w-full flex-1 items-center gap-3 rounded-full border border-border/70 bg-white px-4 text-left text-sm text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:order-2 sm:min-w-[260px]"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-border/70 bg-white text-muted-foreground shadow-soft transition-all hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={t('home.searchPlaceholder')}
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-teal/15 to-blue/20 text-primary shadow-inner">
-                  <Search className="h-4 w-4" />
-                </span>
-                <span className="flex-1 truncate font-medium text-foreground/70 group-hover:text-foreground">
-                  {searchTerm ? searchTerm : t('home.searchPlaceholder')}
-                </span>
-                {searchTerm && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 rounded-full px-4 text-xs font-semibold"
-                    onClick={event => {
-                      event.stopPropagation();
-                      setSearchTerm('');
-                      setSearchDraft('');
-                    }}
-                  >
-                    {t('home.clear')}
-                  </Button>
-                )}
+                <Search className="h-5 w-5" />
               </button>
+              <div className="ml-auto flex items-center gap-2 sm:gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-11 w-11 rounded-xl border border-border/80 bg-white/80 text-foreground shadow-soft transition hover:border-primary/50 hover:text-primary"
+                  aria-label={t('home.filterTitle')}
+                  onClick={() => handleFilterOpen(true)}
+                >
+                  <Filter className="h-4 w-4" />
+                </Button>
+                <NotificationBell />
+                <AccountSheet session={session} />
+              </div>
             </div>
 
             {filterPills.length > 0 && (
@@ -1423,6 +1269,19 @@ export const HomeFeed = ({ session }: HomeFeedProps) => {
       </main>
     </div>
     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white/70 via-white/30 to-transparent" />
+
+    <ShareFallbackDialog
+      open={fallbackOpen}
+      onOpenChange={(open) => {
+        setFallbackOpen(open);
+        if (!open && fallbackImageUrl) {
+          URL.revokeObjectURL(fallbackImageUrl);
+          setFallbackImageUrl(null);
+        }
+      }}
+      imageUrl={fallbackImageUrl}
+      caption={fallbackCaption}
+    />
   </div>
 );
 };

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, TrendingUp } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, Clock, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/context/I18nContext';
@@ -49,14 +49,14 @@ const ProfileBids = () => {
   const handleViewSeller = (sellerId?: string) => {
     if (!sellerId) return;
     trackEvent('profile_bid_seller_view', { sellerId });
-    navigate(`/seller/${sellerId}`);
+    navigate(`/creator/${sellerId}`);
   };
 
   return (
     <main className="min-h-dvh bg-muted/30">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pb-16 pt-6 sm:px-6">
         <header className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -70,13 +70,22 @@ const ProfileBids = () => {
               <h1 className="text-lg font-semibold text-foreground">{t('profile.bids.title')}</h1>
               <p className="text-sm text-muted-foreground">{t('profile.bids.subtitle')}</p>
             </div>
-            {PREVIEW_BADGE_VISIBLE ? (
-              <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
-                {t('common.preview')}
-              </Badge>
-            ) : (
-              <div className="w-10" aria-hidden />
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full border border-border/70 text-muted-foreground transition hover:border-primary/60 hover:text-primary"
+                onClick={() => navigate('/account/switch-role')}
+              >
+                <ArrowLeftRight className="h-5 w-5" />
+                <span className="sr-only">{t('roles.switchTitle')}</span>
+              </Button>
+              {PREVIEW_BADGE_VISIBLE ? (
+                <Badge variant="outline" className="rounded-full border-dashed px-2.5 py-0.5 text-[11px] text-muted-foreground">
+                  {t('common.preview')}
+                </Badge>
+              ) : null}
+            </div>
           </div>
           <AppNav className="justify-center" />
         </header>

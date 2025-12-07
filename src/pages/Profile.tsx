@@ -25,7 +25,7 @@ import { useSession } from '@/context/SessionContext';
 import { useI18n } from '@/context/I18nContext';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -63,6 +63,7 @@ import { getDemoListingById } from '@/lib/demoMode';
 import type { OrderStatus } from '@/types';
 import {
   AlertCircle,
+  ArrowLeftRight,
   ArrowRight,
   ArrowUpRight,
   BadgeCheck,
@@ -92,10 +93,11 @@ import {
 } from 'lucide-react';
 import { LanguageToggle } from '@/components/shell/AccountControls';
 import { loadBids, loadWatchlist, loadWins } from '@/lib/auctionData';
+import { VerificationDialog, type VerificationPayload } from '@/components/verification/VerificationDialog';
 
 type EditState =
   | {
-      mode: 'buyer' | 'importer' | 'vendor';
+      mode: 'buyer' | 'importer' | 'vendor' | 'merchant';
       field:
         | 'name'
         | 'phone'
@@ -112,7 +114,7 @@ type EditState =
       type: 'text' | 'textarea';
     }
   | {
-      mode: 'buyer' | 'importer' | 'vendor';
+      mode: 'buyer' | 'importer' | 'vendor' | 'merchant';
       field: 'defaultPickup';
       label: string;
       type: 'pickup';
@@ -131,7 +133,7 @@ const SectionCard = ({
 }) => (
   <AccordionItem
     value={value}
-    className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-soft"
+    className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-background/95 via-card/95 to-card/90 shadow-card backdrop-blur"
   >
     <AccordionTrigger className="px-5 py-4 text-left text-base font-semibold text-foreground">
       <div className="flex flex-col gap-1 text-left">
@@ -168,7 +170,7 @@ const InfoRow = ({
       type={interactive ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'w-full rounded-2xl border border-border/70 bg-card/80 px-4 py-3 text-left shadow-soft transition-all',
+        'w-full rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/80 px-4 py-3 text-left shadow-soft transition-all backdrop-blur',
         interactive
           ? 'hover:-translate-y-0.5 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px]'
           : 'cursor-default',
@@ -191,26 +193,16 @@ const InfoRow = ({
   );
 };
 
-type SummaryAccent = 'primary' | 'teal' | 'ocean';
-
-const summaryAccentClasses: Record<SummaryAccent, string> = {
-  primary: 'from-primary/25 via-teal/15 to-blue/25',
-  teal: 'from-teal/25 via-blue/15 to-ocean/25',
-  ocean: 'from-blue/25 via-ocean/15 to-primary/25',
-};
-
 type SummaryTileProps = {
   label: string;
-  hint: string;
-  count: string;
+  count?: string | null;
   onClick?: () => void;
-  accent: SummaryAccent;
   badge?: string | null;
 };
 
 type SummaryTileConfig = SummaryTileProps & { key: string };
 
-const SummaryTile = ({ label, hint, count, onClick, accent, badge }: SummaryTileProps) => {
+const SummaryTile = ({ label, count, onClick, badge }: SummaryTileProps) => {
   const interactive = Boolean(onClick);
   const Wrapper = interactive ? 'button' : 'div';
 
@@ -219,30 +211,21 @@ const SummaryTile = ({ label, hint, count, onClick, accent, badge }: SummaryTile
       type={interactive ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border border-white/50 bg-card/95 p-[1px] text-left shadow-soft transition-all',
+        'group relative flex h-full flex-col justify-between gap-2 overflow-hidden rounded-2xl border border-white/10 bg-card/95 px-3 py-3 text-left shadow-card transition-all backdrop-blur',
         interactive
           ? 'hover:-translate-y-0.5 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45 active:translate-y-[1px]'
           : 'cursor-default',
       )}
     >
-      <span
-        className={cn(
-          'pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br opacity-80 transition-opacity duration-300 group-hover:opacity-100',
-          summaryAccentClasses[accent],
-        )}
-      />
-      <div className="relative flex h-full flex-col gap-2 rounded-[18px] bg-card/95 px-4 py-3 backdrop-blur-sm">
-        <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/90">
-          <span className="truncate">{label}</span>
-          {badge ? (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm">
-              {badge}
-            </span>
-          ) : null}
-        </div>
-        <span className="text-xl font-semibold text-foreground">{count}</span>
-        <p className="text-[11px] leading-snug text-muted-foreground/90">{hint}</p>
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-sm font-semibold text-foreground">{label}</span>
+        {badge ? (
+          <span className="rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary shadow-sm">
+            {badge}
+          </span>
+        ) : null}
       </div>
+      {count ? <span className="text-lg font-semibold tracking-tight text-foreground">{count}</span> : null}
     </Wrapper>
   );
 };
@@ -270,25 +253,25 @@ const QuickActionButton = ({
       onClick={onClick}
       disabled={!interactive}
       className={cn(
-        'group relative isolate flex h-full flex-col overflow-hidden rounded-[28px] border border-white/40 bg-gradient-to-br from-primary/12 via-teal/10 to-blue/12 p-[1px] text-left shadow-soft transition-all',
+        'group relative isolate flex h-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-background/95 via-card/95 to-card/90 p-[1px] text-left shadow-soft transition-all backdrop-blur',
         interactive
           ? 'hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:translate-y-[1px]'
           : 'cursor-default opacity-80',
       )}
     >
       <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        <span className="absolute -top-20 right-0 h-40 w-40 rounded-full bg-primary/25 blur-3xl" />
-        <span className="absolute -bottom-24 left-4 h-44 w-44 rounded-full bg-blue/20 blur-3xl" />
+        <span className="absolute -top-24 right-0 h-44 w-44 rounded-full bg-primary/25 blur-3xl" />
+        <span className="absolute -bottom-28 left-6 h-52 w-52 rounded-full bg-blue/20 blur-3xl" />
       </span>
-      <div className="relative flex h-full flex-col justify-between gap-6 rounded-[26px] bg-card/95 px-5 py-5 backdrop-blur-sm">
+      <div className="relative flex h-full flex-col justify-between gap-6 rounded-[26px] bg-card/90 px-5 py-5 backdrop-blur">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <span
               className={cn(
-                'flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 via-teal/15 to-blue/20 text-primary shadow-soft transition-colors duration-300',
+                'flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br shadow-soft transition-all duration-300',
                 muted
                   ? 'from-muted via-muted to-muted text-muted-foreground'
-                  : 'group-hover:from-primary group-hover:via-teal group-hover:to-blue group-hover:text-primary-foreground',
+                  : 'from-primary via-teal to-blue text-primary-foreground group-hover:brightness-110 group-hover:shadow-card',
               )}
             >
               <Icon className="h-5 w-5" />
@@ -296,7 +279,7 @@ const QuickActionButton = ({
             {badge ? (
               <Badge
                 variant="outline"
-                className="rounded-full border-primary/40 bg-primary/10 px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary"
+                className="rounded-full border-primary/40 bg-primary/15 px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary"
               >
                 {badge}
               </Badge>
@@ -332,6 +315,9 @@ type OrderSummary = {
   etaValue?: number | OrderEtaCustomKey;
   pickupHub: string;
   createdAt: string;
+  primaryAction?: 'invoice' | 'order';
+  invoiceNo?: string;
+  paymentStatus?: 'PAID' | 'PENDING';
 };
 
 const FALLBACK_ORDERS: OrderSummary[] = [
@@ -346,6 +332,7 @@ const FALLBACK_ORDERS: OrderSummary[] = [
     etaValue: 3,
     pickupHub: 'Akwa Pickup Hub',
     createdAt: '2025-07-18T09:00:00Z',
+    primaryAction: 'order',
   },
   {
     id: 'demo-order-2',
@@ -357,6 +344,7 @@ const FALLBACK_ORDERS: OrderSummary[] = [
     etaType: 'ready',
     pickupHub: 'Biyem-Assi Hub',
     createdAt: '2025-07-12T09:00:00Z',
+    primaryAction: 'order',
   },
   {
     id: 'demo-order-3',
@@ -368,6 +356,7 @@ const FALLBACK_ORDERS: OrderSummary[] = [
     etaType: 'late',
     pickupHub: 'Akwa Pickup Hub',
     createdAt: '2025-07-05T09:00:00Z',
+    primaryAction: 'order',
   },
 ];
 
@@ -419,10 +408,40 @@ const computeStepProgress = (steps: VerificationStep[]) => {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { session } = useSession();
+  const { session, clearSession, updateSession } = useSession();
+  const [verificationOpen, setVerificationOpen] = useState(false);
+
+  if (!session) {
+    return null;
+  }
+
+  const handleSignOut = () => {
+    clearSession();
+    navigate('/');
+  };
+  const handleVerificationComplete = (payload: VerificationPayload) => {
+    updateSession(current => ({
+      ...current,
+      businessName: payload.businessName,
+      isVerified: true,
+      verification: {
+        status: 'verified',
+        ...payload,
+      },
+    }));
+    setImporterProfile(prev =>
+      prev
+        ? {
+            ...prev,
+            verified: true,
+            storeName: payload.businessName,
+          }
+        : prev,
+    );
+  };
   const { t, locale } = useI18n();
 
-  const mode: 'buyer' | 'importer' | 'vendor' = session?.role ?? 'buyer';
+  const mode: 'buyer' | 'importer' | 'vendor' | 'merchant' = session.role;
   const isOnline = useNetworkStatus();
 
   const [buyerProfile, setBuyerProfile] = useState<BuyerProfile | null>(null);
@@ -443,6 +462,13 @@ const Profile = () => {
 
   const activeBuyer = buyerProfile ?? demoBuyerProfile;
   const activeImporter = importerProfile ?? demoImporterProfile;
+
+  const personalName = session.personalName || (mode === 'buyer' ? activeBuyer.name : activeImporter.contactName);
+  const businessName = session.businessName || (mode === 'buyer' ? activeBuyer.name : activeImporter.storeName);
+  const contactInfo = {
+    phone: session.phone || (mode === 'buyer' ? activeBuyer.phone : activeImporter.phone),
+    email: session.email || (mode === 'buyer' ? activeBuyer.email : activeImporter.email),
+  };
 
   const bidsCount = useMemo(() => loadBids().length, []);
   const watchlistCount = useMemo(() => loadWatchlist().length, []);
@@ -465,42 +491,70 @@ const Profile = () => {
     navigate('/profile/wins');
   }, [navigate]);
 
-  const auctionTiles = useMemo<SummaryTileConfig[]>(
+  const openMyPosts = useCallback(() => {
+    trackEvent('profile_nav_posts');
+    navigate('/user/posts');
+  }, [navigate]);
+
+  const openDeals = useCallback(() => {
+    trackEvent('profile_nav_deals');
+    navigate('/deals');
+  }, [navigate]);
+
+  const openInvoices = useCallback(() => {
+    trackEvent('profile_nav_invoices');
+    navigate('/buyers/profile/invoices');
+  }, [navigate]);
+
+  const summaryTiles = useMemo<SummaryTileConfig[]>(
     () => [
       {
-        key: 'bids',
-        label: t('profile.bids.title'),
-        hint: t('profile.bids.subtitle'),
-        count: numberFormatter.format(bidsCount),
-        onClick: openBids,
-        accent: 'teal',
+        key: 'posts',
+        label: t('profile.cards.posts'),
+        onClick: openMyPosts,
       },
       {
-        key: 'watchlist',
-        label: t('profile.watchlist.title'),
-        hint: t('profile.watchlist.subtitle'),
-        count: numberFormatter.format(watchlistCount),
-        onClick: openWatchlist,
-        accent: 'ocean',
+        key: 'bids',
+        label: t('profile.cards.bids'),
+        count: numberFormatter.format(bidsCount),
+        onClick: openBids,
+      },
+      {
+        key: 'deals',
+        label: t('profile.cards.deals'),
+        onClick: openDeals,
       },
       {
         key: 'wins',
-        label: t('profile.wins.title'),
-        hint: t('profile.wins.subtitle'),
+        label: t('profile.cards.wins'),
         count: numberFormatter.format(winsCount),
         onClick: openWins,
-        accent: 'primary',
       },
       {
-        key: 'points',
-        label: t('profile.points.title'),
-        hint: t('profile.points.subtitle'),
-        count: t('profile.points.placeholder'),
-        accent: 'primary',
-        badge: t('profile.points.badge'),
+        key: 'invoices',
+        label: t('profile.cards.invoices'),
+        onClick: openInvoices,
+      },
+      {
+        key: 'watchlist',
+        label: t('profile.cards.watchlist'),
+        count: numberFormatter.format(watchlistCount),
+        onClick: openWatchlist,
       },
     ],
-    [bidsCount, numberFormatter, openBids, openWatchlist, openWins, t, watchlistCount, winsCount],
+    [
+      bidsCount,
+      numberFormatter,
+      openBids,
+      openDeals,
+      openInvoices,
+      openMyPosts,
+      openWatchlist,
+      openWins,
+      t,
+      watchlistCount,
+      winsCount,
+    ],
   );
 
   const mapDemoOrderToSummary = useCallback(
@@ -513,6 +567,8 @@ const Profile = () => {
     const image = listingMeta?.images?.[0] ?? '/demo/blue-airforce-shoes.jfif';
     const pickupHub = order.pickupPoint?.name ?? listingMeta?.importer?.displayName ?? activeBuyer.pickups[0]?.name ?? '';
     const status = normaliseOrderStatus(order.status);
+    const primaryAction: OrderSummary['primaryAction'] =
+      order.paymentStatus === 'PAID' && order.invoiceNo ? 'invoice' : 'order';
 
     let etaType: OrderSummary['etaType'];
     let etaValue: OrderSummary['etaValue'];
@@ -549,6 +605,9 @@ const Profile = () => {
         etaValue,
         pickupHub,
         createdAt: order.createdAt ?? new Date().toISOString(),
+        primaryAction,
+        invoiceNo: order.invoiceNo ?? undefined,
+        paymentStatus: order.paymentStatus ?? undefined,
       };
     },
     [activeBuyer.pickups, t],
@@ -583,19 +642,20 @@ const Profile = () => {
     setStoredOrders(demoOrders.map(mapDemoOrderToSummary));
   }, [mode, mapDemoOrderToSummary]);
 
-  const maskedContact = useMemo(() => {
-    if (mode === 'buyer') {
-      return `${activeBuyer.maskedPhone} • ${activeBuyer.maskedEmail}`;
-    }
-    return `${activeImporter.maskedPhone} • ${activeImporter.maskedEmail}`;
-  }, [mode, activeBuyer, activeImporter]);
+  const contactDisplay = contactInfo;
 
-  const headerName = useMemo(() => {
+  const headerName = personalName;
+
+  const sessionAvatarUrl = session?.avatarUrl ?? null;
+  const buyerAvatar = activeBuyer.avatarUrl ?? null;
+  const importerAvatar = activeImporter.avatarUrl ?? null;
+
+  const avatarUrl = useMemo(() => {
     if (mode === 'buyer') {
-      return activeBuyer.name || session?.displayName || demoBuyerProfile.name;
+      return buyerAvatar ?? sessionAvatarUrl;
     }
-    return activeImporter.storeName || session?.displayName || demoImporterProfile.storeName;
-  }, [mode, activeBuyer, activeImporter, session]);
+    return importerAvatar ?? sessionAvatarUrl;
+  }, [mode, buyerAvatar, importerAvatar, sessionAvatarUrl]);
 
   const currencyFormatter = useMemo(
     () =>
@@ -794,11 +854,24 @@ const Profile = () => {
     }
   }, [activeFlow, activeBuyer.defaultPickupId, activeBuyer.payments.preferredWallet]);
 
-  const handleOpenOrder = (orderId: string) => {
-    closeQuickFlow();
-    trackEvent('profile_order_open', { orderId });
-    navigate(`/order/${orderId}`);
-  };
+  const handleOpenOrder = useCallback(
+    (orderId: string) => {
+      const summary = orders.find(order => order.id === orderId);
+      const isInvoice = summary?.primaryAction === 'invoice' && Boolean(summary?.invoiceNo);
+      closeQuickFlow();
+      trackEvent('profile_order_open', {
+        orderId,
+        target: isInvoice ? 'invoice' : 'order',
+        invoiceNo: summary?.invoiceNo ?? null,
+      });
+      if (isInvoice && summary?.invoiceNo) {
+        navigate(`/invoice/${summary.invoiceNo}`);
+        return;
+      }
+      navigate(`/order/${orderId}`);
+    },
+    [closeQuickFlow, navigate, orders],
+  );
 
   const handleConfirmPickup = () => {
     if (!pendingPickupId) {
@@ -1144,71 +1217,148 @@ const Profile = () => {
   const verificationProgress = computeStepProgress(activeImporter.verification.steps);
 
   return (
-    <main className="min-h-dvh bg-muted/30">
-      <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-6 px-4 pb-16 pt-6 sm:px-6">
-        <header className="space-y-4">
-          <div className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-soft">
-            <div className="flex items-start gap-4">
-              <Avatar className="h-14 w-14 rounded-2xl border border-border/60 shadow-soft">
-                <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">{headerName}</h1>
-                  <Badge
-                    variant="outline"
-                    className="rounded-full border-primary/50 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
+    <>
+      <main className="min-h-dvh bg-gradient-to-b from-background via-muted/20 to-background">
+        <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-6 px-4 pb-16 pt-6 sm:px-6">
+          <header className="space-y-4">
+          <div
+            className={cn(
+              'rounded-3xl border border-white/20 bg-gradient-to-br from-primary via-blue to-ocean p-6 text-white shadow-card backdrop-blur'
+            )}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-14 w-14 rounded-2xl border border-white/10 shadow-soft">
+                  {avatarUrl ? <AvatarImage src={avatarUrl} alt={headerName} /> : null}
+                  <AvatarFallback
+                    className={cn(
+                      'bg-primary/15 text-lg font-semibold text-white'
+                    )}
                   >
-                    {mode === 'buyer' ? t('roles.buyerBadge') : t('roles.importerBadge')}
-                  </Badge>
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1
+                      className={cn(
+                        'text-2xl font-semibold tracking-tight text-white',
+                      )}
+                    >
+                      {headerName}
+                    </h1>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'rounded-full px-3 py-1 text-xs font-semibold',
+                        session.isVerified
+                          ? 'border-emerald-300/70 bg-emerald-400/20 text-white'
+                          : 'border-amber-300/70 bg-amber-200/20 text-white',
+                      )}
+                    >
+                      {session.isVerified ? t('profile.header.verified') : 'Verification required'}
+                    </Badge>
+                  </div>
+                  <div
+                    className={cn(
+                      'flex flex-wrap items-center gap-2 text-sm text-white/80',
+                    )}
+                  >
+                    <span className="font-semibold">{businessName}</span>
+                  </div>
+                  <div className="space-y-1 text-sm text-white/90">
+                    <p className="font-semibold text-white">{contactDisplay.phone}</p>
+                    <p className="text-white/80">{contactDisplay.email}</p>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{maskedContact}</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {!session.isVerified && (
+                  <Button
+                    className={cn(
+                      'items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-primary shadow-soft transition hover:bg-white/90',
+                    )}
+                    onClick={() => setVerificationOpen(true)}
+                  >
+                    Get verified
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'flex h-10 items-center justify-center gap-2 rounded-full border-white/40 bg-white/15 px-4 text-sm font-semibold text-white shadow-card backdrop-blur transition hover:border-white/60 hover:bg-white/25 hover:text-white focus-visible:ring-white/40'
+                  )}
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>{t('common.signOut')}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    'flex h-10 items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 text-sm font-semibold text-white shadow-card transition hover:bg-white/20'
+                  )}
+                  onClick={() => navigate('/account/switch-role')}
+                >
+                  <ArrowLeftRight className="h-5 w-5" />
+                  <span className="sr-only">{t('roles.switchTitle')}</span>
+                </Button>
+                <Badge
+                  variant="outline"
+                  className="flex h-10 items-center rounded-full border-white/40 bg-white/15 px-4 text-sm font-semibold text-white shadow-soft backdrop-blur"
+                >
+                  {mode === 'buyer'
+                    ? t('roles.buyerBadge')
+                    : mode === 'importer'
+                      ? t('roles.importerBadge')
+                      : mode === 'vendor'
+                        ? t('roles.vendorBadge')
+                        : t('roles.merchantBadge')}
+                </Badge>
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {mode === 'buyer' ? (
-                <Badge className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-emerald-50 shadow-soft">
-                  <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                  {t('profile.header.escrow')}
+            {mode === 'importer' ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'rounded-full px-3 py-1 text-xs font-semibold',
+                    session.isVerified
+                      ? 'border-emerald-300/60 bg-emerald-400/20 text-white'
+                      : 'border-amber-300/60 bg-amber-200/20 text-white',
+                  )}
+                >
+                  <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                  {session.isVerified ? t('profile.header.verified') : t('profile.header.verificationInProgress')}
                 </Badge>
-              ) : (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className="rounded-full border-emerald-400 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
-                  >
-                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                    {activeImporter.verified ? t('profile.header.verified') : t('profile.header.verificationInProgress')}
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="rounded-full border-border/70 bg-card px-3 py-1 text-xs font-semibold text-foreground shadow-soft"
-                  >
-                    <Sparkles className="mr-1 h-3.5 w-3.5 text-amber-500" />
-                    {t('profile.header.score', { value: activeImporter.score })}
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="rounded-full border-border/70 bg-card px-3 py-1 text-xs font-semibold text-foreground shadow-soft"
-                  >
-                    <Truck className="mr-1 h-3.5 w-3.5 text-emerald-500" />
-                    {t('profile.header.onTime', { value: activeImporter.onTime })}
-                  </Badge>
-                </div>
-              )}
-            </div>
+                <Badge
+                  variant="outline"
+                  className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white shadow-soft"
+                >
+                  <Sparkles className="mr-1 h-3.5 w-3.5 text-amber-500" />
+                  {t('profile.header.score', { value: activeImporter.score })}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold text-white shadow-soft"
+                >
+                  <Truck className="mr-1 h-3.5 w-3.5 text-emerald-500" />
+                  {t('profile.header.onTime', { value: activeImporter.onTime })}
+                </Badge>
+              </div>
+            ) : null}
           </div>
 
           {mode === 'buyer' && (
-            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
-              {auctionTiles.map(tile => {
+            <div className="grid w-full grid-cols-2 gap-3">
+              {summaryTiles.map(tile => {
                 const { key, ...tileProps } = tile;
                 return <SummaryTile key={key} {...tileProps} />;
               })}
             </div>
           )}
 
-          <div className="flex flex-col gap-3 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-soft">
+          <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-gradient-to-br from-background/95 via-card/95 to-card/90 p-5 shadow-card backdrop-blur">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-muted-foreground">
                 {mode === 'buyer' ? t('profile.subtitleBuyer') : t('profile.subtitleImporter')}
@@ -1378,8 +1528,14 @@ const Profile = () => {
                 />
                 <Button
                   variant="outline"
-                  className="w-full justify-between rounded-2xl border-primary/60 text-primary"
-                  onClick={() => navigate(`/importers/${activeImporter.id}/profile`)}
+                  className="w-full justify-between rounded-2xl border-white/20 text-primary hover:bg-primary/10"
+                  onClick={() =>
+                    navigate(
+                      mode === 'vendor'
+                        ? `/vendor/${activeImporter.id}`
+                        : `/creator/${activeImporter.id}`,
+                    )
+                  }
                 >
                   <span>{t('profile.actions.publicProfile')}</span>
                   <ArrowRight className="h-4 w-4" />
@@ -1398,7 +1554,7 @@ const Profile = () => {
             }
           >
             {mode === 'buyer' ? (
-              <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+              <div className="space-y-3 rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
                 <div className="flex items-center gap-3">
                   <BadgeCheck className="h-5 w-5 text-primary" />
                   <div>
@@ -1412,14 +1568,14 @@ const Profile = () => {
                 </div>
                 <Separator className="bg-border/60" />
                 <p className="text-sm text-muted-foreground">{activeBuyer.kyc.lastChecked}</p>
-                <div className="flex items-center gap-2 rounded-2xl bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900">
+                <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
                   <ShieldCheck className="h-4 w-4" />
                   <span>{t('profile.verification.buyerExplainer')}</span>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+                <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-foreground">{t('profile.verification.progress')}</p>
@@ -1427,7 +1583,7 @@ const Profile = () => {
                         {t('profile.verification.progressHint', { value: verificationProgress })}
                       </p>
                     </div>
-                    <Badge variant="outline" className="rounded-full border-primary/40 text-sm text-primary">
+                    <Badge variant="outline" className="rounded-full border-primary/40 bg-primary/10 px-3 py-0.5 text-sm font-semibold text-primary">
                       {verificationProgress}%
                     </Badge>
                   </div>
@@ -1444,8 +1600,9 @@ const Profile = () => {
                     <div
                       key={step.id}
                       className={cn(
-                        'flex items-start justify-between gap-4 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft',
-                        step.status === 'complete' && 'border-emerald-200 bg-emerald-50/60',
+                        'flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-background/70 p-4 shadow-soft backdrop-blur',
+                        step.status === 'complete' && 'border-emerald-500/40 bg-emerald-500/10',
+                        step.status === 'current' && 'border-primary/60 bg-primary/8',
                       )}
                     >
                       <div className="space-y-1">
@@ -1460,14 +1617,17 @@ const Profile = () => {
                         <p className="text-xs text-muted-foreground">{step.description}</p>
                       </div>
                       {step.status === 'complete' ? (
-                        <Badge variant="outline" className="rounded-full border-emerald-400 text-xs text-emerald-700">
+                        <Badge
+                          variant="outline"
+                          className="rounded-full border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-emerald-600"
+                        >
                           {t('profile.verification.stepDone')}
                         </Badge>
                       ) : (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-full"
+                          className="rounded-full border-white/20 text-primary hover:bg-primary/10"
                           onClick={() => setVerificationStep(step)}
                         >
                           {t('profile.verification.reviewStep')}
@@ -1476,7 +1636,7 @@ const Profile = () => {
                     </div>
                   ))}
                 </div>
-                <div className="rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary">
+                <div className="rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
                   <Sparkles className="mr-2 inline h-4 w-4" />
                   {t('profile.verification.importerExplainer')}
                 </div>
@@ -1485,13 +1645,13 @@ const Profile = () => {
           </SectionCard>
 
           <SectionCard value="preferences" title={t('profile.sections.preferences')}>
-            <div className="space-y-4 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+            <div className="space-y-4 rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-foreground">{t('profile.preferences.language')}</p>
                   <p className="text-xs text-muted-foreground">{t('profile.preferences.languageHint')}</p>
                 </div>
-                <div className="flex items-center gap-2 rounded-full border border-border/70 px-3 py-1 text-xs font-semibold">
+                <div className="flex items-center gap-2 rounded-full border border-white/20 bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
                   <Globe2 className="h-4 w-4" />
                   <span className="uppercase">{locale}</span>
                 </div>
@@ -1499,7 +1659,7 @@ const Profile = () => {
               <LanguageToggle className="w-full justify-center" />
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+            <div className="space-y-3 rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
               <div className="flex items-center gap-3">
                 <BellRing className="h-5 w-5 text-primary" />
                 <p className="text-sm font-semibold text-foreground">{t('profile.preferences.notifications')}</p>
@@ -1549,7 +1709,7 @@ const Profile = () => {
               )}
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+            <div className="space-y-3 rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
               <div className="flex items-center gap-3">
                 <ShieldCheck className="h-5 w-5 text-primary" />
                 <p className="text-sm font-semibold text-foreground">{t('profile.preferences.privacy')}</p>
@@ -1572,8 +1732,8 @@ const Profile = () => {
             </div>
           </SectionCard>
 
-          <SectionCard value="logistics" title={t('profile.sections.logistics')}>
-            <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+        <SectionCard value="logistics" title={t('profile.sections.logistics')}>
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
               <div className="flex items-center gap-3">
                 <Truck className="h-5 w-5 text-primary" />
                 <p className="text-sm font-semibold text-foreground">{t('profile.logistics.pickupsTitle')}</p>
@@ -1586,8 +1746,8 @@ const Profile = () => {
                     <div
                       key={pickup.id}
                       className={cn(
-                        'flex items-start justify-between gap-3 rounded-2xl border border-border/60 bg-background/60 p-4 shadow-soft',
-                        isDefault && 'border-primary/50',
+                      'flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-background/70 p-4 shadow-soft',
+                      isDefault && 'border-primary/50 bg-primary/5',
                       )}
                     >
                       <div>
@@ -1604,8 +1764,10 @@ const Profile = () => {
                       <Badge
                         variant={isDefault ? 'default' : 'outline'}
                         className={cn(
-                          'rounded-full px-3 py-1 text-[11px] font-semibold',
-                          isDefault ? 'bg-primary text-primary-foreground' : 'border-border/70 text-muted-foreground',
+                          'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
+                          isDefault
+                            ? 'bg-primary text-primary-foreground'
+                            : 'border-white/20 bg-background/80 text-muted-foreground',
                         )}
                       >
                         {isDefault ? t('profile.logistics.default') : t('profile.actions.setDefault')}
@@ -1616,7 +1778,7 @@ const Profile = () => {
               </div>
               <Button
                 variant="outline"
-                className="w-full rounded-2xl"
+                className="w-full rounded-2xl border-white/20 text-primary shadow-soft hover:bg-primary/10"
                 onClick={() =>
                   openEdit({
                     mode,
@@ -1633,21 +1795,27 @@ const Profile = () => {
           </SectionCard>
 
           <SectionCard value="security" title={t('profile.sections.security')}>
-            <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
               <div className="flex items-center gap-3">
                 <ShieldCheck className="h-5 w-5 text-primary" />
                 <p className="text-sm font-semibold text-foreground">{t('profile.security.devicesTitle')}</p>
               </div>
               <div className="space-y-3">
                 {(mode === 'buyer' ? activeBuyer.devices : activeImporter.devices).map(device => (
-                  <div key={device.id} className="flex items-center justify-between rounded-2xl bg-background/70 px-4 py-3">
+                  <div
+                    key={device.id}
+                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-background/70 px-4 py-3 shadow-soft"
+                  >
                     <div>
                       <p className="text-sm font-semibold text-foreground">{device.label}</p>
                       <p className="text-xs text-muted-foreground">{device.location}</p>
                       <p className="text-xs text-muted-foreground">{device.lastActive}</p>
                     </div>
                     {device.current ? (
-                      <Badge variant="outline" className="rounded-full border-emerald-400 text-xs text-emerald-700">
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-emerald-500/30 bg-emerald-500/10 text-xs font-semibold uppercase tracking-wide text-emerald-600"
+                      >
                         {t('profile.security.thisDevice')}
                       </Badge>
                     ) : null}
@@ -1655,20 +1823,20 @@ const Profile = () => {
                 ))}
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button variant="outline" className="flex-1 rounded-full">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t('profile.security.logoutAll')}
-                </Button>
-                <Button variant="ghost" className="flex-1 justify-center rounded-full text-muted-foreground">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {t('profile.security.deleteAccount')}
-                </Button>
+              <Button variant="outline" className="flex-1 rounded-full border-white/20 text-primary hover:bg-primary/10">
+                <LogOut className="mr-2 h-4 w-4" />
+                {t('profile.security.logoutAll')}
+              </Button>
+              <Button variant="ghost" className="flex-1 justify-center rounded-full text-muted-foreground hover:bg-muted/10">
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('profile.security.deleteAccount')}
+              </Button>
               </div>
             </div>
           </SectionCard>
 
           <SectionCard value="help" title={t('profile.sections.help')}>
-            <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-soft">
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-gradient-to-br from-background/90 via-card/90 to-card/85 p-4 shadow-soft backdrop-blur">
               <InfoRow label={t('profile.help.refundPolicy')} value={t('profile.help.refundPolicyHint')} />
               <InfoRow label={t('profile.help.buyerProtection')} value={t('profile.help.buyerProtectionHint')} />
               <InfoRow
@@ -1685,7 +1853,8 @@ const Profile = () => {
             </div>
           </SectionCard>
         </Accordion>
-      </div>
+        </div>
+      </main>
 
       <Drawer open={activeFlow === 'orders'} onOpenChange={open => (!open ? closeQuickFlow() : undefined)}>
         <DrawerContent className="rounded-t-3xl">
@@ -1776,7 +1945,14 @@ const Profile = () => {
                         {t('profile.ordersFlow.pickupLabel', { hub: order.pickupHub })}
                       </p>
                     </div>
-                    <ChevronRight className="mt-4 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    <div className="flex flex-col items-end justify-between gap-1 text-right">
+                      <span className="text-xs font-semibold text-primary">
+                        {order.primaryAction === 'invoice'
+                          ? t('winnerCheckout.actions.viewInvoice')
+                          : t('winnerCheckout.actions.viewOrder')}
+                      </span>
+                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    </div>
                   </button>
                 ))
               )}
@@ -2237,7 +2413,13 @@ const Profile = () => {
           ) : null}
         </DrawerContent>
       </Drawer>
-    </main>
+      <VerificationDialog
+        open={verificationOpen}
+        onOpenChange={setVerificationOpen}
+        initialBusinessName={session.businessName}
+        onComplete={handleVerificationComplete}
+      />
+    </>
   );
 };
 

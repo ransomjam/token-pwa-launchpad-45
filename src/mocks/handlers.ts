@@ -66,11 +66,20 @@ export const handlers = [
   http.get(`${BASE}/auth/session`, () => {
     const sess: Session = {
       userId: 'usr_buyer_1',
+      personalName: 'Nadege',
+      businessName: 'Douala Market Hub',
+      email: 'nadege@demo.prolist',
+      phone: '+237 670 12 34 56',
       displayName: 'Nadege',
-      contact: 'nadege@demo.prolist',
+      contact: '+237 670 12 34 56',
       role: 'buyer',
       hasSelectedRole: true,
-      verifiedImporter: false,
+      isVerified: false,
+      verification: {
+        status: 'unverified',
+        businessName: 'Douala Market Hub',
+        location: 'Douala, Cameroon',
+      },
     };
     return HttpResponse.json(sess);
   }),

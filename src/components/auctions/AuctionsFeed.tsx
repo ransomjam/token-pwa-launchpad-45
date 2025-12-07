@@ -7,10 +7,13 @@ import { trackEvent } from '@/lib/analytics';
 import type { AuctionListing } from '@/types/auctions';
 import type { Session } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/context/I18nContext';
 import { AccountSheet } from '@/components/shell/AccountControls';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Logo } from '@/components/Logo';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Search } from 'lucide-react';
 
 type AuctionsFeedProps = {
@@ -26,6 +29,7 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
   const [selectedAuction, setSelectedAuction] = useState<AuctionListing | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const headerRef = useRef<HTMLElement | null>(null);
 
   const auctions = useMemo(() => (AUCTION_LISTINGS.length > 0 ? AUCTION_LISTINGS : []), []);
@@ -69,7 +73,7 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
   };
 
   const handleViewSeller = (sellerId: string) => {
-    navigate(`/seller/${sellerId}`);
+    navigate(`/creator/${sellerId}`);
   };
 
   const handlePlaceBid = (auction: AuctionListing) => {
@@ -112,7 +116,7 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
               <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                   <div className="order-1 flex items-center gap-3">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-teal/5 to-blue/10 shadow-soft">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-border/80 bg-white/80 shadow-soft">
                       <Logo wrapperClassName="h-8 w-8" />
                     </div>
                     <span className="text-lg font-semibold tracking-tight text-foreground">ProList</span>
@@ -122,19 +126,42 @@ export const AuctionsFeed = ({ variant = 'embedded', session }: AuctionsFeedProp
                       </Badge>
                     )}
                   </div>
-                  <div className="order-2 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
-                    {session && <AccountSheet session={session} />}
+                  <Dialog open={searchDialogOpen} onOpenChange={setSearchDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="order-2 h-11 w-11 rounded-xl border border-border/80 bg-white/80 text-foreground shadow-soft transition hover:border-primary/50 hover:text-primary"
+                        aria-label={t('auctions.searchPlaceholder')}
+                      >
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>{t('auctions.searchPlaceholder')}</DialogTitle>
+                      </DialogHeader>
+                      <div className="relative mt-4">
+                        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          value={searchTerm}
+                          onChange={event => setSearchTerm(event.target.value)}
+                          placeholder={t('auctions.searchPlaceholder')}
+                          className="h-12 rounded-full border border-border/60 bg-white/90 pl-11 pr-4 text-sm shadow-soft focus-visible:border-primary focus-visible:ring-0"
+                          aria-label={t('auctions.searchPlaceholder')}
+                          autoFocus
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <div className="order-3 ml-auto flex items-center gap-2 sm:order-3 sm:ml-0 sm:gap-3">
+                    {session && (
+                      <>
+                        <NotificationBell />
+                        <AccountSheet session={session} />
+                      </>
+                    )}
                   </div>
-                </div>
-                <div className="relative mt-1">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={searchTerm}
-                    onChange={event => setSearchTerm(event.target.value)}
-                    placeholder={t('auctions.searchPlaceholder')}
-                    className="h-12 rounded-full border border-border/60 bg-white/90 pl-11 pr-4 text-sm shadow-soft focus-visible:border-primary focus-visible:ring-0"
-                    aria-label={t('auctions.searchPlaceholder')}
-                  />
                 </div>
               </div>
             </header>

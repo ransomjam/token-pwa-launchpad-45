@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { nanoid } from 'nanoid';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -26,6 +25,9 @@ import {
 } from '@/lib/checkoutStorage';
 import { activateDemoMode, DEMO_PICKUPS, getDemoListingById, isDemoActive, primaryDemoListing } from '@/lib/demoMode';
 import { saveDemoOrder, type DemoOrderRecord } from '@/lib/demoOrderStorage';
+import { generateOrderId } from '@/lib/invoice';
+import { DEMO_INVOICE, findStoredInvoiceByOrderId, saveStoredInvoice } from '@/invoices/demoInvoice';
+import { applyPreorderToInvoice, DEMO_PREORDER_ORDER } from '@/invoices/preorderApply';
 
 const paymentOptions: { id: CheckoutPaymentMethod; labelKey: string; hintKey: string }[] = [
   { id: 'mtn', labelKey: 'checkout.paymentOptions.mtn', hintKey: 'checkout.paymentHints.mtn' },
@@ -244,7 +246,7 @@ const Checkout = () => {
       return;
     }
 
-    const orderId = `demo-${nanoid(10)}`;
+    const orderId = generateOrderId();
     const now = new Date();
     const etaDays = Math.max(
       1,
@@ -258,7 +260,7 @@ const Checkout = () => {
       listingId: activeListing.id,
       pickupPointId: resolvedPickup.id,
       createdAt: now.toISOString(),
-      status: 'POOL_LOCKED',
+      status: 'ESCROW_HELD',
       countdown: {
         deadline: deadlineDate.toISOString(),
         secondsLeft: countdownSeconds,
@@ -304,10 +306,63 @@ const Checkout = () => {
 
       await new Promise(resolve => window.setTimeout(resolve, 1_200));
 
+      const existingInvoice = findStoredInvoiceByOrderId(orderId);
+      const baseInvoice =
+        existingInvoice ?? (JSON.parse(JSON.stringify(DEMO_INVOICE)) as typeof DEMO_INVOICE);
+      const etaWindow = `${activeListing.etaDays.min}–${activeListing.etaDays.max} days`;
+      const preorderOrder = {
+        ...DEMO_PREORDER_ORDER,
+        orderId,
+        poolId: activeListing.id,
+        title: activeListing.title,
+        image: activeListing.images?.[0] ?? DEMO_PREORDER_ORDER.image,
+        qty,
+        unitPriceXAF: activeListing.priceXAF,
+        serviceFeeXAF: platformFee,
+        etaWindow,
+        importer: {
+          ...DEMO_PREORDER_ORDER.importer,
+          name: activeListing.importer?.displayName ?? DEMO_PREORDER_ORDER.importer.name,
+          verified: activeListing.importer?.verified ?? DEMO_PREORDER_ORDER.importer.verified,
+        },
+      };
+
+      const hydratedInvoice = applyPreorderToInvoice(preorderOrder, baseInvoice);
+      hydratedInvoice.pickup = {
+        ...hydratedInvoice.pickup,
+        hubId: resolvedPickup.id,
+        hubName: resolvedPickup.name,
+        address: resolvedPickup.address,
+        city: resolvedPickup.city ?? '',
+        hours: ('hours' in resolvedPickup ? resolvedPickup.hours : undefined) ?? '',
+        etaWindow: preorderOrder.etaWindow ?? hydratedInvoice.pickup?.etaWindow,
+        pickupCode:
+          hydratedInvoice.pickup?.pickupCode ?? String(Math.floor(1000 + Math.random() * 9000)),
+      };
+      hydratedInvoice.qrCodePayload = {
+        orderId: orderId,
+        invoiceNo: hydratedInvoice.invoiceNo,
+        pickupCode: hydratedInvoice.pickup.pickupCode ?? '',
+        hubId: hydratedInvoice.pickup.hubId ?? '',
+      };
+      saveStoredInvoice(hydratedInvoice);
+
+      demoOrder.paymentStatus = 'PAID';
+      demoOrder.invoiceNo = hydratedInvoice.invoiceNo;
+      demoOrder.invoiceTotalXAF = hydratedInvoice.pricing?.totalXAF ?? total;
+      demoOrder.pickupPoint = {
+        ...demoOrder.pickupPoint,
+        id: resolvedPickup.id,
+        name: resolvedPickup.name,
+        address: resolvedPickup.address,
+        city: resolvedPickup.city,
+        phone: resolvedPickup.phone ?? null,
+      };
+
       saveDemoOrder(demoOrder);
       toast({ description: t('checkout.paymentSuccessToast') });
       trackEvent('psp_return_success', { orderId, paymentMethod });
-      navigate(`/order/${orderId}`);
+      navigate(`/invoice/${hydratedInvoice.invoiceNo}?focus=pickup`);
     } catch (error) {
       console.error(error);
       setOrderError(t('checkout.orderError'));
@@ -322,6 +377,8 @@ const Checkout = () => {
     paymentMethod,
     qty,
     selectedPickupId,
+    platformFee,
+    total,
     t,
     toast,
     navigate,

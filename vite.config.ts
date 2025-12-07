@@ -32,6 +32,11 @@ const resolveBasePath = () => {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const base = resolveBasePath();
+  const enablePwaFlag = process.env.VITE_ENABLE_PWA;
+  // Enable the PWA by default in production so browsers can surface the install prompt.
+  const enablePwa =
+    enablePwaFlag === "true" ||
+    (enablePwaFlag === undefined && mode === "production");
 
   return {
     base,
@@ -42,39 +47,40 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mode === "development" && componentTagger(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,avif}'],
-          // Allow larger static assets like the full-resolution logo to be precached.
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
-        manifest: {
-          name: 'ProList_Mini Importation',
-          short_name: 'ProList Mini',
-          description: 'Trust-first preorder app with escrow, countdown and pickup QR.',
-          theme_color: '#0087C5',
-          background_color: '#ffffff',
-          display: 'standalone',
-          start_url: base,
-          scope: base,
-          icons: [
-            {
-              src: 'icon-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any maskable'
-            },
-            {
-              src: 'icon-512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable'
-            }
-          ]
-        }
-      })
+      enablePwa &&
+        VitePWA({
+          registerType: "autoUpdate",
+          workbox: {
+            globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,avif}"],
+            // Allow larger static assets like the full-resolution logo to be precached.
+            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          },
+          includeAssets: ["favicon.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png"],
+          manifest: {
+            name: "ProList_Mini Importation",
+            short_name: "ProList Mini",
+            description: "Trust-first preorder app with escrow, countdown and pickup QR.",
+            theme_color: "#0087C5",
+            background_color: "#ffffff",
+            display: "standalone",
+            start_url: base,
+            scope: base,
+            icons: [
+              {
+                src: "icon-192.png",
+                sizes: "192x192",
+                type: "image/png",
+                purpose: "any maskable",
+              },
+              {
+                src: "icon-512.png",
+                sizes: "512x512",
+                type: "image/png",
+                purpose: "any maskable",
+              },
+            ],
+          },
+        }),
     ].filter(Boolean),
     resolve: {
       alias: {

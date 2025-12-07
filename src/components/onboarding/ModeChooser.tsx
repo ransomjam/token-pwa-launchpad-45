@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShoppingBag, Boxes, Store } from 'lucide-react';
+import { ShoppingBag, Boxes, Store, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/context/I18nContext';
 import { Logo } from '@/components/Logo';
@@ -10,6 +10,7 @@ type Role = Session['role'];
 
 type ModeChooserProps = {
   onModeSelected: (role: Role, isDemoVendor?: boolean) => void;
+  onSignInClick?: () => void;
 };
 
 const modes = [
@@ -20,20 +21,26 @@ const modes = [
     descriptionKey: 'onboarding.modes.buyer.description',
   },
   {
+    role: 'vendor' as const,
+    icon: Store,
+    titleKey: 'onboarding.modes.vendor.title',
+    descriptionKey: 'onboarding.modes.vendor.description',
+  },
+  {
     role: 'importer' as const,
     icon: Boxes,
     titleKey: 'onboarding.modes.importer.title',
     descriptionKey: 'onboarding.modes.importer.description',
   },
   {
-    role: 'vendor' as const,
-    icon: Store,
-    titleKey: 'onboarding.modes.vendor.title',
-    descriptionKey: 'onboarding.modes.vendor.description',
+    role: 'merchant' as const,
+    icon: Megaphone,
+    titleKey: 'onboarding.modes.merchant.title',
+    descriptionKey: 'onboarding.modes.merchant.description',
   },
 ];
 
-export const ModeChooser = ({ onModeSelected }: ModeChooserProps) => {
+export const ModeChooser = ({ onModeSelected, onSignInClick }: ModeChooserProps) => {
   const { t } = useI18n();
   const [selectedMode, setSelectedMode] = useState<Role | null>(null);
 
@@ -113,7 +120,7 @@ export const ModeChooser = ({ onModeSelected }: ModeChooserProps) => {
                 {t('common.continue')}
               </Button>
             )}
-            
+
             <Button
               variant="outline"
               onClick={handleTryVendorDemo}
@@ -121,6 +128,14 @@ export const ModeChooser = ({ onModeSelected }: ModeChooserProps) => {
             >
               {t('onboarding.modeChooser.tryVendorDemo')}
             </Button>
+
+            <button
+              type="button"
+              onClick={onSignInClick}
+              className="w-full rounded-full border border-transparent bg-transparent py-3 text-sm font-medium text-primary transition hover:text-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              {t('onboarding.modeChooser.signInCta')}
+            </button>
           </div>
         </div>
       </div>
